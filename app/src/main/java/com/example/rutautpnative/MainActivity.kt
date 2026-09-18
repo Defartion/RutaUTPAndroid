@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.rutautpnative.data.LineasGuardadasStore
 import com.example.rutautpnative.data.LugaresStore
+import com.example.rutautpnative.data.directions.DirectionsService
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.ui.theme.RutaUTPNativeTheme
@@ -18,6 +19,7 @@ class MainActivity : ComponentActivity() {
         GTFSRepository.init(this)
         LugaresStore.init(this)
         LineasGuardadasStore.init(this)
+        DirectionsService.init(this)
         setContent {
             RutaUTPNativeTheme {
                 val router: AppRouter = viewModel()

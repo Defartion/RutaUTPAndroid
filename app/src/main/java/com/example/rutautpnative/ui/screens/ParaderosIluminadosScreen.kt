@@ -22,10 +22,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.rutautpnative.data.LugaresStore
+import com.example.rutautpnative.data.directions.DirectionsService
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.ParaderoGTFS
 import com.example.rutautpnative.data.gtfs.ParaderosIluminados
 import com.example.rutautpnative.data.gtfs.RutaGTFS
+import com.example.rutautpnative.model.CategoriaLugar
+import com.example.rutautpnative.model.LugarGuardado
 import com.example.rutautpnative.ui.screens.mapa.MarcadorUTP
 import com.example.rutautpnative.ui.theme.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -36,26 +40,30 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.maps.android.compose.*
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
 //----Paraderos iluminados (pantalla)----
-// Mapa con paraderos + búsqueda/filtro de radio + carrusel + "buscar cerca de mí".
+// Mapa + búsqueda/filtro de radio + "cerca de mí" + carrusel + distancia real a pie.
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
     val context = LocalContext.current
     val paraderos = remember(rutas) { ParaderosIluminados.seleccionar(rutas) }
+
     var ubicacionUsuario by remember { mutableStateOf<LatLng?>(null) }
     var locating by remember { mutableStateOf(false) }
     var locationMessage by remember { mutableStateOf<String?>(null) }
 
-    // La ancla es UTP por defecto; cuando se obtenga la ubicación real, reemplaza.
+    // La ancla (por defecto UTP, o la ubicación real del usuario si hay permiso+señal)
     val anchor: LatLng = ubicacionUsuario ?: GTFSRepository.coordenadaUTP
 
     val distancias = remember(paraderos, anchor) {
@@ -80,11 +88,22 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
     }
 
     var selectedId by remember { mutableStateOf<String?>(null) }
+    var guardados by remember { mutableStateOf<List<LugarGuardado>>(emptyList()) }
+
+    // Caminata a pie (Directions API)
+    var walkingLoading by remember { mutableStateOf(false) }
+    var walkingLine by remember { mutableStateOf<List<LatLng>?>(null) }
+    var walkingDistance by remember { mutableStateOf<Int?>(null) }
+    var walkingMessage by remember { mutableStateOf<String?>(null) }
+    var walkingJob by remember { mutableStateOf<Job?>(null) }
+
     val scope = rememberCoroutineScope()
     val cameraState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(anchor, 13f)
     }
     val pagerState = rememberPagerState(pageCount = { maxOf(1, paraderosVisibles.size) })
+
+    val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
 
     fun limpiarFiltro() {
         query = ""
@@ -92,36 +111,6 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
         selectedId = null
         scope.launch { pagerState.scrollToPage(0) }
     }
-
-    // pin -> carrusel + cámara
-    LaunchedEffect(selectedId) {
-        val id = selectedId ?: return@LaunchedEffect
-        val idx = paraderosVisibles.indexOfFirst { it.id == id }
-        if (idx >= 0) {
-            if (pagerState.currentPage != idx) pagerState.animateScrollToPage(idx)
-            cameraState.animate(CameraUpdateFactory.newLatLngZoom(paraderosVisibles[idx].coordinate, 16f))
-        }
-    }
-
-    // carrusel -> pin + cámara (solo cuando el usuario deja de deslizar)
-    LaunchedEffect(pagerState, paraderosVisibles) {
-        snapshotFlow { pagerState.settledPage }
-            .drop(1) // ignora la página inicial para no auto-seleccionar al abrir
-            .collect { page ->
-                paraderosVisibles.getOrNull(page)?.let { p ->
-                    if (p.id != selectedId) selectedId = p.id
-                }
-            }
-    }
-
-    // Al reducir el filtro, vuelve al inicio para no quedar en una página fuera de rango.
-    LaunchedEffect(paraderosVisibles.size) {
-        pagerState.scrollToPage(0)
-    }
-
-    // Manejo del permiso: cuando se resuelve a concedido, se inicia la ubicación;
-    // si no, se muestra un mensaje sin bloquear la pantalla.
-    val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
 
     fun localizar() {
         val fused = LocationServices.getFusedLocationProviderClient(context)
@@ -148,9 +137,33 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                 locating = false
             }
             .addOnCanceledListener {
-                // Llamado por el timeout; ya se registró el mensaje ahí. Solo limpiamos.
                 locating = false
             }
+    }
+
+    fun alternarGuardado(paradero: ParaderoGTFS) {
+        val existente = guardados.firstOrNull { g ->
+            g.nombre == paradero.nombre &&
+                g.lat != null && g.lon != null &&
+                GTFSRepository.distanciaMetros(LatLng(g.lat!!, g.lon!!), paradero.coordinate) < 5.0
+        }
+        guardados = when {
+            existente == null -> guardados + LugarGuardado(
+                nombre = paradero.nombre,
+                direccion = "Trujillo",
+                categoria = CategoriaLugar.OTRO,
+                lat = paradero.lat,
+                lon = paradero.lon
+            )
+            existente.esFijo -> guardados
+            else -> guardados.filter { it.id != existente.id }
+        }
+        scope.launch { LugaresStore.guardar(guardados) }
+    }
+
+    // Carga los lugares guardados una vez (para íconos de bookmark en los pins).
+    LaunchedEffect(Unit) {
+        guardados = LugaresStore.cargar()
     }
 
     LaunchedEffect(locationPermission.status) {
@@ -163,11 +176,57 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
         }
     }
 
-    // Cuando la ancla está con la ubicación real, se reselecciona la más cercana.
+    // Al seleccionar un paradero se calcula la ruta a pie desde ancla.
+    LaunchedEffect(selectedId) {
+        val id = selectedId ?: return@LaunchedEffect
+        val paradero = paraderosVisibles.firstOrNull { p -> p.id == id } ?: return@LaunchedEffect
+
+        walkingJob?.cancel()
+        walkingLoading = true
+        walkingMessage = null
+        walkingLine = null
+        walkingDistance = null
+
+        val anchorActual = anchor
+        val destino = paradero.coordinate
+
+        walkingJob = scope.launch {
+            val resultado = DirectionsService.rutaPeatonal(origen = anchorActual, destino = destino)
+            if (!isActive) return@launch
+            walkingLoading = false
+            when (resultado) {
+                is DirectionsService.Resultado.Exito -> {
+                    walkingLine = resultado.puntos
+                    walkingDistance = resultado.distanciaMetros
+                    // Encuadre a la ruta completa
+                    val bounds = LatLngBounds.Builder().apply {
+                        resultado.puntos.forEach { include(it) }
+                        include(anchorActual)
+                    }.build()
+                    cameraState.animate(CameraUpdateFactory.newLatLngBounds(bounds, 120))
+                }
+                else -> {
+                    walkingMessage = "No se pudo calcular la caminata. Revisa tu conexión."
+                }
+            }
+        }
+    }
+
+    // Cuando la ubicación real llega, se reposiciona la ancla y se muestra el pin cerca.
     LaunchedEffect(ubicacionUsuario) {
         if (ubicacionUsuario != null && paraderosVisibles.isNotEmpty()) {
             selectedId = paraderosVisibles.first().id
         }
+    }
+
+    LaunchedEffect(pagerState, paraderosVisibles) {
+        snapshotFlow { pagerState.settledPage }
+            .drop(1) // ignora la página inicial para no auto-seleccionar al abrir
+            .collect { page ->
+                paraderosVisibles.getOrNull(page)?.let { p ->
+                    if (p.id != selectedId) selectedId = p.id
+                }
+            }
     }
 
     Dialog(onDismissRequest = onCerrar, properties = DialogProperties(usePlatformDefaultWidth = false)) {
@@ -184,12 +243,21 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
             ) {
                 MarkerComposable(
                     state = MarkerState(position = anchor),
-                    title = "UTP Trujillo"
+                    title = if (ubicacionUsuario != null) "Mi ubicación" else "UTP Trujillo"
                 ) {
-                    MarcadorUTP()
+                    if (ubicacionUsuario != null) {
+                        Box(modifier = Modifier.size(20.dp).clip(CircleShape).background(Color(0xFF1A73E8)))
+                    } else {
+                        MarcadorUTP()
+                    }
                 }
                 paraderosVisibles.forEach { paradero ->
                     val seleccionado = paradero.id == selectedId
+                    val esGuardado = guardados.any { g ->
+                        g.nombre == paradero.nombre &&
+                            g.lat != null && g.lon != null &&
+                            GTFSRepository.distanciaMetros(LatLng(g.lat!!, g.lon!!), paradero.coordinate) < 5.0
+                    }
                     MarkerComposable(
                         state = MarkerState(position = paradero.coordinate),
                         title = paradero.nombre,
@@ -199,16 +267,28 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                             modifier = Modifier
                                 .size(if (seleccionado) 40.dp else 30.dp)
                                 .clip(CircleShape)
-                                .background(if (seleccionado) AppPrimary else SecondaryContainer),
+                                .background(
+                                    when {
+                                        seleccionado -> AppPrimary
+                                        esGuardado -> Tertiary
+                                        else -> SecondaryContainer
+                                    }
+                                ),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                Icons.Filled.DirectionsBus,
+                                if (esGuardado) Icons.Filled.Bookmark else Icons.Filled.DirectionsBus,
                                 null,
-                                tint = if (seleccionado) Color.White else OnSecondaryContainer,
+                                tint = if (seleccionado || esGuardado) Color.White else OnSecondaryContainer,
                                 modifier = Modifier.size(if (seleccionado) 20.dp else 16.dp)
                             )
                         }
+                    }
+                }
+                // Línea de la ruta a pie calculada
+                walkingLine?.let { linea ->
+                    if (linea.size >= 2) {
+                        Polyline(points = linea, color = AppPrimary, width = 10f)
                     }
                 }
             }
@@ -231,6 +311,31 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                 Column {
                     Text("Explora paraderos", style = HeadlineBody, color = OnSurface)
                     Text("Tu próxima parada, más cerca", style = BodySm, color = OnSurfaceVariant)
+                }
+                Spacer(Modifier.weight(1f))
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(AppSurface.copy(alpha = 0.92f))
+                        .clickable {
+                            if (!locating) {
+                                locationMessage = null
+                                if (locationPermission.status.isGranted) {
+                                    locating = true
+                                    localizar()
+                                } else {
+                                    locationPermission.launchPermissionRequest()
+                                }
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (locating) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = AppPrimary)
+                    } else {
+                        Icon(Icons.Filled.MyLocation, null, tint = OnSurface, modifier = Modifier.size(20.dp))
+                    }
                 }
             }
 
@@ -262,7 +367,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)
                     )
                     Spacer(Modifier.height(10.dp))
-                    // Control segmentado de radio
+                    // Control de radio
                     SingleChoiceSegmentedButtonRow(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)
                     ) {
@@ -276,7 +381,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                         }
                     }
                     Spacer(Modifier.height(10.dp))
-                    // Contador + indicador de ancla + ubicación
+                    // Fila estado
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -288,34 +393,27 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                             style = LabelCapsSm, color = OnSurfaceVariant
                         )
                         Spacer(Modifier.weight(1f))
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(SecondaryContainer)
-                                .clickable {
-                                    if (!locating) {
-                                        locationMessage = null
-                                        if (locationPermission.status.isGranted) {
-                                            localizar()
-                                        } else {
-                                            locationPermission.launchPermissionRequest()
-                                        }
-                                    }
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (locating) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(18.dp),
-                                    strokeWidth = 2.dp,
-                                    color = OnSecondaryContainer
-                                )
-                            } else {
+                        // Botón de guardar el paradero actualmente seleccionado
+                        if (selectedId != null) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(TertiaryContainer)
+                                    .clickable {
+                                        paraderos.firstOrNull { it.id == selectedId }?.let { alternarGuardado(it) }
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                val guardadoSel = paraderos.firstOrNull { it.id == selectedId }
+                                val yaGuardado = guardadoSel != null && guardados.any { g ->
+                                    g.nombre == guardadoSel.nombre && g.lat != null && g.lon != null &&
+                                        GTFSRepository.distanciaMetros(LatLng(g.lat!!, g.lon!!), guardadoSel.coordinate) < 5.0
+                                }
                                 Icon(
-                                    Icons.Filled.MyLocation,
+                                    if (yaGuardado) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
                                     null,
-                                    tint = OnSecondaryContainer,
+                                    tint = OnTertiaryContainer,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -325,6 +423,14 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                         Spacer(Modifier.height(6.dp))
                         Text(
                             locationMessage!!,
+                            style = BodyXs, color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(horizontal = 20.dp)
+                        )
+                    }
+                    if (walkingMessage != null) {
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            walkingMessage!!,
                             style = BodyXs, color = MaterialTheme.colorScheme.error,
                             modifier = Modifier.padding(horizontal = 20.dp)
                         )
@@ -342,14 +448,16 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                             }
                         }
                     } else {
-                        HorizontalPager(state = pagerState, modifier = Modifier.height(140.dp)) { page ->
+                        HorizontalPager(state = pagerState, modifier = Modifier.height(130.dp)) { page ->
                             paraderosVisibles.getOrNull(page)?.let { paradero ->
                                 ParaderoCard(
                                     paradero = paradero,
-                                    distancia = distancias[paradero.id] ?: 0.0,
+                                    distancia = if (paradero.id == selectedId && walkingDistance != null) walkingDistance!!.toDouble() else distancias[paradero.id] ?: 0.0,
                                     lineas = lineasPorParadero[paradero.id] ?: emptyList(),
                                     seleccionado = paradero.id == selectedId,
+                                    esGuardado = guardados.any { g -> g.nombre == paradero.nombre && g.lat != null && g.lon != null && GTFSRepository.distanciaMetros(LatLng(g.lat!!, g.lon!!), paradero.coordinate) < 5.0 },
                                     onClick = { selectedId = paradero.id },
+                                    onGuardar = { alternarGuardado(paradero) },
                                     modifier = Modifier.padding(horizontal = 20.dp)
                                 )
                             }
@@ -377,7 +485,9 @@ private fun ParaderoCard(
     distancia: Double,
     lineas: List<String>,
     seleccionado: Boolean,
+    esGuardado: Boolean,
     onClick: () -> Unit,
+    onGuardar: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -386,22 +496,35 @@ private fun ParaderoCard(
         colors = CardDefaults.cardColors(containerColor = if (seleccionado) PrimaryContainer else SurfaceContainerLowest),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Text(paradero.nombre, style = BodyMdMedium, color = OnSurface, maxLines = 1)
-            Spacer(Modifier.height(2.dp))
-            Text("${distancia.roundToInt()} m", style = BodySm, color = OnSurfaceVariant)
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                lineas.take(3).forEach { linea ->
-                    Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(PrimaryContainer).padding(horizontal = 8.dp, vertical = 4.dp)) {
-                        Text(linea, style = LabelCapsSm, color = OnPrimaryContainer)
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(paradero.nombre, style = BodyMdMedium, color = OnSurface, maxLines = 1)
+                Spacer(Modifier.height(2.dp))
+                Text("${distancia.roundToInt()} m", style = BodySm, color = OnSurfaceVariant)
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    lineas.take(3).forEach { linea ->
+                        Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(PrimaryContainer).padding(horizontal = 8.dp, vertical = 4.dp)) {
+                            Text(linea, style = LabelCapsSm, color = OnPrimaryContainer)
+                        }
+                    }
+                    if (lineas.size > 3) {
+                        Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(SurfaceContainerHigh).padding(horizontal = 8.dp, vertical = 4.dp)) {
+                            Text("+${lineas.size - 3}", style = LabelCapsSm, color = OnSurfaceVariant)
+                        }
                     }
                 }
-                if (lineas.size > 3) {
-                    Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(SurfaceContainerHigh).padding(horizontal = 8.dp, vertical = 4.dp)) {
-                        Text("+${lineas.size - 3}", style = LabelCapsSm, color = OnSurfaceVariant)
-                    }
-                }
+            }
+            Spacer(Modifier.width(8.dp))
+            IconButton(onClick = { onGuardar() }) {
+                Icon(
+                    if (esGuardado) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
+                    null,
+                    tint = if (esGuardado) Tertiary else OnSurfaceVariant
+                )
             }
         }
     }
