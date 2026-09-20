@@ -1,5 +1,7 @@
 package com.example.rutautpnative.ui.screens.mapa
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -85,6 +87,21 @@ class MapaViewModel : ViewModel() {
         viewModelScope.launch {
             actualizarRutasCercanas(LatLng(destino.lat, destino.lon))
         }
+    }
+
+    // Selecciona un lugar que llega de fuera del mapa (router.destinoPendiente,
+    // p.ej. zonas de Seguridad). Se trata como si el usuario lo hubiera buscado
+    // manualmente: mismo flujo de seleccionar(DestinoChip).
+    fun seleccionarLugarExterno(titulo: String, lat: Double, lon: Double) {
+        seleccionar(
+            DestinoChip(
+                id = "ext|$titulo|$lat|$lon".hashCode(),
+                label = titulo,
+                icon = Icons.Filled.Place,
+                lat = lat,
+                lon = lon
+            )
+        )
     }
 
     fun buscarTexto(texto: String) {

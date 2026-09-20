@@ -59,6 +59,15 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
         onDispose { vm.detenerAnimacion() }
     }
 
+    // Consumir un destino pendiente publicado por otra pestaña (p.ej. zonas de
+    // referencia en Seguridad): se limpia y se selecciona como si el usuario lo
+    // hubiera buscado manualmente. Convive con rutaPendiente (estado aparte).
+    LaunchedEffect(router.destinoPendiente) {
+        val pendiente = router.destinoPendiente ?: return@LaunchedEffect
+        router.destinoPendiente = null
+        vm.seleccionarLugarExterno(pendiente.titulo, pendiente.lat, pendiente.lon)
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         // Mapa
         GoogleMap(

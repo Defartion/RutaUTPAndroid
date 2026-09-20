@@ -93,6 +93,7 @@ data class ReporteComunidad(
     val tipo: TipoReporte,
     val cuerpo: String,
     val utiles: Int,
+    val dislikes: Int = 0,
     val comentarios: Int,
     val utilMarcado: Boolean = false,
     val avatarColor: Color = SurfaceContainerHigh,

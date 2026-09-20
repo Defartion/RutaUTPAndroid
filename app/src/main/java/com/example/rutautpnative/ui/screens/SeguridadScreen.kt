@@ -2,7 +2,13 @@ package com.example.rutautpnative.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.StartOffset
 import androidx.compose.animation.core.animateFloat
@@ -46,17 +52,13 @@ import com.example.rutautpnative.model.ReporteComunidad
 import com.example.rutautpnative.model.TipoReporte
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
+import com.example.rutautpnative.navigation.DestinoPendiente
 import com.example.rutautpnative.ui.components.BottomNavBar
 import com.example.rutautpnative.ui.theme.*
+import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import java.util.Calendar
-
-private val sampleReportes = listOf(
-    ReporteComunidad(iniciales = "JD", nombre = "Jorge D.", hace = "HACE 5 MIN",   tipo = TipoReporte.ALERTA,     cuerpo = "Micro lleno en Av. Larco. Pasaron 3 sin parar hacia la UTP.", utiles = 12, comentarios = 2),
-    ReporteComunidad(iniciales = "MA", nombre = "Maria A.", hace = "HACE 15 MIN",  tipo = TipoReporte.TRAFICO,    cuerpo = "Demora en Óvalo Papal por obras. Considerar 10 min adicionales.", utiles = 45, comentarios = 8, utilMarcado = true, avatarColor = SecondaryContainer, avatarForeground = OnSecondaryContainer),
-    ReporteComunidad(iniciales = "RC", nombre = "Rosa C.",  hace = "HACE 1 HORA",  tipo = TipoReporte.SUGERENCIA, cuerpo = "Tomar Av. Miraflores a las 7:30 AM evita el tráfico de España.", utiles = 28, comentarios = 5, avatarColor = TertiaryContainer, avatarForeground = OnTertiaryContainer),
-)
 
 @Composable
 fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel()) {
@@ -66,8 +68,26 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
     val borderColor = OutlineVariant.copy(alpha = 0.25f)
     var showReportarSheet by remember { mutableStateOf(false) }
     var showLlamarDialog by remember { mutableStateOf(false) }
-    var selectedReporte by remember { mutableStateOf<ReporteComunidad?>(null) }
     var mostrarParaderos by remember { mutableStateOf(false) }
+    var showPublicarComunidad by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    // Eventos de búsqueda de zonas de referencia (una sola vez cada uno).
+    LaunchedEffect(Unit) {
+        viewModel.zonaEventos.collect { evento ->
+            when (evento) {
+                is ZonaEvento.Exito -> {
+                    router.destinoPendiente = DestinoPendiente(evento.titulo, evento.lat, evento.lon)
+                    router.navigate(AppScreen.MapaPrincipal)
+                }
+                ZonaEvento.SinResultados ->
+                    snackbarHostState.showSnackbar("No encontramos esta ubicación.")
+                ZonaEvento.Fallo ->
+                    snackbarHostState.showSnackbar("No pudimos buscar el lugar. Revisa tu conexión.")
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(AppBackground)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -124,7 +144,12 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
                 Spacer(Modifier.height(28.dp))
                 RutasSegurasSection(numParaderos = numParaderos, onOpenParaderos = { mostrarParaderos = true })
                 Spacer(Modifier.height(28.dp))
-                ComunidadSection(reportes = sampleReportes, onReporte = { selectedReporte = it }, onAnadir = { showReportarSheet = true })
+                ZonasReferenciaSection(onZona = { zona -> viewModel.buscarZona(zona.nombre) })
+                Spacer(Modifier.height(28.dp))
+                ComunidadSection(
+                    viewModel = viewModel,
+                    onAnadir = { showPublicarComunidad = true }
+                )
                 Spacer(Modifier.height(90.dp))
             }
         }
@@ -132,6 +157,11 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             BottomNavBar(router)
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp)
+        )
     }
 
     // Dialogs & sheets
@@ -151,12 +181,12 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
         )
     }
 
-    selectedReporte?.let { reporte ->
-        ReporteDetailSheet(reporte = reporte, onDismiss = { selectedReporte = null })
-    }
-
     if (showReportarSheet) {
         ReportarSheet(onDismiss = { showReportarSheet = false })
+    }
+
+    if (showPublicarComunidad) {
+        PublicarComunidadSheet(onDismiss = { showPublicarComunidad = false })
     }
 
     if (mostrarParaderos) {
@@ -528,8 +558,95 @@ private fun RutasSegurasSection(numParaderos: Int, onOpenParaderos: () -> Unit) 
     }
 }
 
+//----Zonas de referencia----
+// Las 10 zonas fijas de Trujillo, igual que en iOS. El texto de descripción
+// es una redacción breve razonable (el texto original no era crítico).
+private data class ZonaReferencia(
+    val nombre: String,
+    val descripcion: String,
+    val icono: ImageVector
+)
+
+private val zonasReferencia = listOf(
+    ZonaReferencia("Óvalo Papal", "Nodo vial principal hacia el norte de la ciudad.", Icons.Filled.AltRoute),
+    ZonaReferencia("Avenida España 1450", "Tramo comercial con alto flujo de micros.", Icons.Filled.Signpost),
+    ZonaReferencia("Comisaría Víctor Larco", "Comisaría de referencia del distrito.", Icons.Filled.LocalPolice),
+    ZonaReferencia("Real Plaza", "Centro comercial con gran afluencia diaria.", Icons.Filled.ShoppingBag),
+    ZonaReferencia("Plaza de Armas", "Centro histórico y principal punto de encuentro.", Icons.Filled.AccountBalance),
+    ZonaReferencia("Mall Aventura", "Centro comercial frente al Óvalo Papal.", Icons.Filled.Storefront),
+    ZonaReferencia("Paseo de los Héroes", "Avenida arbolada en zona residencial.", Icons.Filled.Park),
+    ZonaReferencia("Hospital Belén", "Hospital de referencia para emergencias.", Icons.Filled.LocalHospital),
+    ZonaReferencia("Estadio Mansiche", "Estadio regional; eventos masivos.", Icons.Filled.Stadium),
+    ZonaReferencia("Cineplanet", "Cines dentro del Mall Aventura Plaza.", Icons.Filled.Movie)
+)
+
 @Composable
-private fun ComunidadSection(reportes: List<ReporteComunidad>, onReporte: (ReporteComunidad) -> Unit, onAnadir: () -> Unit) {
+private fun ZonasReferenciaSection(onZona: (ZonaReferencia) -> Unit) {
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(Icons.Filled.Explore, null, tint = AppPrimary, modifier = Modifier.size(20.dp))
+            Text("Zonas de referencia", style = HeadlineSm, color = OnSurface)
+        }
+        Spacer(Modifier.height(12.dp))
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            items(zonasReferencia.size) { i ->
+                ZonaCard(
+                    numero = i + 1,
+                    zona = zonasReferencia[i],
+                    onClick = { onZona(zonasReferencia[i]) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ZonaCard(numero: Int, zona: ZonaReferencia, onClick: () -> Unit) {
+    // El círculo de ícono alterna los contenedores del tema para dar variedad.
+    val (bg, fg) = when ((numero - 1) % 3) {
+        0 -> PrimaryContainer.copy(alpha = 0.35f) to AppPrimary
+        1 -> SecondaryContainer to OnSecondaryContainer
+        else -> TertiaryContainer to OnTertiaryContainer
+    }
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest),
+        modifier = Modifier.width(150.dp).clickable(onClick = onClick)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier.size(40.dp).clip(CircleShape).background(bg),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(zona.icono, null, tint = fg, modifier = Modifier.size(20.dp))
+                }
+                Text(
+                    "%02d".format(numero),
+                    style = LabelCapsSm,
+                    color = OnSurfaceVariant,
+                    modifier = Modifier.align(Alignment.TopEnd)
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+            Text(zona.nombre, style = BodyMdMedium, color = OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(4.dp))
+            Text(zona.descripcion, style = BodySm, color = OnSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis, minLines = 2)
+            Spacer(Modifier.height(10.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Explorar ubicación", style = LabelCapsSm, color = AppPrimary)
+                Icon(Icons.Filled.ArrowForward, null, tint = AppPrimary, modifier = Modifier.size(12.dp))
+            }
+        }
+    }
+}
+
+//----Sección Comunidad: publicaciones demo que rotan cada 4 minutos----
+@Composable
+private fun ComunidadSection(viewModel: SeguridadViewModel, onAnadir: () -> Unit) {
+    val ventana by viewModel.ventanaComunidad.collectAsState()
+    val votos by viewModel.votosComunidad.collectAsState()
+
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)) {
@@ -539,19 +656,45 @@ private fun ComunidadSection(reportes: List<ReporteComunidad>, onReporte: (Repor
             TextButton(onClick = onAnadir) { Text("AÑADIR", style = LabelCapsSm, color = AppPrimary) }
         }
         Spacer(Modifier.height(12.dp))
-        reportes.forEach { r ->
-            ReporteCard(reporte = r, onClick = { onReporte(r) })
-            Spacer(Modifier.height(12.dp))
+
+        // Transición suave (fade + slide) al cambiar de ventana.
+        AnimatedContent(
+            targetState = ventana,
+            transitionSpec = {
+                (fadeIn() + slideInHorizontally { it / 3 }) togetherWith
+                    (fadeOut() + slideOutHorizontally { -it / 3 })
+            },
+            label = "ventanaComunidad"
+        ) { ventanaActual ->
+            Column {
+                viewModel.publicacionesVisibles().forEach { r ->
+                    ReporteCard(
+                        reporte = r,
+                        votoActual = votos[r.id],
+                        utiles = viewModel.utilesMostrados(r),
+                        noUtiles = viewModel.noUtilesMostrados(r),
+                        onVotar = { voto -> viewModel.votar(r.id, voto) }
+                    )
+                    Spacer(Modifier.height(12.dp))
+                }
+            }
         }
     }
 }
 
+//----Tarjeta de una publicación de la comunidad----
 @Composable
-private fun ReporteCard(reporte: ReporteComunidad, onClick: () -> Unit) {
+private fun ReporteCard(
+    reporte: ReporteComunidad,
+    votoActual: VotoComunidad?,
+    utiles: Int,
+    noUtiles: Int,
+    onVotar: (VotoComunidad) -> Unit
+) {
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest),
-        modifier = Modifier.fillMaxWidth().clickable { onClick() }
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -570,48 +713,49 @@ private fun ReporteCard(reporte: ReporteComunidad, onClick: () -> Unit) {
             Spacer(Modifier.height(12.dp))
             Text(reporte.cuerpo, style = BodyMd, color = OnSurface)
             Spacer(Modifier.height(12.dp))
-            Row {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Icon(if (reporte.utilMarcado) Icons.Filled.ThumbUp else Icons.Filled.ThumbUpOffAlt, null, tint = if (reporte.utilMarcado) AppPrimary else OnSurfaceVariant, modifier = Modifier.size(14.dp))
-                    Text("Útil (${reporte.utiles})", style = BodySm, color = OnSurfaceVariant)
-                }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Voto "útil"
+                VotoChip(
+                    icono = if (votoActual == VotoComunidad.UTIL) Icons.Filled.ThumbUp else Icons.Filled.ThumbUpOffAlt,
+                    texto = "Útil ($utiles)",
+                    activo = votoActual == VotoComunidad.UTIL,
+                    onClick = { onVotar(VotoComunidad.UTIL) }
+                )
                 Spacer(Modifier.width(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Icon(Icons.Filled.ChatBubbleOutline, null, tint = OnSurfaceVariant, modifier = Modifier.size(14.dp))
-                    Text("${reporte.comentarios}", style = BodySm, color = OnSurfaceVariant)
-                }
+                // Voto "no útil"
+                VotoChip(
+                    icono = if (votoActual == VotoComunidad.NO_UTIL) Icons.Filled.ThumbDown else Icons.Filled.ThumbDownOffAlt,
+                    texto = "No útil ($noUtiles)",
+                    activo = votoActual == VotoComunidad.NO_UTIL,
+                    onClick = { onVotar(VotoComunidad.NO_UTIL) }
+                )
+                Spacer(Modifier.width(16.dp))
+                // Solo el número de comentarios (no hay comentarios reales que abrir).
+                Icon(Icons.Filled.ChatBubbleOutline, null, tint = OnSurfaceVariant, modifier = Modifier.size(14.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("${reporte.comentarios}", style = BodySm, color = OnSurfaceVariant)
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ReporteDetailSheet(reporte: ReporteComunidad, onDismiss: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(reporte.avatarColor), contentAlignment = Alignment.Center) {
-                    Text(reporte.iniciales, style = HeadlineSm, color = reporte.avatarForeground)
-                }
-                Spacer(Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(reporte.nombre, style = HeadlineSm, color = OnSurface)
-                    Text(reporte.hace, style = LabelCapsSm, color = OnSurfaceVariant)
-                }
-                Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(reporte.tipo.background).padding(horizontal = 8.dp, vertical = 4.dp)) {
-                    Text(reporte.tipo.label, style = LabelCapsMd, color = reporte.tipo.foreground)
-                }
-            }
-            Spacer(Modifier.height(16.dp)); Divider(); Spacer(Modifier.height(16.dp))
-            Text(reporte.cuerpo, style = BodyLg, color = OnSurface)
-            Spacer(Modifier.height(16.dp)); Divider(); Spacer(Modifier.height(16.dp))
-            Spacer(Modifier.height(16.dp))
-            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().height(48.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)) {
-                Text("Cerrar", style = BodyMdMedium, color = Color.White)
-            }
-            Spacer(Modifier.height(24.dp))
-        }
+private fun VotoChip(
+    icono: ImageVector,
+    texto: String,
+    activo: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 4.dp, vertical = 4.dp)
+    ) {
+        Icon(icono, null, tint = if (activo) AppPrimary else OnSurfaceVariant, modifier = Modifier.size(14.dp))
+        Text(texto, style = BodySm, color = if (activo) AppPrimary else OnSurfaceVariant)
     }
 }
 
