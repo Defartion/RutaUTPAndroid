@@ -37,6 +37,8 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.google.android.gms.maps.model.Dash
+import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -50,6 +52,10 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
+
+// Color fijo de la ruta a pie (claro). No existe tema oscuro en este proyecto
+// todavía, así que se usa directamente el valor claro fijo: #1669A8.
+private val ColorCaminata = Color(0xFF1669A8)
 
 //----Paraderos iluminados (pantalla)----
 // Mapa + búsqueda/filtro de radio + "cerca de mí" + carrusel + distancia real a pie.
@@ -176,20 +182,25 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
         }
     }
 
-    // Al seleccionar un paradero se calcula la ruta a pie desde ancla.
+    // Al seleccionar un paradero: mueve carrusel+ cámara y calcula la caminata.
     LaunchedEffect(selectedId) {
         val id = selectedId ?: return@LaunchedEffect
         val paradero = paraderosVisibles.firstOrNull { p -> p.id == id } ?: return@LaunchedEffect
 
+        // Carrusel: selecciona la tarjeta
+        val idx = paraderosVisibles.indexOfFirst { it.id == id }
+        if (idx >= 0 && pagerState.currentPage != idx) {
+            pagerState.animateScrollToPage(idx)
+        }
+
+        // Caminata
+        val anchorActual = anchor
+        val destino = paradero.coordinate
         walkingJob?.cancel()
         walkingLoading = true
         walkingMessage = null
         walkingLine = null
         walkingDistance = null
-
-        val anchorActual = anchor
-        val destino = paradero.coordinate
-
         walkingJob = scope.launch {
             val resultado = DirectionsService.rutaPeatonal(origen = anchorActual, destino = destino)
             if (!isActive) return@launch
@@ -198,7 +209,6 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                 is DirectionsService.Resultado.Exito -> {
                     walkingLine = resultado.puntos
                     walkingDistance = resultado.distanciaMetros
-                    // Encuadre a la ruta completa
                     val bounds = LatLngBounds.Builder().apply {
                         resultado.puntos.forEach { include(it) }
                         include(anchorActual)
@@ -288,7 +298,13 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                 // Línea de la ruta a pie calculada
                 walkingLine?.let { linea ->
                     if (linea.size >= 2) {
-                        Polyline(points = linea, color = AppPrimary, width = 10f)
+                        // Estilo punteado con guiones para distinguir de la ruta de bus
+                        Polyline(
+                            points = linea,
+                            color = ColorCaminata,
+                            width = 4f,
+                            pattern = listOf(Dash(20f), Gap(12f))
+                        )
                     }
                 }
             }

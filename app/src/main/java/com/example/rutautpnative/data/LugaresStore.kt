@@ -7,7 +7,9 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.model.CategoriaLugar
 import com.example.rutautpnative.model.LugarGuardado
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -48,13 +50,24 @@ object LugaresStore {
         lon = -79.0287
     )
 
-    //----Consulta de la lista actual----
+    //----Consulta de la lista actual (una sola lectura)----
     // Si no hay nada guardado devuelve la semilla; siempre reordena UTP primero.
     suspend fun cargar(): List<LugarGuardado> {
         val ctx = appContext ?: return semilla()
         val raw = ctx.lugaresDataStore.data.first()[KEY].orEmpty()
         val lista = if (raw.isBlank()) semilla() else deserializar(raw)
         return reordenarUTP(lista)
+    }
+
+    //----Observación reactiva----
+    // Devuelve un Flow que se emite cada vez que cambia el valor guardado.
+    fun observar(): Flow<List<LugarGuardado>> {
+        val ctx = appContext ?: return kotlinx.coroutines.flow.emptyFlow()
+        return ctx.lugaresDataStore.data.map { prefs ->
+            val raw = prefs[KEY].orEmpty()
+            val lista = if (raw.isBlank()) semilla() else deserializar(raw)
+            reordenarUTP(lista)
+        }
     }
 
     //----Persistencia inmediata de la lista actual----
