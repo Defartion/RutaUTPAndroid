@@ -1,5 +1,12 @@
 package com.example.rutautpnative.ui.screens
 
+import android.Manifest
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.location.Geocoder
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,10 +15,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.ChatBubbleOutline
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,10 +32,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.rutautpnative.model.TipoReporte
 import com.example.rutautpnative.ui.theme.*
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.Locale
 
 //----Formulario de publicar en la comunidad----
 // Demo (igual que en iOS): NO inserta el reporte en el feed. Publicar solo
@@ -60,6 +83,39 @@ private fun iconoPara(tipo: TipoReporte): ImageVector = when (tipo) {
     TipoReporte.OTRO       -> Icons.Filled.ChatBubbleOutline
 }
 
+//----Geocodificación inversa con Geocoder nativo----
+// (Gratis, sin API key. Si no hay dirección disponible, devuelve la coordenada cruda.)
+@Suppress("DEPRECATION")
+private suspend fun geocodificar(context: android.content.Context, punto: LatLng): String =
+    withContext(Dispatchers.IO) {
+        try {
+            Geocoder(context, Locale("es", "PE"))
+                .getFromLocation(punto.latitude, punto.longitude, 1)
+                ?.firstOrNull()
+                ?.getAddressLine(0)
+        } catch (e: Exception) {
+            null
+        } ?: "%.4f, %.4f".format(punto.latitude, punto.longitude)
+    }
+
+//----Fila de opción del selector de foto----
+// (interna: la reutiliza también CarneDigitalScreen para cambiar la foto del carné)
+@Composable
+internal fun OpcionFoto(icono: ImageVector, texto: String, onClick: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 12.dp)
+    ) {
+        Icon(icono, null, tint = AppPrimary, modifier = Modifier.size(22.dp))
+        Spacer(Modifier.width(12.dp))
+        Text(texto, style = BodyMdMedium, color = OnSurface)
+    }
+}
+
 //----Tarjeta de tipo de reporte (selector de 4)----
 @Composable
 private fun TipoCard(tipo: TipoReporte, seleccionado: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -79,12 +135,45 @@ private fun TipoCard(tipo: TipoReporte, seleccionado: Boolean, onClick: () -> Un
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun PublicarComunidadSheet(onDismiss: () -> Unit) {
     var tipo by remember { mutableStateOf(TipoReporte.ALERTA) }
     var descripcion by remember { mutableStateOf("") }
     var showSuccess by remember { mutableStateOf(false) }
+
+    //----Foto y ubicación (demo: solo viven en el estado, no se suben ni persisten)----
+    val context = LocalContext.current
+    var foto by remember { mutableStateOf<Bitmap?>(null) }
+    var showSelectorFoto by remember { mutableStateOf(false) }
+    var pendienteCamara by remember { mutableStateOf(false) }
+    var ubicacion by remember { mutableStateOf<LatLng?>(null) }
+    var direccionUbicacion by remember { mutableStateOf<String?>(null) }
+    var mostrarPickerUbicacion by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    // Galería: Photo Picker moderno, NO requiere permiso (igual que PHPicker en iOS).
+    val galeriaLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            foto = context.contentResolver.openInputStream(uri)?.use(BitmapFactory::decodeStream)
+        }
+    }
+
+    // Cámara: miniatura, sin FileProvider nuevo (el Manifest no tiene uno).
+    val camaraLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap -> if (bitmap != null) foto = bitmap }
+
+    // Permiso CAMERA (ya declarado en el Manifest), mismo patrón de CarnetScanner.
+    val permisoCamara = rememberPermissionState(Manifest.permission.CAMERA)
+    LaunchedEffect(permisoCamara.status.isGranted) {
+        if (permisoCamara.status.isGranted && pendienteCamara) {
+            pendienteCamara = false
+            camaraLauncher.launch(null)
+        }
+    }
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(
@@ -172,6 +261,112 @@ fun PublicarComunidadSheet(onDismiss: () -> Unit) {
                     }
                 }
             }
+            Spacer(Modifier.height(12.dp))
+
+            //----FOTO (OPCIONAL)----
+            // Sin foto: fila tocable que abre el selector Cámara/Galería.
+            // Con foto: vista previa de 180dp con botón "✕" para quitarla.
+            Text("FOTO (OPCIONAL)", style = LabelCapsMd, color = OnSurfaceVariant)
+            Spacer(Modifier.height(8.dp))
+            val bitmap = foto
+            if (bitmap == null) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(SurfaceContainerHigh)
+                        .clickable { showSelectorFoto = true }
+                        .padding(horizontal = 14.dp, vertical = 12.dp)
+                ) {
+                    Icon(Icons.Filled.AddAPhoto, null, tint = OnSurfaceVariant, modifier = Modifier.size(22.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Column {
+                        Text("Añadir foto", style = BodyMdMedium, color = OnSurface)
+                        Text("Toma una foto o elige de tu galería", style = BodySm, color = OnSurfaceVariant)
+                    }
+                }
+            } else {
+                // Vista previa (la foto NO se sube ni persiste: solo estado del formulario).
+                Box(modifier = Modifier.fillMaxWidth().height(180.dp)) {
+                    Image(
+                        bitmap = bitmap.asImageBitmap(),
+                        contentDescription = "Foto adjunta",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(16.dp))
+                    )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(alpha = 0.55f))
+                            .clickable { foto = null },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Filled.Close, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                    }
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+
+            //----UBICACIÓN (OPCIONAL)----
+            // Igual que la foto: vacía → fila "Añadir ubicación"; con dato →
+            // dirección legible (geocodificación inversa) con editar/quitar.
+            Text("UBICACIÓN (OPCIONAL)", style = LabelCapsMd, color = OnSurfaceVariant)
+            Spacer(Modifier.height(8.dp))
+            val ubic = ubicacion
+            if (ubic == null) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(SurfaceContainerHigh)
+                        .clickable { mostrarPickerUbicacion = true }
+                        .padding(horizontal = 14.dp, vertical = 12.dp)
+                ) {
+                    Icon(Icons.Filled.LocationOn, null, tint = OnSurfaceVariant, modifier = Modifier.size(22.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Column {
+                        Text("Añadir ubicación", style = BodyMdMedium, color = OnSurface)
+                        Text("Marca el punto exacto en el mapa", style = BodySm, color = OnSurfaceVariant)
+                    }
+                }
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(SurfaceContainerLow)
+                        .clickable { mostrarPickerUbicacion = true } // tocar = editar
+                        .padding(horizontal = 14.dp, vertical = 12.dp)
+                ) {
+                    Icon(Icons.Filled.LocationOn, null, tint = AppPrimary, modifier = Modifier.size(22.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        direccionUbicacion ?: "%.4f, %.4f".format(ubic.latitude, ubic.longitude),
+                        style = BodyMd,
+                        color = OnSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(Icons.Filled.Edit, "Editar", tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(14.dp))
+                    Icon(
+                        Icons.Filled.Close, "Quitar", tint = OnSurfaceVariant,
+                        modifier = Modifier
+                            .size(18.dp)
+                            .clickable {
+                                ubicacion = null
+                                direccionUbicacion = null
+                            }
+                    )
+                }
+            }
             Spacer(Modifier.height(20.dp))
 
             //----Botón Publicar (gradiente del color tertiary)----
@@ -196,6 +391,52 @@ fun PublicarComunidadSheet(onDismiss: () -> Unit) {
             }
             Spacer(Modifier.height(24.dp))
         }
+    }
+
+    //----Selector de origen de la foto: Cámara o Galería----
+    if (showSelectorFoto) {
+        AlertDialog(
+            onDismissRequest = { showSelectorFoto = false },
+            title = { Text("Añadir foto") },
+            text = {
+                Column {
+                    OpcionFoto(Icons.Filled.AddAPhoto, "Tomar foto") {
+                        showSelectorFoto = false
+                        if (permisoCamara.status.isGranted) {
+                            camaraLauncher.launch(null)
+                        } else {
+                            pendienteCamara = true
+                            permisoCamara.launchPermissionRequest()
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    OpcionFoto(Icons.Filled.PhotoLibrary, "Elegir de galería") {
+                        showSelectorFoto = false
+                        galeriaLauncher.launch(
+                            androidx.activity.result.PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                            )
+                        )
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {}
+        )
+    }
+
+    //----Selector de ubicación a pantalla completa----
+    if (mostrarPickerUbicacion) {
+        MapaUbicacionPicker(
+            inicial = ubicacion,
+            onConfirmar = { punto ->
+                ubicacion = punto
+                // Geocodificación inversa para mostrar dirección legible.
+                // Geocoder nativo: gratis, sin API key. Respaldo: coordenada cruda.
+                scope.launch { direccionUbicacion = geocodificar(context, punto) }
+            },
+            onCerrar = { mostrarPickerUbicacion = false }
+        )
     }
 
     //----Confirmación de publicación (demo: no se inserta nada en el feed)----

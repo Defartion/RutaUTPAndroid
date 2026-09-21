@@ -1,5 +1,7 @@
 package com.example.rutautpnative.ui.screens
 
+import android.graphics.Bitmap
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,7 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.ui.components.BottomNavBar
@@ -32,6 +36,9 @@ fun PerfilScreen(router: AppRouter) {
     var showEditDialog by remember { mutableStateOf(false) }
     var newNameInput by remember { mutableStateOf("") }
     var showCarnetScanner by remember { mutableStateOf(false) }
+    var showCarneDigital by remember { mutableStateOf(false) }
+    // Foto del carné: estado de sesión (no persiste), compartido con el avatar.
+    var fotoPerfil by remember { mutableStateOf<Bitmap?>(null) }
 
     Box(modifier = Modifier.fillMaxSize().background(AppBackground)) {
         Column(
@@ -64,7 +71,16 @@ fun PerfilScreen(router: AppRouter) {
                             modifier = Modifier.size(72.dp).clip(CircleShape).background(InversePrimary),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(iniciales(nombre), style = HeadlineMd, color = Color.White)
+                            if (fotoPerfil != null) {
+                                Image(
+                                    bitmap = fotoPerfil!!.asImageBitmap(),
+                                    contentDescription = "Foto de perfil",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Text(iniciales(nombre), style = HeadlineMd, color = Color.White)
+                            }
                         }
                         Spacer(Modifier.width(14.dp))
                         Column {
@@ -102,7 +118,11 @@ fun PerfilScreen(router: AppRouter) {
                             title = "Carnet UTP",
                             subtitle = if (carnetVerificado) "Verificado" else "Escanear ahora",
                             modifier = Modifier.weight(1f),
-                            onClick = { showCarnetScanner = true }
+                            // Ya verificado: abre el carné directo; si no, primero el scanner.
+                            onClick = {
+                                if (carnetVerificado) showCarneDigital = true
+                                else showCarnetScanner = true
+                            }
                         )
                     }
                 }
@@ -181,11 +201,24 @@ fun PerfilScreen(router: AppRouter) {
         )
     }
 
-    // Carnet scanner placeholder (Fase 4)
+    // Carnet scanner: al "escanear", abre el carné digital.
     if (showCarnetScanner) {
         CarnetScannerScreen(
-            onCapture = { carnetVerificado = true },
+            onCapture = {
+                carnetVerificado = true
+                showCarneDigital = true
+            },
             onDismiss = { showCarnetScanner = false }
+        )
+    }
+
+    // Carné digital (tras escanear o al tocar la tarjeta ya verificada).
+    if (showCarneDigital) {
+        CarneDigitalScreen(
+            nombre = nombre,
+            foto = fotoPerfil,
+            onFotoChange = { fotoPerfil = it },
+            onCerrar = { showCarneDigital = false }
         )
     }
     }
