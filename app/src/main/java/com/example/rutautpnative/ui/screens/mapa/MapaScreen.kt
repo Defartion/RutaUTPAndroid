@@ -27,9 +27,12 @@ import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.RutaGTFS
+import com.example.rutautpnative.data.senias.SeniasOverlay
+import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.model.TipoReporte
 import com.example.rutautpnative.ui.components.BottomNavBar
 import com.example.rutautpnative.ui.theme.*
+import kotlinx.coroutines.launch
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -191,6 +194,8 @@ private fun MapaHeader(onMenuClick: () -> Unit) {
 // Panel de busqueda
 @Composable
 private fun SearchPanel(vm: MapaViewModel, onSearch: () -> Unit, modifier: Modifier = Modifier) {
+    val scope = rememberCoroutineScope()
+    val modoSenias by SeniasPrefs.observarActivo().collectAsState(initial = false)
     Card(
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = AppSurface.copy(alpha = 0.92f)),
@@ -239,10 +244,24 @@ private fun SearchPanel(vm: MapaViewModel, onSearch: () -> Unit, modifier: Modif
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 vm.destinos.forEach { destino ->
+                        // Textos señables: el chip tiene su propio clickable, así que
+                        // la decisión "¿seña o acción normal?" va DENTRO del onClick.
+                        val claveSenia = when (destino.label) {
+                            "UTP"       -> "mapa.destino.utp"
+                            "Centro"    -> "mapa.destino.centro"
+                            "Huanchaco" -> "mapa.destino.huanchaco"
+                            else        -> null
+                        }
                         DestinoChipItem(
                             destino = destino,
                             isActive = vm.destinoSeleccionado?.id == destino.id,
-                            onClick = { onSearch(); vm.seleccionar(destino) }
+                            onClick = {
+                                if (modoSenias && claveSenia != null) {
+                                    scope.launch { SeniasOverlay.mostrar(claveSenia) }
+                                } else {
+                                    onSearch(); vm.seleccionar(destino)
+                                }
+                            }
                         )
                     }
                 }

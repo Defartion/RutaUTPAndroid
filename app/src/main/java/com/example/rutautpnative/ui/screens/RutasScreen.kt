@@ -24,9 +24,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.RutaGTFS
+import com.example.rutautpnative.data.senias.SeniasOverlay
+import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.ui.components.BottomNavBar
+import com.example.rutautpnative.ui.components.Signable
 import com.example.rutautpnative.ui.theme.*
+import kotlinx.coroutines.launch
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
@@ -177,7 +181,9 @@ private fun ListaRutasScreen(
                 // Lista
                 Column(modifier = Modifier.padding(horizontal = 20.dp)) {
                     Spacer(Modifier.height(20.dp))
-                    Text("Elige tu ruta", style = HeadlineSm, color = OnSurface)
+                    Signable(clave = "rutas.elegir") {
+                        Text("Elige tu ruta", style = HeadlineSm, color = OnSurface)
+                    }
                     Text("Toca una ruta para ver el detalle", style = BodySm, color = OnSurfaceVariant)
                     Spacer(Modifier.height(12.dp))
                     // Campo de búsqueda
@@ -271,6 +277,8 @@ private fun DetalleRutaScreen(
 ) {
     val borderColor = OutlineVariant.copy(alpha = 0.25f)
     var mostrarExplorador by remember { mutableStateOf(false) }
+    val modoSenias by SeniasPrefs.observarActivo().collectAsState(initial = false)
+    val scope = rememberCoroutineScope()
 
     // --- Datos para la guía paso a paso ---
     // Ubicación del usuario (mock) mientras no haya GPS real en esta pantalla;
@@ -442,9 +450,16 @@ private fun DetalleRutaScreen(
                 PasoRow("3", "Baja en ${paraderoDestino?.nombre ?: "destino final"}", "Llegada a destino final", Icons.Filled.School, Tertiary, Color.White, isLast = true)
                 Spacer(Modifier.height(20.dp))
 
-                // Botón Iniciar Navegación
+                // Botón Iniciar Navegación (señable: con el Modo Señas activo
+                // muestra la seña en vez de iniciar el tracking).
                 Button(
-                    onClick = { onIniciarNavegacion() },
+                    onClick = {
+                        if (modoSenias) {
+                            scope.launch { SeniasOverlay.mostrar("nav.iniciar") }
+                        } else {
+                            onIniciarNavegacion()
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryContainer)

@@ -21,10 +21,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.rutautpnative.data.negocios.CuponesStore
+import com.example.rutautpnative.data.negocios.NegociosService
+import com.example.rutautpnative.data.senias.SeniasPrefs
+import com.example.rutautpnative.model.CategoriaNegocio
+import com.example.rutautpnative.model.Negocio
 import com.example.rutautpnative.navigation.AppRouter
+import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.ui.components.BottomNavBar
 import com.example.rutautpnative.ui.theme.*
+import kotlinx.coroutines.launch
 
 @Composable
 fun PerfilScreen(router: AppRouter) {
@@ -32,6 +41,9 @@ fun PerfilScreen(router: AppRouter) {
     var notifOn by remember { mutableStateOf(true) }
     var ubicacionOn by remember { mutableStateOf(true) }
     var ecoOff by remember { mutableStateOf(false) }
+    // Modo Señas: ESTA preferencia SÍ persiste en disco (DataStore), a diferencia
+    // de las demás de arriba, porque la leen todas las pantallas de la app.
+    val modoSenias by SeniasPrefs.observarActivo().collectAsState(initial = false)
     var carnetVerificado by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var newNameInput by remember { mutableStateOf("") }
@@ -39,6 +51,20 @@ fun PerfilScreen(router: AppRouter) {
     var showCarneDigital by remember { mutableStateOf(false) }
     // Foto del carné: estado de sesión (no persiste), compartido con el avatar.
     var fotoPerfil by remember { mutableStateOf<Bitmap?>(null) }
+    // Método de pago: solo los últimos 4 dígitos, estado de sesión (no persiste).
+    var metodoPagoUltimos4 by remember { mutableStateOf<String?>(null) }
+    var showTarjetaForm by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    // Cupones guardados: SÍ persisten (DataStore). Reactivo via Flow de ids,
+    // resueltos contra el catálogo de NegociosService.
+    val cuponesGuardados by produceState<List<Negocio>>(initialValue = emptyList()) {
+        CuponesStore.observarIds().collect { ids ->
+            value = NegociosService.todos()
+                .filter { it.cupon != null && it.id in ids }
+                .sortedBy { it.nombre }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(AppBackground)) {
         Column(
@@ -109,9 +135,9 @@ fun PerfilScreen(router: AppRouter) {
                         WalletCard(
                             icon = Icons.Filled.CreditCard,
                             title = "Método Pago",
-                            subtitle = "Agregar tarjeta",
+                            subtitle = metodoPagoUltimos4?.let { "•••• $it" } ?: "Agregar tarjeta",
                             modifier = Modifier.weight(1f),
-                            onClick = {}
+                            onClick = { showTarjetaForm = true }
                         )
                         WalletCard(
                             icon = Icons.Filled.Badge,
@@ -158,6 +184,12 @@ fun PerfilScreen(router: AppRouter) {
                         Divider(modifier = Modifier.padding(start = 56.dp))
                         ToggleRow(Icons.Filled.CreditCard, Tertiary, "Modo económico", ecoOff) { ecoOff = it }
                         Divider(modifier = Modifier.padding(start = 56.dp))
+                        // Persistida: reactiva vía Flow; al tocar textos señables
+                        // en cualquier pantalla se muestra el clip de señas.
+                        ToggleRow(Icons.Filled.SignLanguage, AppPrimary, "Modo Señas", modoSenias) { activo ->
+                            scope.launch { SeniasPrefs.establecerActivo(activo) }
+                        }
+                        Divider(modifier = Modifier.padding(start = 56.dp))
                         ChevronRow(Icons.Filled.Person, AppPrimary, "Nombre: $nombre") {
                             newNameInput = nombre
                             showEditDialog = true
@@ -170,6 +202,14 @@ fun PerfilScreen(router: AppRouter) {
                     }
                 }
             }
+
+            //----Mis cupones (persistidos, reactivos)----
+            MisCuponesSection(
+                cupones = cuponesGuardados,
+                onExplorar = { router.navigate(AppScreen.MapaPrincipal) },
+                onQuitar = { negocio -> scope.launch { CuponesStore.alternarCupon(negocio) } },
+                modifier = Modifier.padding(horizontal = 20.dp).offset(y = (-16).dp)
+            )
             Spacer(Modifier.height(90.dp))
         }
 
@@ -198,6 +238,17 @@ fun PerfilScreen(router: AppRouter) {
                 }) { Text("Guardar") }
             },
             dismissButton = { TextButton(onClick = { showEditDialog = false }) { Text("Cancelar") } }
+        )
+    }
+
+    // Formulario de tarjeta (simulación: solo salen los últimos 4 dígitos).
+    if (showTarjetaForm) {
+        TarjetaFormSheet(
+            onGuardar = { ultimos4 ->
+                metodoPagoUltimos4 = ultimos4
+                showTarjetaForm = false
+            },
+            onCancelar = { showTarjetaForm = false }
         )
     }
 
@@ -279,3 +330,216 @@ private fun ChevronRow(icon: ImageVector, iconColor: Color, label: String, onCli
 
 private fun iniciales(name: String): String =
     name.split(" ").take(2).mapNotNull { it.firstOrNull()?.toString() }.joinToString("")
+
+//----Ícono por categoría de negocio----
+private fun iconoNegocio(cat: CategoriaNegocio): ImageVector = when (cat) {
+    CategoriaNegocio.POLLERIA    -> Icons.Filled.DinnerDining
+    CategoriaNegocio.MENU        -> Icons.Filled.Restaurant
+    CategoriaNegocio.CAFETERIA   -> Icons.Filled.LocalCafe
+    CategoriaNegocio.CHIFA       -> Icons.Filled.RamenDining
+    CategoriaNegocio.SALCHIPAPAS -> Icons.Filled.Fastfood
+    CategoriaNegocio.PANADERIA   -> Icons.Filled.BakeryDining
+    CategoriaNegocio.HELADERIA   -> Icons.Filled.Icecream
+    CategoriaNegocio.JUGUERIA    -> Icons.Filled.LocalDrink
+    CategoriaNegocio.PIZZA       -> Icons.Filled.LocalPizza
+    CategoriaNegocio.BURGER      -> Icons.Filled.LunchDining
+    CategoriaNegocio.CEVICHERIA  -> Icons.Filled.SetMeal
+    CategoriaNegocio.EMPANADAS   -> Icons.Filled.BakeryDining
+}
+
+// Vigencia del cupón: si tiene fecha ISO "yyyy-MM-dd" y ya pasó, está vencido.
+private fun cuponVigente(vence: String?): Boolean {
+    if (vence.isNullOrBlank()) return true
+    return try {
+        !java.time.LocalDate.parse(vence).isBefore(java.time.LocalDate.now())
+    } catch (e: Exception) {
+        true
+    }
+}
+
+// "2026-12-31" → "31 dic 2026"
+private fun fechaLegible(vence: String): String = try {
+    java.time.LocalDate.parse(vence)
+        .format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", java.util.Locale("es")))
+} catch (e: Exception) {
+    vence
+}
+
+//----Tarjeta de cupón guardado (PerfilCuponCard)----
+@Composable
+private fun PerfilCuponCard(negocio: Negocio, onQuitar: () -> Unit) {
+    val cupon = negocio.cupon ?: return
+    val vigente = cuponVigente(cupon.vence)
+    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+    var copiado by remember { mutableStateOf(false) }
+
+    // La confirmación "Código copiado" dura 2.5 s y luego se revierte sola.
+    LaunchedEffect(copiado) {
+        if (copiado) { kotlinx.coroutines.delay(2500); copiado = false }
+    }
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest),
+        modifier = Modifier.width(285.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            //----Encabezado: ícono de categoría + nombre + categoría + chevron----
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier.size(36.dp).clip(CircleShape).background(negocio.categoria.color.copy(alpha = 0.14f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(iconoNegocio(negocio.categoria), null, tint = negocio.categoria.color, modifier = Modifier.size(18.dp))
+                }
+                Spacer(Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(negocio.nombre, style = BodyMdMedium, color = OnSurface, maxLines = 1)
+                    Text(negocio.categoria.label, style = BodySm, color = OnSurfaceVariant)
+                }
+                Icon(Icons.Filled.ChevronRight, null, tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
+            }
+            Spacer(Modifier.height(10.dp))
+
+            //----Detalle del cupón----
+            Text(cupon.detalle.texto(), style = BodySm, color = OnSurface)
+            Spacer(Modifier.height(8.dp))
+
+            //----Estado + tipo demo----
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(
+                    modifier = Modifier.clip(RoundedCornerShape(6.dp))
+                        .background(if (vigente) SecondaryContainer else ErrorContainer)
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                ) {
+                    Text(
+                        if (vigente) "Guardado" else "Vencido",
+                        style = LabelCapsSm,
+                        color = if (vigente) OnSecondaryContainer else OnErrorContainer
+                    )
+                }
+                Text("Cupón demo", style = LabelCapsSm, color = OnSurfaceVariant)
+            }
+            if (!cupon.vence.isNullOrBlank()) {
+                Spacer(Modifier.height(4.dp))
+                Text("Vence: ${fechaLegible(cupon.vence)}", style = BodySm, color = OnSurfaceVariant)
+            }
+
+            Spacer(Modifier.height(10.dp))
+            Divider()
+            Spacer(Modifier.height(10.dp))
+
+            //----Código + copiar----
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    cupon.codigo,
+                    style = BodyMdMedium.copy(fontFamily = FontFamily.Monospace, letterSpacing = 2.sp),
+                    color = if (vigente) OnSurface else OnSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(
+                    onClick = {
+                        clipboard.setText(androidx.compose.ui.text.AnnotatedString(cupon.codigo))
+                        copiado = true
+                    },
+                    enabled = vigente
+                ) {
+                    Icon(
+                        if (copiado) Icons.Filled.Check else Icons.Filled.ContentCopy,
+                        "Copiar código",
+                        tint = when {
+                            copiado -> Tertiary
+                            vigente -> AppPrimary
+                            else -> OnSurfaceVariant.copy(alpha = 0.4f)
+                        },
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+            if (copiado) {
+                Text("Código copiado", style = BodyXs, color = Tertiary)
+            }
+            Spacer(Modifier.height(4.dp))
+
+            //----Fila inferior: ver promoción (pendiente) + quitar----
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // TODO(negocios-detalle): abrir NegocioDetailCard del negocio.
+                // Pendiente del sub-paso de burbujas en NavegacionScreen; por ahora sin acción.
+                Text("Ver promoción", style = BodySm, color = AppPrimary)
+                Spacer(Modifier.weight(1f))
+                IconButton(onClick = onQuitar) {
+                    Icon(Icons.Filled.BookmarkRemove, "Quitar cupón", tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
+                }
+            }
+        }
+    }
+}
+
+//----Sección "Mis cupones"----
+// Los cupones guardados sí persisten (DataStore); aquí solo se consumen.
+@Composable
+private fun MisCuponesSection(
+    cupones: List<Negocio>,
+    onExplorar: () -> Unit,
+    onQuitar: (Negocio) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.ConfirmationNumber, null, tint = AppPrimary, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Mis cupones", style = HeadlineSm, color = OnSurface)
+            Spacer(Modifier.width(8.dp))
+            // Badge con el total.
+            Box(
+                modifier = Modifier.clip(CircleShape).background(PrimaryContainer.copy(alpha = 0.35f)).padding(horizontal = 8.dp, vertical = 2.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("${cupones.size}", style = LabelCapsSm, color = AppPrimary)
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+        Text("Tus promociones guardadas en Tracking Demo.", style = BodySm, color = OnSurfaceVariant)
+        Spacer(Modifier.height(12.dp))
+
+        if (cupones.isEmpty()) {
+            //----Estado vacío----
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth().padding(24.dp)
+                ) {
+                    Icon(Icons.Filled.ConfirmationNumber, null, tint = OnSurfaceVariant, modifier = Modifier.size(40.dp))
+                    Spacer(Modifier.height(12.dp))
+                    Text("Tu próxima promo te espera", style = BodyMdMedium, color = OnSurface)
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "Abre un negocio en el mapa y toca Guardar en su cupón. Aparecerá aquí.",
+                        style = BodySm,
+                        color = OnSurfaceVariant,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Button(
+                        onClick = onExplorar,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)
+                    ) {
+                        Text("Explorar negocios", style = BodyMdMedium, color = Color.White)
+                    }
+                }
+            }
+        } else {
+            //----Scroll horizontal de tarjetas (Paso 2)----
+            androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(cupones.size) { i ->
+                    PerfilCuponCard(cupones[i], onQuitar = { onQuitar(cupones[i]) })
+                }
+            }
+        }
+    }
+}

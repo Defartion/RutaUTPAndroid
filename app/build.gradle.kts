@@ -61,6 +61,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.sh.reorderable)
     implementation(libs.zxing.core)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

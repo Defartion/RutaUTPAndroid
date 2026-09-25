@@ -12,7 +12,7 @@ import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,7 +28,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
+import com.example.rutautpnative.data.senias.SeniasOverlay
+import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.ui.theme.*
+import kotlinx.coroutines.launch
 
 @Composable
 fun BienvenidaScreen(router: AppRouter) {
@@ -152,9 +155,18 @@ fun BienvenidaScreen(router: AppRouter) {
                 }
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // CTA Button
+                // CTA Button (señable: con el Modo Señas activo, muestra la seña
+                // en vez de navegar — el chip/botón recupera su acción al apagarlo).
+                val modoSenias by SeniasPrefs.observarActivo().collectAsState(initial = false)
+                val scope = rememberCoroutineScope()
                 Button(
-                    onClick = { router.navigate(AppScreen.MapaPrincipal) },
+                    onClick = {
+                        if (modoSenias) {
+                            scope.launch { SeniasOverlay.mostrar("bienvenida.comenzar") }
+                        } else {
+                            router.navigate(AppScreen.MapaPrincipal)
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth().height(62.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)
