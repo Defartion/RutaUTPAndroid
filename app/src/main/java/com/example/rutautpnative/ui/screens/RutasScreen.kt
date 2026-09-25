@@ -4,6 +4,8 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -151,60 +153,65 @@ private fun ListaRutasScreen(
                 }
             }
 
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(bottom = 80.dp)
+            // LazyColumn: el catálogo tiene ~102 rutas; con Column+verticalScroll se
+            // renderizarían todas de golpe. El mapa y el buscador van como `item {}`
+            // para conservar el mismo scroll global y el mismo layout visual.
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(bottom = 80.dp)
             ) {
-                // Mapa overview
-                Box(modifier = Modifier.fillMaxWidth().height(280.dp)) {
-                    val utpLatLng = LatLng(-8.1116, -79.0287)
-                    val origenLatLng = LatLng(-8.1180, -79.0350)
-                    val cameraState = rememberCameraPositionState {
-                        position = CameraPosition.fromLatLngZoom(utpLatLng, 13f)
+                // Mapa overview + encabezado + búsqueda
+                item {
+                    Box(modifier = Modifier.fillMaxWidth().height(280.dp)) {
+                        val utpLatLng = LatLng(-8.1116, -79.0287)
+                        val origenLatLng = LatLng(-8.1180, -79.0350)
+                        val cameraState = rememberCameraPositionState {
+                            position = CameraPosition.fromLatLngZoom(utpLatLng, 13f)
+                        }
+                        GoogleMap(
+                            modifier = Modifier.fillMaxSize(),
+                            cameraPositionState = cameraState,
+                            uiSettings = MapUiSettings(
+                                zoomControlsEnabled = false,
+                                scrollGesturesEnabled = false,
+                                zoomGesturesEnabled = false
+                            )
+                        ) {
+                            Polyline(points = listOf(origenLatLng, utpLatLng), color = AppPrimary, width = 8f)
+                            Marker(state = MarkerState(position = utpLatLng), title = "UTP Trujillo")
+                            Marker(state = MarkerState(position = origenLatLng), title = "Mi ubicación")
+                        }
                     }
-                    GoogleMap(
-                        modifier = Modifier.fillMaxSize(),
-                        cameraPositionState = cameraState,
-                        uiSettings = MapUiSettings(
-                            zoomControlsEnabled = false,
-                            scrollGesturesEnabled = false,
-                            zoomGesturesEnabled = false
+                    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                        Spacer(Modifier.height(20.dp))
+                        Signable(clave = "rutas.elegir") {
+                            Text("Elige tu ruta", style = HeadlineSm, color = OnSurface)
+                        }
+                        Text("Toca una ruta para ver el detalle", style = BodySm, color = OnSurfaceVariant)
+                        Spacer(Modifier.height(12.dp))
+                        // Campo de búsqueda
+                        OutlinedTextField(
+                            value = textoBusqueda,
+                            onValueChange = onSearchChange,
+                            placeholder = { Text("Buscar línea, empresa o avenida", style = BodyMd, color = OnSurfaceVariant) },
+                            leadingIcon = { Icon(Icons.Filled.Search, null, tint = OnSurfaceVariant) },
+                            trailingIcon = {
+                                if (textoBusqueda.isNotEmpty()) {
+                                    IconButton(onClick = onClearSearch) {
+                                        Icon(Icons.Filled.Close, null, tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
+                                    }
+                                }
+                            },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
                         )
-                    ) {
-                        Polyline(points = listOf(origenLatLng, utpLatLng), color = AppPrimary, width = 8f)
-                        Marker(state = MarkerState(position = utpLatLng), title = "UTP Trujillo")
-                        Marker(state = MarkerState(position = origenLatLng), title = "Mi ubicación")
+                        Spacer(Modifier.height(16.dp))
                     }
                 }
-                // Lista
-                Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    Spacer(Modifier.height(20.dp))
-                    Signable(clave = "rutas.elegir") {
-                        Text("Elige tu ruta", style = HeadlineSm, color = OnSurface)
-                    }
-                    Text("Toca una ruta para ver el detalle", style = BodySm, color = OnSurfaceVariant)
-                    Spacer(Modifier.height(12.dp))
-                    // Campo de búsqueda
-                    OutlinedTextField(
-                        value = textoBusqueda,
-                        onValueChange = onSearchChange,
-                        placeholder = { Text("Buscar línea, empresa o avenida", style = BodyMd, color = OnSurfaceVariant) },
-                        leadingIcon = { Icon(Icons.Filled.Search, null, tint = OnSurfaceVariant) },
-                        trailingIcon = {
-                            if (textoBusqueda.isNotEmpty()) {
-                                IconButton(onClick = onClearSearch) {
-                                    Icon(Icons.Filled.Close, null, tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
-                                }
-                            }
-                        },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    if (rutas.isEmpty() && textoBusqueda.isNotBlank()) {
+
+                if (rutas.isEmpty() && textoBusqueda.isNotBlank()) {
+                    item {
                         Box(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
                             contentAlignment = Alignment.Center
@@ -216,8 +223,10 @@ private fun ListaRutasScreen(
                                 textAlign = TextAlign.Center
                             )
                         }
-                    } else {
-                        rutas.forEach { ruta ->
+                    }
+                } else {
+                    items(rutas, key = { it.id }) { ruta ->
+                        Column(modifier = Modifier.padding(horizontal = 20.dp)) {
                             RutaOpcionCard(ruta = ruta, onClick = { onSelectRuta(ruta) })
                             Spacer(Modifier.height(12.dp))
                         }
