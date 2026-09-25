@@ -39,6 +39,9 @@ data class DestinoChip(
 )
 
 // Modelo de vista
+// NOTA (convención del proyecto): este ViewModel usa mutableStateOf de Compose
+// (fue de los primeros escritos). Los ViewModels nuevos usan StateFlow puro
+// (ver GuardadoViewModel/SeguridadViewModel). Migrar solo si hay refactor mayor.
 class MapaViewModel : ViewModel() {
 
     var cameraPositionState = CameraPositionState(

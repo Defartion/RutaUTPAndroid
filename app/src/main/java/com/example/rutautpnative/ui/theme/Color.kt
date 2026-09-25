@@ -11,7 +11,7 @@ val PrimaryFixed          = Color(0xFFffdadb)
 val PrimaryFixedDim       = Color(0xFFffb2b7)
 val InversePrimary        = Color(0xFFffb2b7)
 
-//----Colores Secundarios
+//----Colores Secundarios----
 val Secondary             = Color(0xFF3c5d9c)
 val SecondaryContainer    = Color(0xFF99b8fe)
 val OnSecondary           = Color.White

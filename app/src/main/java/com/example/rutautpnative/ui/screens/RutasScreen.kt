@@ -41,7 +41,7 @@ import kotlin.math.roundToInt
 // mientras no haya un motor de rutas peatonales real integrado.
 private const val VELOCIDAD_CAMINATA_KMH = 5.0
 
-// ── Main Screen ───────────────────────────────────────────────────────────────
+//----Main Screen----
 @Composable
 fun RutasScreen(router: AppRouter, viewModel: RutasViewModel = viewModel()) {
     val rutas by viewModel.rutas.collectAsState()
@@ -104,7 +104,7 @@ fun RutasScreen(router: AppRouter, viewModel: RutasViewModel = viewModel()) {
     }
 }
 
-// ── Lista de rutas ────────────────────────────────────────────────────────────
+//----Lista de rutas----
 @Composable
 private fun ListaRutasScreen(
     router: AppRouter,
@@ -231,7 +231,7 @@ private fun ListaRutasScreen(
     }
 }
 
-// ── Card de ruta ──────────────────────────────────────────────────────────────
+//----Card de ruta----
 @Composable
 private fun RutaOpcionCard(ruta: RutaGTFS, onClick: () -> Unit) {
     Card(
@@ -267,7 +267,7 @@ private fun RutaOpcionCard(ruta: RutaGTFS, onClick: () -> Unit) {
     }
 }
 
-// ── Detalle de ruta ───────────────────────────────────────────────────────────
+//----Detalle de ruta----
 @Composable
 private fun DetalleRutaScreen(
     ruta: RutaGTFS,
@@ -478,7 +478,7 @@ private fun DetalleRutaScreen(
     }
 }
 
-// ── Componentes compartidos ───────────────────────────────────────────────────
+//----Componentes compartidos----
 @Composable
 private fun StatTile(label: String, value: String, icon: ImageVector, iconColor: Color, modifier: Modifier = Modifier) {
     Card(

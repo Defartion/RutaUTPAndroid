@@ -35,7 +35,7 @@ import com.example.rutautpnative.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-// ── Instrucciones de navegación ───────────────────────────────────────────────
+//----Instrucciones de navegación----
 data class NavInstruccion(
     val id: Int,
     val texto: String,
@@ -75,7 +75,7 @@ private fun puntoEnRuta(progreso: Float): LatLng {
     )
 }
 
-// ── Main Screen ───────────────────────────────────────────────────────────────
+//----Main Screen----
 @Composable
 fun NavegacionScreen(
     rutaNombre: String,
@@ -250,7 +250,7 @@ fun NavegacionScreen(
 // Ícono por categoría y vigencia de cupón: viven compartidas en
 // ui/components/IconosCategorias.kt y FormatoCupones.kt (están importadas).
 
-// ── Burbuja de negocio (NegocioBubbleMarker) ──────────────────────────────────
+//----Burbuja de negocio (NegocioBubbleMarker)----
 @Composable
 private fun NegocioBubbleMarker(negocio: Negocio, seleccionado: Boolean) {
     val color = negocio.categoria.color
@@ -321,7 +321,7 @@ private fun NegocioBubbleMarker(negocio: Negocio, seleccionado: Boolean) {
     }
 }
 
-// ── Tarjeta de detalle de negocio (NegocioDetailCard) ─────────────────────────
+//----Tarjeta de detalle de negocio (NegocioDetailCard)----
 @Composable
 private fun NegocioDetailCard(
     negocio: Negocio,
@@ -493,7 +493,7 @@ private fun NegocioDetailCard(
     }
 }
 
-// ── Top Bar ───────────────────────────────────────────────────────────────────
+//----Top Bar----
 @Composable
 private fun TopBar(rutaNombre: String, onFinish: () -> Unit) {
     Row(
@@ -535,7 +535,7 @@ private fun TopBar(rutaNombre: String, onFinish: () -> Unit) {
     }
 }
 
-// ── Bottom Panel ──────────────────────────────────────────────────────────────
+//----Bottom Panel----
 @Composable
 private fun BottomPanel(
     instruccion: NavInstruccion,

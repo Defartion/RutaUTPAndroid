@@ -3,27 +3,7 @@ package com.example.rutautpnative.model
 import androidx.compose.ui.graphics.Color
 import com.example.rutautpnative.ui.theme.*
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import java.util.UUID
-
-// ----Tipo de Vehiculo----
-enum class TipoVehiculo(val label: String) {
-    MICRO("Micro"),
-    COMBI("Combi"),
-    BUS("Bus")
-}
-
-//----Ruta----
-data class Ruta(
-    val id: String,
-    val linea: String,
-    val nombre: String,
-    val empresa: String,
-    val tipo: TipoVehiculo,
-    val placa: String,
-    val minutosLlegada: Int,
-    val colorIdentificador: Color
-)
 
 //----Lugar----
 @Serializable
@@ -46,8 +26,7 @@ data class LugarGuardado(
     val categoria: CategoriaLugar,
     val esFrecuente: Boolean = false,
     val lat: Double? = null,
-    val lon: Double? = null,
-    @Transient val colorBadge: Color = AppPrimary
+    val lon: Double? = null
 ) {
     // Lugares fijos (UTP) no se pueden eliminar desde la UI.
     val esFijo: Boolean get() = nombre.equals("UTP", ignoreCase = true)
@@ -84,7 +63,7 @@ enum class TipoReporte(val label: String) {
     }
 }
 
-//-----Reporte de la comunidad----
+//----Reporte de la comunidad----
 data class ReporteComunidad(
     val id: UUID = UUID.randomUUID(),
     val iniciales: String,

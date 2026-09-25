@@ -1,7 +1,7 @@
 package com.example.rutautpnative.ui.theme
 import androidx.compose.ui.unit.dp
 
-// ----Espaciado----
+//----Espaciado----
 object AppSpacing {
     val unit             = 4.dp
     val stackGap         = 12.dp
@@ -10,7 +10,7 @@ object AppSpacing {
     val touchTargetMin   = 48.dp
 }
 
-// ----Radios----
+//----Radios----
 object AppRadius {
     val small      = 4.dp
     val medium     = 8.dp

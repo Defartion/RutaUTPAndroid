@@ -174,7 +174,7 @@ fun CarnetScannerScreen(
     }
 }
 
-// ── Camera Preview ────────────────────────────────────────────────────────────
+//----Camera Preview----
 @Composable
 private fun CameraPreview(modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -206,7 +206,7 @@ private fun CameraPreview(modifier: Modifier = Modifier) {
     )
 }
 
-// ── Scanner overlay with cutout ───────────────────────────────────────────────
+//----Scanner overlay with cutout----
 @Composable
 private fun ScannerOverlay() {
     val primaryColor = AppPrimary
@@ -256,7 +256,7 @@ private fun ScannerOverlay() {
     }
 }
 
-// ── Capture button ────────────────────────────────────────────────────────────
+//----Capture button----
 @Composable
 private fun CaptureButton(enabled: Boolean, onClick: () -> Unit) {
     Box(contentAlignment = Alignment.Center) {
@@ -286,7 +286,7 @@ private fun CaptureButton(enabled: Boolean, onClick: () -> Unit) {
     }
 }
 
-// ── Permission denied view ────────────────────────────────────────────────────
+//----Permission denied view----
 @Composable
 private fun PermissionDeniedView(onDismiss: () -> Unit) {
     val context = LocalContext.current
