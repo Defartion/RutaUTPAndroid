@@ -18,6 +18,9 @@ import java.net.URLEncoder
 // Busca un lugar por texto cerca del campus UTP y devuelve el primer resultado
 // con su nombre real y coordenada. Sin librerías nuevas: HTTP directo, igual
 // que DirectionsService.
+// TODO(places-precision): el Text Search legacy solo SESGA por ubicación (no filtra);
+// caso conocido: "Real Plaza, Trujillo" devolvió "Mall Aventura" por cercanía/tipo.
+// Evaluar migrar a Places API (New) con locationRestriction si se quiere precisión exacta.
 object PlacesService {
 
     sealed class Resultado {

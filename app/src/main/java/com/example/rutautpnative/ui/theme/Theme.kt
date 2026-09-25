@@ -1,5 +1,7 @@
 package com.example.rutautpnative.ui.theme
 
+// TODO(tema-oscuro): el tema oscuro no está implementado; hoy la app es solo clara.
+
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme

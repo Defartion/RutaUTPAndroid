@@ -29,6 +29,8 @@ import com.example.rutautpnative.ui.components.BottomNavBar
 import com.example.rutautpnative.ui.components.iconoParaCategoria
 import com.example.rutautpnative.ui.theme.*
 
+// TODO(ver-en-mapa): el mecanismo ya existe (router.destinoPendiente consume el Mapa);
+// falta conectar el "ver en el mapa" de un lugar guardado desde esta pantalla.
 // Pantalla
 @Composable
 fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()) {

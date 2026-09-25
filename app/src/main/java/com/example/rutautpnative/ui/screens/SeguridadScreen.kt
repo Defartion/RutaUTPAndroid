@@ -518,6 +518,8 @@ private fun ElegirLugaresSheet(
     }
 }
 
+// TODO(banner-rutas-seguras): en iOS este bloque es una ilustración de mini-mapa
+// nocturno con focos pulsantes; hoy es un degradado simple a propósito.
 @Composable
 private fun RutasSegurasSection(numParaderos: Int, onOpenParaderos: () -> Unit) {
     Column {
