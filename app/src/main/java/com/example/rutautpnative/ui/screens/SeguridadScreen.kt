@@ -54,8 +54,8 @@ import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.navigation.DestinoPendiente
 import com.example.rutautpnative.ui.components.BottomNavBar
+import com.example.rutautpnative.ui.components.iconoParaCategoria
 import com.example.rutautpnative.ui.theme.*
-import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import java.util.Calendar
@@ -71,7 +71,6 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
     var mostrarParaderos by remember { mutableStateOf(false) }
     var showPublicarComunidad by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
     // Eventos de búsqueda de zonas de referencia (una sola vez cada uno).
     LaunchedEffect(Unit) {
@@ -214,17 +213,6 @@ private fun GreetingCard() {
             }
         }
     }
-}
-
-// Ícono por categoría, mismo mapeo que en Guardado.
-private fun iconoParaCategoria(cat: CategoriaLugar): ImageVector = when (cat) {
-    CategoriaLugar.UNIVERSIDAD -> Icons.Filled.School
-    CategoriaLugar.HOGAR       -> Icons.Filled.Home
-    CategoriaLugar.TIENDA      -> Icons.Filled.Storefront
-    CategoriaLugar.RESTAURANTE -> Icons.Filled.Restaurant
-    CategoriaLugar.PLAZA       -> Icons.Filled.AccountBalance
-    CategoriaLugar.PLAYA       -> Icons.Filled.Water
-    CategoriaLugar.OTRO        -> Icons.Filled.LocationOn
 }
 
 @Composable

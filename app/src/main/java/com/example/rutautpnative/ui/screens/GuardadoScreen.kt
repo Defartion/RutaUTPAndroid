@@ -26,17 +26,8 @@ import com.example.rutautpnative.model.LugarGuardado
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.ui.components.BottomNavBar
+import com.example.rutautpnative.ui.components.iconoParaCategoria
 import com.example.rutautpnative.ui.theme.*
-
-private fun iconoParaCategoria(cat: CategoriaLugar): ImageVector = when (cat) {
-    CategoriaLugar.UNIVERSIDAD -> Icons.Filled.School
-    CategoriaLugar.HOGAR       -> Icons.Filled.Home
-    CategoriaLugar.TIENDA      -> Icons.Filled.Storefront
-    CategoriaLugar.RESTAURANTE -> Icons.Filled.Restaurant
-    CategoriaLugar.PLAZA       -> Icons.Filled.AccountBalance
-    CategoriaLugar.PLAYA       -> Icons.Filled.Water
-    CategoriaLugar.OTRO        -> Icons.Filled.LocationOn
-}
 
 // Pantalla
 @Composable

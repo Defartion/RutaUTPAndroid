@@ -21,7 +21,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.example.rutautpnative.navigation.AppRouter
-import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.ui.theme.*
 
 // Lo del lado

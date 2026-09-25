@@ -28,6 +28,9 @@ import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.negocios.CuponesStore
 import com.example.rutautpnative.data.negocios.NegociosService
 import com.example.rutautpnative.model.Negocio
+import com.example.rutautpnative.ui.components.cuponVigente
+import com.example.rutautpnative.ui.components.formatoVenceCupon
+import com.example.rutautpnative.ui.components.iconoParaCategoria
 import com.example.rutautpnative.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -244,31 +247,8 @@ fun NavegacionScreen(
     }
 }
 
-// ── Ícono por categoría / vigencia de cupón ───────────────────────────────────
-private fun iconoCategoria(cat: com.example.rutautpnative.model.CategoriaNegocio): ImageVector =
-    when (cat) {
-        com.example.rutautpnative.model.CategoriaNegocio.POLLERIA    -> Icons.Filled.DinnerDining
-        com.example.rutautpnative.model.CategoriaNegocio.MENU        -> Icons.Filled.Restaurant
-        com.example.rutautpnative.model.CategoriaNegocio.CAFETERIA   -> Icons.Filled.LocalCafe
-        com.example.rutautpnative.model.CategoriaNegocio.CHIFA       -> Icons.Filled.RamenDining
-        com.example.rutautpnative.model.CategoriaNegocio.SALCHIPAPAS -> Icons.Filled.Fastfood
-        com.example.rutautpnative.model.CategoriaNegocio.PANADERIA   -> Icons.Filled.BakeryDining
-        com.example.rutautpnative.model.CategoriaNegocio.HELADERIA   -> Icons.Filled.Icecream
-        com.example.rutautpnative.model.CategoriaNegocio.JUGUERIA    -> Icons.Filled.LocalDrink
-        com.example.rutautpnative.model.CategoriaNegocio.PIZZA       -> Icons.Filled.LocalPizza
-        com.example.rutautpnative.model.CategoriaNegocio.BURGER      -> Icons.Filled.LunchDining
-        com.example.rutautpnative.model.CategoriaNegocio.CEVICHERIA  -> Icons.Filled.SetMeal
-        com.example.rutautpnative.model.CategoriaNegocio.EMPANADAS   -> Icons.Filled.BakeryDining
-    }
-
-private fun cuponVigente(vence: String?): Boolean {
-    if (vence.isNullOrBlank()) return true
-    return try {
-        !java.time.LocalDate.parse(vence).isBefore(java.time.LocalDate.now())
-    } catch (e: Exception) {
-        true
-    }
-}
+// Ícono por categoría y vigencia de cupón: viven compartidas en
+// ui/components/IconosCategorias.kt y FormatoCupones.kt (están importadas).
 
 // ── Burbuja de negocio (NegocioBubbleMarker) ──────────────────────────────────
 @Composable
@@ -309,7 +289,7 @@ private fun NegocioBubbleMarker(negocio: Negocio, seleccionado: Boolean) {
                     .border(3.dp, Color.White, RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(iconoCategoria(negocio.categoria), null, tint = Color.White, modifier = Modifier.size(22.dp))
+                Icon(iconoParaCategoria(negocio.categoria), null, tint = Color.White, modifier = Modifier.size(22.dp))
             }
             // Insignia de ticket si tiene cupón vigente
             val cupon = negocio.cupon
@@ -385,7 +365,7 @@ private fun NegocioDetailCard(
                         .background(negocio.categoria.color),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(iconoCategoria(negocio.categoria), null, tint = Color.White, modifier = Modifier.size(22.dp))
+                    Icon(iconoParaCategoria(negocio.categoria), null, tint = Color.White, modifier = Modifier.size(22.dp))
                 }
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
@@ -442,12 +422,7 @@ private fun NegocioDetailCard(
                 if (!cupon.vence.isNullOrBlank()) {
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "Vence: " + try {
-                            java.time.LocalDate.parse(cupon.vence)
-                                .format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", java.util.Locale("es")))
-                        } catch (e: Exception) {
-                            cupon.vence
-                        },
+                        "Vence: " + formatoVenceCupon(cupon.vence),
                         style = BodySm,
                         color = OnSurfaceVariant
                     )

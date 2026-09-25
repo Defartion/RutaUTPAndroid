@@ -1,11 +1,6 @@
 package com.example.rutautpnative.ui.screens
 
-import android.Manifest
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,7 +12,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Badge
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
@@ -28,7 +22,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -37,16 +30,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.rutautpnative.ui.components.CodigoBarras
+import com.example.rutautpnative.ui.components.rememberSelectorFoto
 import com.example.rutautpnative.ui.theme.*
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
 
 //----Carné Digital (port de CarneDigitalView)----
 // Foto y nombre: estado de sesión (no se persiste), igual que el resto de Perfil.
 private const val CODIGO_UTP = "1234567" // dato de ejemplo, igual que en iOS
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun CarneDigitalScreen(
     nombre: String,
@@ -54,29 +44,8 @@ fun CarneDigitalScreen(
     onFotoChange: (Bitmap?) -> Unit,
     onCerrar: () -> Unit
 ) {
-    val context = LocalContext.current
-    var showSelectorFoto by remember { mutableStateOf(false) }
-    var pendienteCamara by remember { mutableStateOf(false) }
-
-    // Mismo patrón de selector cámara/galería de PublicarComunidadSheet:
-    // galería = Photo Picker (sin permiso), cámara = TakePicturePreview + CAMERA.
-    val galeriaLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia()
-    ) { uri ->
-        if (uri != null) {
-            onFotoChange(context.contentResolver.openInputStream(uri)?.use(BitmapFactory::decodeStream))
-        }
-    }
-    val camaraLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.TakePicturePreview()
-    ) { bitmap -> if (bitmap != null) onFotoChange(bitmap) }
-    val permisoCamara = rememberPermissionState(Manifest.permission.CAMERA)
-    LaunchedEffect(permisoCamara.status.isGranted) {
-        if (permisoCamara.status.isGranted && pendienteCamara) {
-            pendienteCamara = false
-            camaraLauncher.launch(null)
-        }
-    }
+    // Selector cámara/galería compartido (ui/components/SelectorFoto.kt).
+    val abrirSelectorFoto = rememberSelectorFoto(titulo = "Foto del carné") { onFotoChange(it) }
 
     Dialog(
         onDismissRequest = onCerrar,
@@ -146,7 +115,7 @@ fun CarneDigitalScreen(
                                     .size(26.dp)
                                     .clip(CircleShape)
                                     .background(Color.White)
-                                    .clickable { showSelectorFoto = true },
+                                    .clickable { abrirSelectorFoto() },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Box(
@@ -263,35 +232,8 @@ fun CarneDigitalScreen(
         }
     }
 
-    //----Selector de foto: cámara o galería----
-    if (showSelectorFoto) {
-        AlertDialog(
-            onDismissRequest = { showSelectorFoto = false },
-            title = { Text("Foto del carné") },
-            text = {
-                Column {
-                    OpcionFoto(Icons.Filled.AddAPhoto, "Tomar foto") {
-                        showSelectorFoto = false
-                        if (permisoCamara.status.isGranted) {
-                            camaraLauncher.launch(null)
-                        } else {
-                            pendienteCamara = true
-                            permisoCamara.launchPermissionRequest()
-                        }
-                    }
-                    Spacer(Modifier.height(4.dp))
-                    OpcionFoto(Icons.Filled.PhotoLibrary, "Elegir de galería") {
-                        showSelectorFoto = false
-                        galeriaLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                        )
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {}
-        )
-    }
+    // (El diálogo de selector de foto lo incluye rememberSelectorFoto,
+    //  compartido en ui/components/SelectorFoto.kt)
 }
 
 private fun inicialesDe(nombre: String): String =

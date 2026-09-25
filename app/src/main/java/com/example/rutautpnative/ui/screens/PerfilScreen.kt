@@ -32,6 +32,9 @@ import com.example.rutautpnative.model.Negocio
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.ui.components.BottomNavBar
+import com.example.rutautpnative.ui.components.cuponVigente
+import com.example.rutautpnative.ui.components.formatoVenceCupon
+import com.example.rutautpnative.ui.components.iconoParaCategoria
 import com.example.rutautpnative.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -331,40 +334,6 @@ private fun ChevronRow(icon: ImageVector, iconColor: Color, label: String, onCli
 private fun iniciales(name: String): String =
     name.split(" ").take(2).mapNotNull { it.firstOrNull()?.toString() }.joinToString("")
 
-//----Ícono por categoría de negocio----
-private fun iconoNegocio(cat: CategoriaNegocio): ImageVector = when (cat) {
-    CategoriaNegocio.POLLERIA    -> Icons.Filled.DinnerDining
-    CategoriaNegocio.MENU        -> Icons.Filled.Restaurant
-    CategoriaNegocio.CAFETERIA   -> Icons.Filled.LocalCafe
-    CategoriaNegocio.CHIFA       -> Icons.Filled.RamenDining
-    CategoriaNegocio.SALCHIPAPAS -> Icons.Filled.Fastfood
-    CategoriaNegocio.PANADERIA   -> Icons.Filled.BakeryDining
-    CategoriaNegocio.HELADERIA   -> Icons.Filled.Icecream
-    CategoriaNegocio.JUGUERIA    -> Icons.Filled.LocalDrink
-    CategoriaNegocio.PIZZA       -> Icons.Filled.LocalPizza
-    CategoriaNegocio.BURGER      -> Icons.Filled.LunchDining
-    CategoriaNegocio.CEVICHERIA  -> Icons.Filled.SetMeal
-    CategoriaNegocio.EMPANADAS   -> Icons.Filled.BakeryDining
-}
-
-// Vigencia del cupón: si tiene fecha ISO "yyyy-MM-dd" y ya pasó, está vencido.
-private fun cuponVigente(vence: String?): Boolean {
-    if (vence.isNullOrBlank()) return true
-    return try {
-        !java.time.LocalDate.parse(vence).isBefore(java.time.LocalDate.now())
-    } catch (e: Exception) {
-        true
-    }
-}
-
-// "2026-12-31" → "31 dic 2026"
-private fun fechaLegible(vence: String): String = try {
-    java.time.LocalDate.parse(vence)
-        .format(java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", java.util.Locale("es")))
-} catch (e: Exception) {
-    vence
-}
-
 //----Tarjeta de cupón guardado (PerfilCuponCard)----
 @Composable
 private fun PerfilCuponCard(negocio: Negocio, onQuitar: () -> Unit) {
@@ -390,7 +359,7 @@ private fun PerfilCuponCard(negocio: Negocio, onQuitar: () -> Unit) {
                     modifier = Modifier.size(36.dp).clip(CircleShape).background(negocio.categoria.color.copy(alpha = 0.14f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(iconoNegocio(negocio.categoria), null, tint = negocio.categoria.color, modifier = Modifier.size(18.dp))
+                    Icon(iconoParaCategoria(negocio.categoria), null, tint = negocio.categoria.color, modifier = Modifier.size(18.dp))
                 }
                 Spacer(Modifier.width(10.dp))
                 Column(modifier = Modifier.weight(1f)) {
@@ -422,7 +391,7 @@ private fun PerfilCuponCard(negocio: Negocio, onQuitar: () -> Unit) {
             }
             if (!cupon.vence.isNullOrBlank()) {
                 Spacer(Modifier.height(4.dp))
-                Text("Vence: ${fechaLegible(cupon.vence)}", style = BodySm, color = OnSurfaceVariant)
+                Text("Vence: ${formatoVenceCupon(cupon.vence)}", style = BodySm, color = OnSurfaceVariant)
             }
 
             Spacer(Modifier.height(10.dp))

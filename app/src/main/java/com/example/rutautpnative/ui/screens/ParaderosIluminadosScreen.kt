@@ -28,6 +28,7 @@ import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.ParaderoGTFS
 import com.example.rutautpnative.data.gtfs.ParaderosIluminados
 import com.example.rutautpnative.data.gtfs.RutaGTFS
+import com.example.rutautpnative.data.ubicacion.UbicacionUnaVez
 import com.example.rutautpnative.model.CategoriaLugar
 import com.example.rutautpnative.model.LugarGuardado
 import com.example.rutautpnative.ui.screens.mapa.MarcadorUTP
@@ -35,18 +36,14 @@ import com.example.rutautpnative.ui.theme.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.Dash
 import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
-import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.maps.android.compose.*
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -119,32 +116,14 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
     }
 
     fun localizar() {
-        val fused = LocationServices.getFusedLocationProviderClient(context)
-        val cancelacion = CancellationTokenSource()
-        val timeoutJob = scope.launch {
-            delay(12_000)
-            locationMessage = "No recibimos señal GPS. Inténtalo de nuevo."
-            locating = false
-            cancelacion.cancel()
-        }
-        fused.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cancelacion.token)
-            .addOnSuccessListener { location ->
-                timeoutJob.cancel()
-                if (location != null) {
-                    ubicacionUsuario = LatLng(location.latitude, location.longitude)
-                } else {
-                    locationMessage = "No recibimos señal GPS. Inténtalo de nuevo."
-                }
-                locating = false
-            }
-            .addOnFailureListener {
-                timeoutJob.cancel()
+        UbicacionUnaVez.solicitar(context, scope, timeoutMs = 12_000) { punto ->
+            if (punto != null) {
+                ubicacionUsuario = punto
+            } else {
                 locationMessage = "No recibimos señal GPS. Inténtalo de nuevo."
-                locating = false
             }
-            .addOnCanceledListener {
-                locating = false
-            }
+            locating = false
+        }
     }
 
     fun alternarGuardado(paradero: ParaderoGTFS) {

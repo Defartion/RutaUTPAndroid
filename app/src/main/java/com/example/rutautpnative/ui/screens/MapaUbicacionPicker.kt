@@ -22,19 +22,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.rutautpnative.data.gtfs.GTFSRepository
+import com.example.rutautpnative.data.ubicacion.UbicacionUnaVez
 import com.example.rutautpnative.ui.theme.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.rememberCameraPositionState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 //----Selector de ubicación a pantalla completa (pin fijo al centro)----
@@ -77,19 +74,9 @@ fun MapaUbicacionPicker(
     }
 
     fun miUbicacion() {
-        val fused = LocationServices.getFusedLocationProviderClient(context)
-        val cancelacion = CancellationTokenSource()
-        val timeout = scope.launch {
-            delay(10_000)
-            cancelacion.cancel()
+        UbicacionUnaVez.solicitar(context, scope) { punto ->
+            punto?.let { centrarEn(it) }
         }
-        fused.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cancelacion.token)
-            .addOnSuccessListener { location ->
-                timeout.cancel()
-                location?.let { centrarEn(LatLng(it.latitude, it.longitude)) }
-            }
-            .addOnFailureListener { timeout.cancel() }
-            .addOnCanceledListener { }
     }
 
     // Tras conceder permiso desde el botón, se ejecuta la búsqueda pendiente.
