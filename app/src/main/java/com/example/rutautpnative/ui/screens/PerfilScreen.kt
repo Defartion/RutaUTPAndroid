@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.rutautpnative.data.negocios.CuponesStore
 import com.example.rutautpnative.data.negocios.NegociosService
+import com.example.rutautpnative.data.TemaStore
 import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.model.CategoriaNegocio
 import com.example.rutautpnative.model.Negocio
@@ -47,6 +48,9 @@ fun PerfilScreen(router: AppRouter) {
     // Modo Señas: ESTA preferencia SÍ persiste en disco (DataStore), a diferencia
     // de las demás de arriba, porque la leen todas las pantallas de la app.
     val modoSenias by SeniasPrefs.observarActivo().collectAsState(initial = false)
+    // Tema oscuro: igualmente persistida (interruptor manual global, no sigue
+    // al sistema). Se aplica en MainActivity → la app entera reacciona al instante.
+    val modoOscuro by TemaStore.observarOscuro().collectAsState(initial = false)
     var carnetVerificado by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var newNameInput by remember { mutableStateOf("") }
@@ -191,6 +195,10 @@ fun PerfilScreen(router: AppRouter) {
                         // en cualquier pantalla se muestra el clip de señas.
                         ToggleRow(Icons.Filled.SignLanguage, AppPrimary, "Modo Señas", modoSenias) { activo ->
                             scope.launch { SeniasPrefs.establecerActivo(activo) }
+                        }
+                        Divider(modifier = Modifier.padding(start = 56.dp))
+                        ToggleRow(Icons.Filled.DarkMode, AppPrimary, "Tema oscuro", modoOscuro) { activo ->
+                            scope.launch { TemaStore.establecerOscuro(activo) }
                         }
                         Divider(modifier = Modifier.padding(start = 56.dp))
                         ChevronRow(Icons.Filled.Person, AppPrimary, "Nombre: $nombre") {
