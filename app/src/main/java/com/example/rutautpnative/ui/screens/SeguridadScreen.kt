@@ -55,6 +55,7 @@ import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.navigation.DestinoPendiente
 import com.example.rutautpnative.ui.components.BottomNavBar
 import com.example.rutautpnative.ui.components.iconoParaCategoria
+import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -81,9 +82,9 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
                     router.navigate(AppScreen.MapaPrincipal)
                 }
                 ZonaEvento.SinResultados ->
-                    snackbarHostState.showSnackbar("No encontramos esta ubicación.")
+                    snackbarHostState.showSnackbar(L.t("No encontramos esta ubicación.", "We couldn't find this location."))
                 ZonaEvento.Fallo ->
-                    snackbarHostState.showSnackbar("No pudimos buscar el lugar. Revisa tu conexión.")
+                    snackbarHostState.showSnackbar(L.t("No pudimos buscar el lugar. Revisa tu conexión.", "We couldn't search for the place. Check your connection."))
             }
         }
     }
@@ -104,13 +105,13 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
                     Icon(Icons.Filled.Lock, null, tint = AppPrimary, modifier = Modifier.size(24.dp))
                 }
                 Spacer(Modifier.width(12.dp))
-                Text("Seguridad", style = HeadlineLg, color = AppPrimary, modifier = Modifier.weight(1f))
+                Text(L.t("Seguridad", "Safety"), style = HeadlineLg, color = AppPrimary, modifier = Modifier.weight(1f))
                 Box(
                     modifier = Modifier.clip(CircleShape).background(AppPrimary).clickable { showReportarSheet = true }.padding(horizontal = 14.dp, vertical = 8.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Icon(Icons.Filled.Warning, null, tint = Color.White, modifier = Modifier.size(12.dp))
-                        Text("Reportar", style = LabelCapsMd, color = Color.White)
+                        Text(L.t("Reportar", "Report"), style = LabelCapsMd, color = Color.White)
                     }
                 }
             }
@@ -123,13 +124,13 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
             ) {
                 Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Alertas hoy: 2", style = BodySmMedium, color = OnSurface)
-                        Text("Paraderos iluminados: $numParaderos", style = BodySmMedium, color = OnSurface)
+                        Text(L.t("Alertas hoy: 2", "Alerts today: 2"), style = BodySmMedium, color = OnSurface)
+                        Text(L.t("Paraderos iluminados: $numParaderos", "Well-lit stops: $numParaderos"), style = BodySmMedium, color = OnSurface)
                     }
                     Box(
                         modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(SurfaceContainerHigh).clickable { showLlamarDialog = true }.padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
-                        Text("Llamar 105", style = BodyXsMedium, color = OnSurface)
+                        Text(L.t("Llamar 105", "Call 105"), style = BodyXsMedium, color = OnSurface)
                     }
                 }
             }
@@ -167,16 +168,16 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
     if (showLlamarDialog) {
         AlertDialog(
             onDismissRequest = { showLlamarDialog = false },
-            title = { Text("Llamar al 105") },
-            text = { Text("Se abrirá la aplicación de teléfono para llamar a la central de emergencias.") },
+            title = { Text(L.t("Llamar al 105", "Call 105")) },
+            text = { Text(L.t("Se abrirá la aplicación de teléfono para llamar a la central de emergencias.", "The phone app will open to call the emergency line.")) },
             confirmButton = {
                 TextButton(onClick = {
                     val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:105"))
                     context.startActivity(intent)
                     showLlamarDialog = false
-                }) { Text("Llamar") }
+                }) { Text(L.t("Llamar", "Call")) }
             },
-            dismissButton = { TextButton(onClick = { showLlamarDialog = false }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { showLlamarDialog = false }) { Text(L.t("Cancelar", "Cancel")) } }
         )
     }
 
@@ -197,9 +198,9 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
 private fun GreetingCard() {
     val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
     val saludo = when (hour) {
-        in 5..11  -> "Buenos días"
-        in 12..18 -> "Buenas tardes"
-        else      -> "Buenas noches"
+        in 5..11  -> L.t("Buenos días", "Good morning")
+        in 12..18 -> L.t("Buenas tardes", "Good afternoon")
+        else      -> L.t("Buenas noches", "Good evening")
     }
     Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest)) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -224,11 +225,11 @@ private fun LugaresSection(router: AppRouter, viewModel: SeguridadViewModel) {
 
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Lugares Guardados", style = HeadlineSm, color = OnSurface, modifier = Modifier.weight(1f))
+            Text(L.t("Lugares Guardados", "Saved Places"), style = HeadlineSm, color = OnSurface, modifier = Modifier.weight(1f))
             TextButton(onClick = { modoEdicion = !modoEdicion }) {
                 Icon(if (modoEdicion) Icons.Filled.Check else Icons.Filled.Edit, null, modifier = Modifier.size(14.dp))
                 Spacer(Modifier.width(4.dp))
-                Text(if (modoEdicion) "LISTO" else "EDITAR", style = LabelCapsSm, color = OnSurfaceVariant)
+                Text(if (modoEdicion) L.t("LISTO", "DONE") else L.t("EDITAR", "EDIT"), style = LabelCapsSm, color = OnSurfaceVariant)
             }
         }
         Spacer(Modifier.height(12.dp))
@@ -425,7 +426,7 @@ private fun AnadirTile(onClick: () -> Unit) {
             Icon(Icons.Filled.Add, null, tint = Outline, modifier = Modifier.size(24.dp))
         }
         Spacer(Modifier.height(6.dp))
-        Text("Añadir", style = LabelCapsMd, color = OnSurfaceVariant, maxLines = 1)
+        Text(L.t("Añadir", "Add"), style = LabelCapsMd, color = OnSurfaceVariant, maxLines = 1)
     }
 }
 
@@ -444,9 +445,9 @@ private fun ElegirLugaresSheet(
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(modifier = Modifier.padding(20.dp)) {
-            Text("Elige los lugares que verás aquí", style = HeadlineMd, color = OnSurface)
+            Text(L.t("Elige los lugares que verás aquí", "Choose the places you'll see here"), style = HeadlineMd, color = OnSurface)
             Spacer(Modifier.height(4.dp))
-            Text("Tus lugares guardados de la pestaña Guardado. UTP siempre aparece.", style = BodySm, color = OnSurfaceVariant)
+            Text(L.t("Tus lugares guardados de la pestaña Guardado. UTP siempre aparece.", "Your saved places from the Saved tab. UTP always appears."), style = BodySm, color = OnSurfaceVariant)
             Spacer(Modifier.height(16.dp))
 
             if (noFijos.isEmpty()) {
@@ -462,14 +463,14 @@ private fun ElegirLugaresSheet(
                         Icon(Icons.Filled.BookmarkBorder, null, tint = OnSurfaceVariant, modifier = Modifier.size(28.dp))
                     }
                     Spacer(Modifier.height(12.dp))
-                    Text("Aún no tienes lugares guardados", style = BodyMdMedium, color = OnSurface)
+                    Text(L.t("Aún no tienes lugares guardados", "You don't have any saved places yet"), style = BodyMdMedium, color = OnSurface)
                     Spacer(Modifier.height(20.dp))
                     Button(
                         onClick = onIrAGuardado,
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)
                     ) {
-                        Text("Ir a Guardado", style = BodyMdMedium, color = Color.White)
+                        Text(L.t("Ir a Guardado", "Go to Saved"), style = BodyMdMedium, color = Color.White)
                     }
                 }
             } else {
@@ -510,7 +511,7 @@ private fun ElegirLugaresSheet(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)
                 ) {
-                    Text("Listo", style = BodyMdMedium, color = Color.White)
+                    Text(L.t("Listo", "Done"), style = BodyMdMedium, color = Color.White)
                 }
             }
             Spacer(Modifier.height(24.dp))
@@ -525,7 +526,7 @@ private fun RutasSegurasSection(numParaderos: Int, onOpenParaderos: () -> Unit) 
     Column {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(Icons.Filled.Shield, null, tint = Tertiary, modifier = Modifier.size(20.dp))
-            Text("Rutas Seguras Hoy", style = HeadlineSm, color = OnSurface)
+            Text(L.t("Rutas Seguras Hoy", "Safe Routes Today"), style = HeadlineSm, color = OnSurface)
         }
         Spacer(Modifier.height(12.dp))
         Box(
@@ -541,7 +542,7 @@ private fun RutasSegurasSection(numParaderos: Int, onOpenParaderos: () -> Unit) 
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Icon(Icons.Filled.Lightbulb, null, tint = TertiaryFixedDim, modifier = Modifier.size(16.dp))
-                    Text("Paraderos iluminados activos: $numParaderos", style = BodySm, color = Color.White)
+                    Text(L.t("Paraderos iluminados activos: $numParaderos", "Well-lit stops active: $numParaderos"), style = BodySm, color = Color.White)
                 }
             }
         }
@@ -552,22 +553,23 @@ private fun RutasSegurasSection(numParaderos: Int, onOpenParaderos: () -> Unit) 
 // Las 10 zonas fijas de Trujillo, igual que en iOS. El texto de descripción
 // es una redacción breve razonable (el texto original no era crítico).
 private data class ZonaReferencia(
-    val nombre: String,
-    val descripcion: String,
+    val nombre: String,        // nombre propio del lugar (sin traducir: también alimenta la búsqueda en Places)
+    val descripcionEs: String,
+    val descripcionEn: String,
     val icono: ImageVector
 )
 
 private val zonasReferencia = listOf(
-    ZonaReferencia("Óvalo Papal", "Nodo vial principal hacia el norte de la ciudad.", Icons.Filled.AltRoute),
-    ZonaReferencia("Avenida España 1450", "Tramo comercial con alto flujo de micros.", Icons.Filled.Signpost),
-    ZonaReferencia("Comisaría Víctor Larco", "Comisaría de referencia del distrito.", Icons.Filled.LocalPolice),
-    ZonaReferencia("Real Plaza", "Centro comercial con gran afluencia diaria.", Icons.Filled.ShoppingBag),
-    ZonaReferencia("Plaza de Armas", "Centro histórico y principal punto de encuentro.", Icons.Filled.AccountBalance),
-    ZonaReferencia("Mall Aventura", "Centro comercial frente al Óvalo Papal.", Icons.Filled.Storefront),
-    ZonaReferencia("Paseo de los Héroes", "Avenida arbolada en zona residencial.", Icons.Filled.Park),
-    ZonaReferencia("Hospital Belén", "Hospital de referencia para emergencias.", Icons.Filled.LocalHospital),
-    ZonaReferencia("Estadio Mansiche", "Estadio regional; eventos masivos.", Icons.Filled.Stadium),
-    ZonaReferencia("Cineplanet", "Cines dentro del Mall Aventura Plaza.", Icons.Filled.Movie)
+    ZonaReferencia("Óvalo Papal", "Nodo vial principal hacia el norte de la ciudad.", "Main traffic junction toward the north of the city.", Icons.Filled.AltRoute),
+    ZonaReferencia("Avenida España 1450", "Tramo comercial con alto flujo de micros.", "Busy commercial stretch for city buses.", Icons.Filled.Signpost),
+    ZonaReferencia("Comisaría Víctor Larco", "Comisaría de referencia del distrito.", "Reference police station of the district.", Icons.Filled.LocalPolice),
+    ZonaReferencia("Real Plaza", "Centro comercial con gran afluencia diaria.", "Shopping mall with heavy daily foot traffic.", Icons.Filled.ShoppingBag),
+    ZonaReferencia("Plaza de Armas", "Centro histórico y principal punto de encuentro.", "Historic downtown and main meeting point.", Icons.Filled.AccountBalance),
+    ZonaReferencia("Mall Aventura", "Centro comercial frente al Óvalo Papal.", "Shopping mall across from Óvalo Papal.", Icons.Filled.Storefront),
+    ZonaReferencia("Paseo de los Héroes", "Avenida arbolada en zona residencial.", "Tree-lined avenue in a residential area.", Icons.Filled.Park),
+    ZonaReferencia("Hospital Belén", "Hospital de referencia para emergencias.", "Reference hospital for emergencies.", Icons.Filled.LocalHospital),
+    ZonaReferencia("Estadio Mansiche", "Estadio regional; eventos masivos.", "Regional stadium; large events.", Icons.Filled.Stadium),
+    ZonaReferencia("Cineplanet", "Cines dentro del Mall Aventura Plaza.", "Movie theaters inside Mall Aventura Plaza.", Icons.Filled.Movie)
 )
 
 @Composable
@@ -575,7 +577,7 @@ private fun ZonasReferenciaSection(onZona: (ZonaReferencia) -> Unit) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(Icons.Filled.Explore, null, tint = AppPrimary, modifier = Modifier.size(20.dp))
-            Text("Zonas de referencia", style = HeadlineSm, color = OnSurface)
+            Text(L.t("Zonas de referencia", "Reference zones"), style = HeadlineSm, color = OnSurface)
         }
         Spacer(Modifier.height(12.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -621,10 +623,10 @@ private fun ZonaCard(numero: Int, zona: ZonaReferencia, onClick: () -> Unit) {
             Spacer(Modifier.height(10.dp))
             Text(zona.nombre, style = BodyMdMedium, color = OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(4.dp))
-            Text(zona.descripcion, style = BodySm, color = OnSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis, minLines = 2)
+            Text(L.t(zona.descripcionEs, zona.descripcionEn), style = BodySm, color = OnSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis, minLines = 2)
             Spacer(Modifier.height(10.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Explorar ubicación", style = LabelCapsSm, color = AppPrimary)
+                Text(L.t("Explorar ubicación", "Explore location"), style = LabelCapsSm, color = AppPrimary)
                 Icon(Icons.Filled.ArrowForward, null, tint = AppPrimary, modifier = Modifier.size(12.dp))
             }
         }
@@ -641,9 +643,9 @@ private fun ComunidadSection(viewModel: SeguridadViewModel, onAnadir: () -> Unit
         Row(verticalAlignment = Alignment.CenterVertically) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)) {
                 Icon(Icons.Filled.Group, null, tint = AppPrimary, modifier = Modifier.size(20.dp))
-                Text("Comunidad", style = HeadlineSm, color = OnSurface)
+                Text(L.t("Comunidad", "Community"), style = HeadlineSm, color = OnSurface)
             }
-            TextButton(onClick = onAnadir) { Text("AÑADIR", style = LabelCapsSm, color = AppPrimary) }
+            TextButton(onClick = onAnadir) { Text(L.t("AÑADIR", "ADD"), style = LabelCapsSm, color = AppPrimary) }
         }
         Spacer(Modifier.height(12.dp))
 
@@ -672,6 +674,15 @@ private fun ComunidadSection(viewModel: SeguridadViewModel, onAnadir: () -> Unit
     }
 }
 
+//----Etiqueta del tipo de reporte según idioma----
+// (el enum guarda etiquetas en español; la UI traduce en el punto de uso).
+private fun tipoReporteLabel(tipo: TipoReporte): String = when (tipo) {
+    TipoReporte.ALERTA     -> L.t("ALERTA", "ALERT")
+    TipoReporte.TRAFICO    -> L.t("TRÁFICO", "TRAFFIC")
+    TipoReporte.SUGERENCIA -> L.t("SUGERENCIA", "SUGGESTION")
+    TipoReporte.OTRO       -> L.t("OTRO", "OTHER")
+}
+
 //----Tarjeta de una publicación de la comunidad----
 @Composable
 private fun ReporteCard(
@@ -697,7 +708,7 @@ private fun ReporteCard(
                     Text(reporte.hace, style = LabelCapsSm, color = OnSurfaceVariant)
                 }
                 Box(modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(reporte.tipo.background).padding(horizontal = 8.dp, vertical = 4.dp)) {
-                    Text(reporte.tipo.label, style = LabelCapsSm, color = reporte.tipo.foreground)
+                    Text(tipoReporteLabel(reporte.tipo), style = LabelCapsSm, color = reporte.tipo.foreground)
                 }
             }
             Spacer(Modifier.height(12.dp))
@@ -707,7 +718,7 @@ private fun ReporteCard(
                 // Voto "útil"
                 VotoChip(
                     icono = if (votoActual == VotoComunidad.UTIL) Icons.Filled.ThumbUp else Icons.Filled.ThumbUpOffAlt,
-                    texto = "Útil ($utiles)",
+                    texto = L.t("Útil", "Useful") + " ($utiles)",
                     activo = votoActual == VotoComunidad.UTIL,
                     onClick = { onVotar(VotoComunidad.UTIL) }
                 )
@@ -715,7 +726,7 @@ private fun ReporteCard(
                 // Voto "no útil"
                 VotoChip(
                     icono = if (votoActual == VotoComunidad.NO_UTIL) Icons.Filled.ThumbDown else Icons.Filled.ThumbDownOffAlt,
-                    texto = "No útil ($noUtiles)",
+                    texto = L.t("No útil", "Not useful") + " ($noUtiles)",
                     activo = votoActual == VotoComunidad.NO_UTIL,
                     onClick = { onVotar(VotoComunidad.NO_UTIL) }
                 )
@@ -758,22 +769,22 @@ private fun ReportarSheet(onDismiss: () -> Unit) {
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(modifier = Modifier.padding(20.dp)) {
-            Text("Reportar incidente", style = HeadlineMd, color = OnSurface)
+            Text(L.t("Reportar incidente", "Report incident"), style = HeadlineMd, color = OnSurface)
             Spacer(Modifier.height(20.dp))
-            Text("TIPO DE REPORTE", style = LabelCapsMd, color = OnSurfaceVariant)
+            Text(L.t("TIPO DE REPORTE", "REPORT TYPE"), style = LabelCapsMd, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(TipoReporte.ALERTA, TipoReporte.TRAFICO, TipoReporte.SUGERENCIA).forEach { t ->
-                    FilterChip(selected = tipo == t, onClick = { tipo = t }, label = { Text(t.label, style = BodySm) })
+                    FilterChip(selected = tipo == t, onClick = { tipo = t }, label = { Text(tipoReporteLabel(t), style = BodySm) })
                 }
             }
             Spacer(Modifier.height(16.dp))
-            Text("DESCRIPCIÓN", style = LabelCapsMd, color = OnSurfaceVariant)
+            Text(L.t("DESCRIPCIÓN", "DESCRIPTION"), style = LabelCapsMd, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
                 value = descripcion,
                 onValueChange = { descripcion = it },
-                placeholder = { Text("¿Qué sucede?") },
+                placeholder = { Text(L.t("¿Qué sucede?", "What happened?")) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
                 shape = RoundedCornerShape(12.dp)
@@ -786,7 +797,7 @@ private fun ReportarSheet(onDismiss: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = AppPrimary),
                 enabled = descripcion.isNotBlank()
             ) {
-                Text("Enviar reporte", style = HeadlineSm, color = Color.White)
+                Text(L.t("Enviar reporte", "Send report"), style = HeadlineSm, color = Color.White)
             }
             Spacer(Modifier.height(24.dp))
         }
@@ -795,8 +806,8 @@ private fun ReportarSheet(onDismiss: () -> Unit) {
     if (showSuccess) {
         AlertDialog(
             onDismissRequest = { onDismiss() },
-            title = { Text("Reporte enviado") },
-            text = { Text("Gracias por colaborar con la comunidad.") },
+            title = { Text(L.t("Reporte enviado", "Report sent")) },
+            text = { Text(L.t("Gracias por colaborar con la comunidad.", "Thanks for contributing to the community.")) },
             confirmButton = { TextButton(onClick = { onDismiss() }) { Text("OK") } }
         )
     }

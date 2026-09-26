@@ -31,6 +31,7 @@ import com.example.rutautpnative.data.gtfs.RutaGTFS
 import com.example.rutautpnative.data.ubicacion.UbicacionUnaVez
 import com.example.rutautpnative.model.CategoriaLugar
 import com.example.rutautpnative.model.LugarGuardado
+import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.screens.mapa.MarcadorUTP
 import com.example.rutautpnative.ui.theme.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -120,7 +121,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
             if (punto != null) {
                 ubicacionUsuario = punto
             } else {
-                locationMessage = "No recibimos señal GPS. Inténtalo de nuevo."
+                locationMessage = L.t("No recibimos señal GPS. Inténtalo de nuevo.", "We couldn't get a GPS signal. Try again.")
             }
             locating = false
         }
@@ -157,7 +158,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
             localizar()
         } else {
             locating = false
-            locationMessage = "Activa Ubicación en Ajustes. Las distancias usan UTP como referencia."
+            locationMessage = L.t("Activa Ubicación en Ajustes. Las distancias usan UTP como referencia.", "Enable Location in Settings. Distances use UTP as the reference point.")
         }
     }
 
@@ -195,7 +196,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                     cameraState.animate(CameraUpdateFactory.newLatLngBounds(bounds, 120))
                 }
                 else -> {
-                    walkingMessage = "No se pudo calcular la caminata. Revisa tu conexión."
+                    walkingMessage = L.t("No se pudo calcular la caminata. Revisa tu conexión.", "Couldn't calculate the walking route. Check your connection.")
                 }
             }
         }
@@ -304,8 +305,8 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                 }
                 Spacer(Modifier.width(10.dp))
                 Column {
-                    Text("Explora paraderos", style = HeadlineBody, color = OnSurface)
-                    Text("Tu próxima parada, más cerca", style = BodySm, color = OnSurfaceVariant)
+                    Text(L.t("Explora paraderos", "Explore bus stops"), style = HeadlineBody, color = OnSurface)
+                    Text(L.t("Tu próxima parada, más cerca", "Your next stop, closer"), style = BodySm, color = OnSurfaceVariant)
                 }
                 Spacer(Modifier.weight(1f))
                 Box(
@@ -348,7 +349,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                     OutlinedTextField(
                         value = query,
                         onValueChange = { query = it },
-                        placeholder = { Text("Busca una avenida o paradero", style = BodySm, color = OnSurfaceVariant) },
+                        placeholder = { Text(L.t("Busca una avenida o paradero", "Search an avenue or bus stop"), style = BodySm, color = OnSurfaceVariant) },
                         leadingIcon = { Icon(Icons.Filled.Search, null, tint = OnSurfaceVariant) },
                         trailingIcon = {
                             if (query.isNotEmpty()) {
@@ -367,11 +368,12 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)
                     ) {
                         listOf(0 to "Todos", 1000 to "1 km", 3000 to "3 km").forEachIndexed { index, (metros, etiqueta) ->
+                            val etiquetaMostrada = if (metros == 0) L.t("Todos", "All") else etiqueta
                             SegmentedButton(
                                 selected = radioMetros == metros,
                                 onClick = { radioMetros = metros },
                                 shape = SegmentedButtonDefaults.itemShape(index, count = 3),
-                                label = { Text(etiqueta, style = BodySm) }
+                                label = { Text(etiquetaMostrada, style = BodySm) }
                             )
                         }
                     }
@@ -381,10 +383,10 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("PARADEROS ${paraderosVisibles.size}", style = LabelCapsMd, color = AppPrimary)
+                        Text(L.t("PARADEROS", "STOPS") + " ${paraderosVisibles.size}", style = LabelCapsMd, color = AppPrimary)
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            if (ubicacionUsuario != null) "CERCA DE TI" else "DESDE UTP",
+                            if (ubicacionUsuario != null) L.t("CERCA DE TI", "NEAR YOU") else L.t("DESDE UTP", "FROM UTP"),
                             style = LabelCapsSm, color = OnSurfaceVariant
                         )
                         Spacer(Modifier.weight(1f))
@@ -436,10 +438,10 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("No hay paraderos en esta búsqueda", style = BodyMdMedium, color = OnSurface)
+                            Text(L.t("No hay paraderos en esta búsqueda", "No stops match this search"), style = BodyMdMedium, color = OnSurface)
                             Spacer(Modifier.height(8.dp))
                             TextButton(onClick = { limpiarFiltro() }) {
-                                Text("Ver todos", style = BodyMdMedium, color = AppPrimary)
+                                Text(L.t("Ver todos", "See all"), style = BodyMdMedium, color = AppPrimary)
                             }
                         }
                     } else {
@@ -459,7 +461,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                         }
                     }
                     Spacer(Modifier.height(10.dp))
-                    Text("Iluminación y vigilancia sin verificar", style = BodyXs, color = OnSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp))
+                    Text(L.t("Iluminación y vigilancia sin verificar", "Lighting and surveillance not verified"), style = BodyXs, color = OnSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp))
                 }
             }
         }

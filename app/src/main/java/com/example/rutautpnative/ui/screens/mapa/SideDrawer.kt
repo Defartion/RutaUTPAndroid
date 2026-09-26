@@ -20,8 +20,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import com.example.rutautpnative.data.TemaStore
 import com.example.rutautpnative.navigation.AppRouter
+import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
+import kotlinx.coroutines.launch
 
 // Lo del lado
 @Composable
@@ -71,22 +74,22 @@ fun SideDrawer(router: AppRouter, onClose: () -> Unit) {
                         }
                         Spacer(Modifier.height(10.dp))
                         Text("Ruta UTP Trujillo", style = HeadlineSm, color = Color.White)
-                        Text("Menú principal", style = BodyXs, color = Color.White.copy(alpha = 0.75f))
+                        Text(L.t("Menú principal", "Main menu"), style = BodyXs, color = Color.White.copy(alpha = 0.75f))
                     }
                 }
 
                 // Menu items
                 Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-                    DrawerRow(Icons.Filled.Notifications, Tertiary, "Notificaciones")    { activeSheet = DrawerSheet.NOTIFICACIONES }
-                    DrawerRow(Icons.Filled.LocationCity, Secondary, "Ciudad")             { activeSheet = DrawerSheet.CIUDAD }
+                    DrawerRow(Icons.Filled.Notifications, Tertiary, L.t("Notificaciones", "Notifications")) { activeSheet = DrawerSheet.NOTIFICACIONES }
+                    DrawerRow(Icons.Filled.LocationCity, Secondary, L.t("Ciudad", "City")) { activeSheet = DrawerSheet.CIUDAD }
                     Divider(modifier = Modifier.padding(start = 56.dp))
-                    DrawerRow(Icons.Filled.Settings, OnSurfaceVariant, "Ajustes")         { activeSheet = DrawerSheet.AJUSTES }
-                    DrawerRow(Icons.Filled.Headphones, OnSurfaceVariant, "Soporte")       { activeSheet = DrawerSheet.SOPORTE }
-                    DrawerRow(Icons.Filled.Info, OnSurfaceVariant, "Sobre Nosotros")      { activeSheet = DrawerSheet.SOBRE_NOSOTROS }
+                    DrawerRow(Icons.Filled.Settings, OnSurfaceVariant, L.t("Ajustes", "Settings")) { activeSheet = DrawerSheet.AJUSTES }
+                    DrawerRow(Icons.Filled.Headphones, OnSurfaceVariant, L.t("Soporte", "Support")) { activeSheet = DrawerSheet.SOPORTE }
+                    DrawerRow(Icons.Filled.Info, OnSurfaceVariant, L.t("Sobre Nosotros", "About Us")) { activeSheet = DrawerSheet.SOBRE_NOSOTROS }
                 }
 
                 // Logout
-                DrawerRow(Icons.Filled.ExitToApp, AppPrimary, "Cerrar Sesión", destructive = true) {
+                DrawerRow(Icons.Filled.ExitToApp, AppPrimary, L.t("Cerrar Sesión", "Log Out"), destructive = true) {
                     showLogoutConfirm = true
                 }
                 Spacer(Modifier.height(24.dp))
@@ -108,14 +111,14 @@ fun SideDrawer(router: AppRouter, onClose: () -> Unit) {
     if (showLogoutConfirm) {
         AlertDialog(
             onDismissRequest = { showLogoutConfirm = false },
-            title = { Text("¿Te vas?") },
-            text = { Text("Tendrás que volver a iniciar sesión para usar la app.") },
+            title = { Text(L.t("¿Te vas?", "Leaving?")) },
+            text = { Text(L.t("Tendrás que volver a iniciar sesión para usar la app.", "You'll need to log in again to use the app.")) },
             confirmButton = {
                 TextButton(onClick = { showLogoutConfirm = false; onClose() }) {
-                    Text("Cerrar sesión", color = AppPrimary)
+                    Text(L.t("Cerrar sesión", "Log out"), color = AppPrimary)
                 }
             },
-            dismissButton = { TextButton(onClick = { showLogoutConfirm = false }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { showLogoutConfirm = false }) { Text(L.t("Cancelar", "Cancel")) } }
         )
     }
 }
@@ -143,24 +146,29 @@ private fun DrawerRow(icon: ImageVector, iconColor: Color, label: String, destru
 private fun NotificacionesSheet(onDismiss: () -> Unit) {
     var notifOn by remember { mutableStateOf(true) }
     var pausaSeleccionada by remember { mutableStateOf<String?>(null) }
-    val pausas = listOf("30 minutos", "1 hora", "3 horas", "Indefinido")
+    val pausas = listOf(
+        L.t("30 minutos", "30 minutes"),
+        L.t("1 hora", "1 hour"),
+        L.t("3 horas", "3 hours"),
+        L.t("Indefinido", "Indefinitely")
+    )
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(modifier = Modifier.padding(20.dp)) {
-            SheetHeader(Icons.Filled.Notifications, Tertiary, "Notificaciones")
+            SheetHeader(Icons.Filled.Notifications, Tertiary, L.t("Notificaciones", "Notifications"))
             Spacer(Modifier.height(16.dp))
             Card(shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = SurfaceContainerLow)) {
                 Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Activar notificaciones", style = BodyMdMedium, color = OnSurface)
-                        Text("Recibe alertas de rutas y reportes", style = BodySm, color = OnSurfaceVariant)
+                        Text(L.t("Activar notificaciones", "Enable notifications"), style = BodyMdMedium, color = OnSurface)
+                        Text(L.t("Recibe alertas de rutas y reportes", "Get route and report alerts"), style = BodySm, color = OnSurfaceVariant)
                     }
                     Switch(checked = notifOn, onCheckedChange = { notifOn = it }, colors = SwitchDefaults.colors(checkedTrackColor = AppPrimary))
                 }
             }
             if (notifOn) {
                 Spacer(Modifier.height(16.dp))
-                Text("PAUSAR NOTIFICACIONES", style = LabelCapsMd, color = OnSurfaceVariant)
+                Text(L.t("PAUSAR NOTIFICACIONES", "PAUSE NOTIFICATIONS"), style = LabelCapsMd, color = OnSurfaceVariant)
                 Spacer(Modifier.height(8.dp))
                 pausas.forEach { pausa ->
                     val isSelected = pausaSeleccionada == pausa
@@ -179,7 +187,7 @@ private fun NotificacionesSheet(onDismiss: () -> Unit) {
                         )
                         Spacer(Modifier.width(10.dp))
                         Text(pausa, style = BodyMd, color = OnSurface, modifier = Modifier.weight(1f))
-                        if (pausa == "Indefinido") Icon(Icons.Filled.Bedtime, null, tint = Secondary, modifier = Modifier.size(16.dp))
+                        if (pausa == L.t("Indefinido", "Indefinitely")) Icon(Icons.Filled.Bedtime, null, tint = Secondary, modifier = Modifier.size(16.dp))
                     }
                     Spacer(Modifier.height(8.dp))
                 }
@@ -197,9 +205,9 @@ private fun CiudadSheet(onDismiss: () -> Unit) {
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(modifier = Modifier.padding(20.dp)) {
-            SheetHeader(Icons.Filled.LocationCity, Secondary, "Ciudad")
+            SheetHeader(Icons.Filled.LocationCity, Secondary, L.t("Ciudad", "City"))
             Spacer(Modifier.height(8.dp))
-            Text("Selecciona tu ciudad para ver rutas y paraderos actualizados.", style = BodySm, color = OnSurfaceVariant)
+            Text(L.t("Selecciona tu ciudad para ver rutas y paraderos actualizados.", "Select your city to see updated routes and stops."), style = BodySm, color = OnSurfaceVariant)
             Spacer(Modifier.height(16.dp))
             ciudades.forEach { ciudad ->
                 val isSelected = ciudad == ciudadSeleccionada
@@ -222,7 +230,7 @@ private fun CiudadSheet(onDismiss: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Filled.Info, null, tint = OnSurfaceVariant, modifier = Modifier.size(14.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Pronto añadiremos más ciudades.", style = BodyXs, color = OnSurfaceVariant)
+                Text(L.t("Pronto añadiremos más ciudades.", "We'll add more cities soon."), style = BodyXs, color = OnSurfaceVariant)
             }
             Spacer(Modifier.height(24.dp))
         }
@@ -232,16 +240,19 @@ private fun CiudadSheet(onDismiss: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AjustesSheet(onDismiss: () -> Unit) {
-    var isDark by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    // Conectado a TemaStore (persistido): es el ÚNICO control de tema real,
+    // igual que en iOS (SideDrawer.swift).
+    val isDark by TemaStore.observarOscuro().collectAsState(initial = false)
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(modifier = Modifier.padding(20.dp)) {
-            SheetHeader(Icons.Filled.Settings, OnSurfaceVariant, "Ajustes")
+            SheetHeader(Icons.Filled.Settings, OnSurfaceVariant, L.t("Ajustes", "Settings"))
             Spacer(Modifier.height(16.dp))
-            Text("APARIENCIA", style = LabelCapsMd, color = OnSurfaceVariant)
+            Text(L.t("APARIENCIA", "APPEARANCE"), style = LabelCapsMd, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                listOf(false to "Claro" to Icons.Filled.LightMode, true to "Oscuro" to Icons.Filled.DarkMode).forEach { (pair, icon) ->
+                listOf(false to L.t("Claro", "Light") to Icons.Filled.LightMode, true to L.t("Oscuro", "Dark") to Icons.Filled.DarkMode).forEach { (pair, icon) ->
                     val (mode, label) = pair
                     val isSelected = isDark == mode
                     Box(
@@ -249,7 +260,7 @@ private fun AjustesSheet(onDismiss: () -> Unit) {
                             .weight(1f)
                             .clip(RoundedCornerShape(12.dp))
                             .background(if (isSelected) PrimaryContainer else SurfaceContainerLow)
-                            .clickable { isDark = mode }
+                            .clickable { scope.launch { TemaStore.establecerOscuro(mode) } }
                             .padding(vertical = 20.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -269,23 +280,27 @@ private fun AjustesSheet(onDismiss: () -> Unit) {
 @Composable
 private fun SoporteSheet(onDismiss: () -> Unit) {
     val faqs = listOf(
-        Triple(Icons.Filled.Warning,    "¿Cómo reporto un incidente?",   "Toca el botón REPORTAR en el mapa o en Seguridad y describe la situación."),
-        Triple(Icons.Filled.Bookmark,   "¿Cómo guardo un lugar?",        "En la pantalla de Guardado, presiona + Añadir y completa los datos."),
-        Triple(Icons.Filled.LocationOn, "¿Cómo cambio mi destino?",      "En el mapa, toca los chips de Casa / UTP / Trabajo para cambiar rápido."),
-        Triple(Icons.Filled.Refresh,    "¿Cómo actualizo una ruta?",     "Las rutas se actualizan automáticamente cada pocos segundos.")
+        Triple(Icons.Filled.Warning,    L.t("¿Cómo reporto un incidente?", "How do I report an incident?"),
+                                            L.t("Toca el botón REPORTAR en el mapa o en Seguridad y describe la situación.", "Tap the REPORT button on the map or in Safety and describe the situation.")),
+        Triple(Icons.Filled.Bookmark,   L.t("¿Cómo guardo un lugar?", "How do I save a place?"),
+                                            L.t("En la pantalla de Guardado, presiona + Añadir y completa los datos.", "On the Saved screen, tap + Add and fill in the details.")),
+        Triple(Icons.Filled.LocationOn, L.t("¿Cómo cambio mi destino?", "How do I change my destination?"),
+                                            L.t("En el mapa, toca los chips de Casa / UTP / Trabajo para cambiar rápido.", "On the map, tap the Home / UTP / Work chips to change quickly.")),
+        Triple(Icons.Filled.Refresh,    L.t("¿Cómo actualizo una ruta?", "How do I update a route?"),
+                                            L.t("Las rutas se actualizan automáticamente cada pocos segundos.", "Routes update automatically every few seconds."))
     )
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(modifier = Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
-            SheetHeader(Icons.Filled.Headphones, Secondary, "Soporte")
+            SheetHeader(Icons.Filled.Headphones, Secondary, L.t("Soporte", "Support"))
             Spacer(Modifier.height(16.dp))
             Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)) {
                 Icon(Icons.Filled.Message, null, tint = Color.White)
                 Spacer(Modifier.width(8.dp))
-                Text("Contactar Soporte Técnico", style = HeadlineSm, color = Color.White)
+                Text(L.t("Contactar Soporte Técnico", "Contact Technical Support"), style = HeadlineSm, color = Color.White)
             }
             Spacer(Modifier.height(16.dp))
-            Text("PREGUNTAS FRECUENTES", style = LabelCapsMd, color = OnSurfaceVariant)
+            Text(L.t("PREGUNTAS FRECUENTES", "FREQUENTLY ASKED QUESTIONS"), style = LabelCapsMd, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             faqs.forEach { (icon, pregunta, respuesta) ->
                 var expanded by remember { mutableStateOf(false) }
@@ -329,13 +344,13 @@ private fun SobreNosotrosSheet(onDismiss: () -> Unit) {
             Spacer(Modifier.height(20.dp))
 
             Column(modifier = Modifier.fillMaxWidth()) {
-                Text("SOBRE LA APP", style = LabelCapsMd, color = OnSurfaceVariant)
+                Text(L.t("SOBRE LA APP", "ABOUT THE APP"), style = LabelCapsMd, color = OnSurfaceVariant)
                 Spacer(Modifier.height(8.dp))
-                Text("Aplicación que ayuda a los estudiantes de la UTP Trujillo a encontrar rutas de micros y combis hacia el campus. Incluye lugares guardados, reportes comunitarios y seguimiento en tiempo real.", style = BodyMd, color = OnSurface)
+                Text(L.t("Aplicación que ayuda a los estudiantes de la UTP Trujillo a encontrar rutas de micros y combis hacia el campus. Incluye lugares guardados, reportes comunitarios y seguimiento en tiempo real.", "An app that helps UTP Trujillo students find bus and combi routes toward campus. Includes saved places, community reports and real-time tracking."), style = BodyMd, color = OnSurface)
                 Spacer(Modifier.height(16.dp))
-                Text("EQUIPO DE DESARROLLO", style = LabelCapsMd, color = OnSurfaceVariant)
+                Text(L.t("EQUIPO DE DESARROLLO", "DEVELOPMENT TEAM"), style = LabelCapsMd, color = OnSurfaceVariant)
                 Spacer(Modifier.height(8.dp))
-                listOf("Diseño y desarrollo" to "Joaquín Díaz", "Curso" to "Productos y Servicios - Ciclo 7", "Institución" to "UTP Trujillo").forEach { (rol, nombre) ->
+                listOf(L.t("Diseño y desarrollo", "Design & development") to "Joaquín Díaz", L.t("Curso", "Course") to "Productos y Servicios - Ciclo 7", L.t("Institución", "Institution") to "UTP Trujillo").forEach { (rol, nombre) ->
                     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
                         Text(rol, style = BodySm, color = OnSurfaceVariant, modifier = Modifier.weight(1f))
                         Text(nombre, style = BodySmMedium, color = OnSurface)

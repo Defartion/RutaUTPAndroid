@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
 import com.google.accompanist.permissions.*
 import kotlinx.coroutines.delay
@@ -117,7 +118,7 @@ fun CarnetScannerScreen(
                                 .padding(horizontal = 14.dp, vertical = 8.dp)
                         ) {
                             TextButton(onClick = onDismiss) {
-                                Text("Cancelar", style = BodyMdMedium, color = Color.White)
+                                Text(L.t("Cancelar", "Cancel"), style = BodyMdMedium, color = Color.White)
                             }
                         }
                     }
@@ -126,7 +127,7 @@ fun CarnetScannerScreen(
 
                     // Instruction above cutout
                     Text(
-                        "Encuadra tu carnet aquí",
+                        L.t("Encuadra tu carnet aquí", "Frame your student ID here"),
                         style = BodyMdMedium,
                         color = Color.White,
                         modifier = Modifier
@@ -139,7 +140,7 @@ fun CarnetScannerScreen(
 
                     // Instruction below cutout
                     Text(
-                        "Asegúrate que el texto sea legible",
+                        L.t("Asegúrate que el texto sea legible", "Make sure the text is readable"),
                         style = BodySm,
                         color = Color.White.copy(alpha = 0.6f),
                         modifier = Modifier
@@ -304,10 +305,10 @@ private fun PermissionDeniedView(onDismiss: () -> Unit) {
             modifier = Modifier.size(60.dp)
         )
         Spacer(Modifier.height(20.dp))
-        Text("Acceso a la cámara denegado", style = HeadlineSm, color = Color.White)
+        Text(L.t("Acceso a la cámara denegado", "Camera access denied"), style = HeadlineSm, color = Color.White)
         Spacer(Modifier.height(12.dp))
         Text(
-            "Necesitamos acceso a la cámara para escanear tu carnet universitario.",
+            L.t("Necesitamos acceso a la cámara para escanear tu carnet universitario.", "We need camera access to scan your student ID."),
             style = BodySm,
             color = Color.White.copy(alpha = 0.7f)
         )
@@ -322,11 +323,11 @@ private fun PermissionDeniedView(onDismiss: () -> Unit) {
             shape = CircleShape,
             colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)
         ) {
-            Text("Abrir Ajustes", style = HeadlineSm, color = Color.White)
+            Text(L.t("Abrir Ajustes", "Open Settings"), style = HeadlineSm, color = Color.White)
         }
         Spacer(Modifier.height(12.dp))
         TextButton(onClick = onDismiss) {
-            Text("Cancelar", style = BodyMd, color = Color.White.copy(alpha = 0.7f))
+            Text(L.t("Cancelar", "Cancel"), style = BodyMd, color = Color.White.copy(alpha = 0.7f))
         }
     }
 }

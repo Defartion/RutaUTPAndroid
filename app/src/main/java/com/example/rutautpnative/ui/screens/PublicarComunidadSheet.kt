@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.example.rutautpnative.model.TipoReporte
 import com.example.rutautpnative.ui.components.OpcionFoto
 import com.example.rutautpnative.ui.components.rememberSelectorFoto
+import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.Dispatchers
@@ -48,26 +49,34 @@ import java.util.Locale
 
 private const val MAX_CARACTERES = 200
 
-//----Textos contextuales según el tipo elegido----
+//----Textos contextuales según el tipo elegido (traducidos, cada variante suya)----
 private fun detallePara(tipo: TipoReporte) = when (tipo) {
-    TipoReporte.ALERTA     -> "Cuenta qué pasó: robo, acoso, persona sospechosa o accidente. Indica el lugar aproximado."
-    TipoReporte.TRAFICO    -> "Reporta congestión, choques o desvíos que estén afectando tu ruta ahora mismo."
-    TipoReporte.SUGERENCIA -> "Propón mejoras: frecuencias, limpieza, nuevos paraderos o precios justos."
-    TipoReporte.OTRO       -> "Cualquier otra cosa que la comunidad deba saber."
+    TipoReporte.ALERTA     -> L.t("Cuenta qué pasó: robo, acoso, persona sospechosa o accidente. Indica el lugar aproximado.", "Tell us what happened: robbery, harassment, suspicious person or accident. Indicate the approximate place.")
+    TipoReporte.TRAFICO    -> L.t("Reporta congestión, choques o desvíos que estén afectando tu ruta ahora mismo.", "Report congestion, crashes or detours affecting your route right now.")
+    TipoReporte.SUGERENCIA -> L.t("Propón mejoras: frecuencias, limpieza, nuevos paraderos o precios justos.", "Suggest improvements: frequency, cleanliness, new stops or fair prices.")
+    TipoReporte.OTRO       -> L.t("Cualquier otra cosa que la comunidad deba saber.", "Anything else the community should know.")
 }
 
 private fun placeholderPara(tipo: TipoReporte) = when (tipo) {
-    TipoReporte.ALERTA     -> "Ej. Vi a una persona sospechosa cerca del paradero…"
-    TipoReporte.TRAFICO    -> "Ej. Choque en Av. España, tráfico detenido…"
-    TipoReporte.SUGERENCIA -> "Ej. La línea B debería pasar más seguido…"
-    TipoReporte.OTRO       -> "¿Qué sucede?"
+    TipoReporte.ALERTA     -> L.t("Ej. Vi a una persona sospechosa cerca del paradero…", "E.g. I saw a suspicious person by the bus stop…")
+    TipoReporte.TRAFICO    -> L.t("Ej. Choque en Av. España, tráfico detenido…", "E.g. Crash on Av. España, traffic stopped…")
+    TipoReporte.SUGERENCIA -> L.t("Ej. La línea B debería pasar más seguido…", "E.g. Route B should run more often…")
+    TipoReporte.OTRO       -> L.t("¿Qué sucede?", "What happened?")
 }
 
 private fun chipsPara(tipo: TipoReporte): List<String> = when (tipo) {
-    TipoReporte.ALERTA     -> listOf("Robo en el paradero", "Persona sospechosa", "Accidente")
-    TipoReporte.TRAFICO    -> listOf("Tráfico detenido", "Choque", "Desvío en la ruta")
-    TipoReporte.SUGERENCIA -> listOf("Más frecuencia", "Nuevo paradero", "Mejor limpieza")
+    TipoReporte.ALERTA     -> listOf(L.t("Robo en el paradero", "Robbery at the bus stop"), L.t("Persona sospechosa", "Suspicious person"), L.t("Accidente", "Accident"))
+    TipoReporte.TRAFICO    -> listOf(L.t("Tráfico detenido", "Traffic stopped"), L.t("Choque", "Crash"), L.t("Desvío en la ruta", "Detour on the route"))
+    TipoReporte.SUGERENCIA -> listOf(L.t("Más frecuencia", "More frequency"), L.t("Nuevo paradero", "New bus stop"), L.t("Mejor limpieza", "Better cleaning"))
     TipoReporte.OTRO       -> emptyList()
+}
+
+// Etiqueta del tipo según idioma (el enum guarda etiquetas en español).
+private fun tipoParaLabel(tipo: TipoReporte) = when (tipo) {
+    TipoReporte.ALERTA     -> L.t("ALERTA", "ALERT")
+    TipoReporte.TRAFICO    -> L.t("TRÁFICO", "TRAFFIC")
+    TipoReporte.SUGERENCIA -> L.t("SUGERENCIA", "SUGGESTION")
+    TipoReporte.OTRO       -> L.t("OTRO", "OTHER")
 }
 
 private fun iconoPara(tipo: TipoReporte): ImageVector = when (tipo) {
@@ -107,7 +116,7 @@ private fun TipoCard(tipo: TipoReporte, seleccionado: Boolean, onClick: () -> Un
     ) {
         Icon(iconoPara(tipo), null, tint = contenido, modifier = Modifier.size(20.dp))
         Spacer(Modifier.height(6.dp))
-        Text(tipo.label, style = LabelCapsSm, color = contenido, maxLines = 1)
+        Text(tipoParaLabel(tipo), style = LabelCapsSm, color = contenido, maxLines = 1)
     }
 }
 
@@ -136,7 +145,7 @@ fun PublicarComunidadSheet(onDismiss: () -> Unit) {
             //----Barra superior: Cancelar----
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = onDismiss) {
-                    Text("Cancelar", style = BodyMdMedium, color = OnSurfaceVariant)
+                    Text(L.t("Cancelar", "Cancel"), style = BodyMdMedium, color = OnSurfaceVariant)
                 }
             }
 
@@ -147,14 +156,14 @@ fun PublicarComunidadSheet(onDismiss: () -> Unit) {
                 }
                 Spacer(Modifier.width(12.dp))
                 Column {
-                    Text("Publicar en la comunidad", style = HeadlineMd, color = OnSurface)
-                    Text("Comparte algo útil con otros estudiantes", style = BodySm, color = OnSurfaceVariant)
+                    Text(L.t("Publicar en la comunidad", "Post to the community"), style = HeadlineMd, color = OnSurface)
+                    Text(L.t("Comparte algo útil con otros estudiantes", "Share something useful with other students"), style = BodySm, color = OnSurfaceVariant)
                 }
             }
             Spacer(Modifier.height(20.dp))
 
             //----Selector de tipo (4 tarjetas)----
-            Text("TIPO", style = LabelCapsMd, color = OnSurfaceVariant)
+            Text(L.t("TIPO", "TYPE"), style = LabelCapsMd, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TipoReporte.entries.forEach { t ->
@@ -173,7 +182,7 @@ fun PublicarComunidadSheet(onDismiss: () -> Unit) {
             Spacer(Modifier.height(16.dp))
 
             //----Descripción con contador regresivo y truncado----
-            Text("DESCRIPCIÓN", style = LabelCapsMd, color = OnSurfaceVariant)
+            Text(L.t("DESCRIPCIÓN", "DESCRIPTION"), style = LabelCapsMd, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             val restantes = MAX_CARACTERES - descripcion.length
             OutlinedTextField(
@@ -218,7 +227,7 @@ fun PublicarComunidadSheet(onDismiss: () -> Unit) {
             //----FOTO (OPCIONAL)----
             // Sin foto: fila tocable que abre el selector Cámara/Galería.
             // Con foto: vista previa de 180dp con botón "✕" para quitarla.
-            Text("FOTO (OPCIONAL)", style = LabelCapsMd, color = OnSurfaceVariant)
+            Text(L.t("FOTO (OPCIONAL)", "PHOTO (OPTIONAL)"), style = LabelCapsMd, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             val bitmap = foto
             if (bitmap == null) {
@@ -234,8 +243,8 @@ fun PublicarComunidadSheet(onDismiss: () -> Unit) {
                     Icon(Icons.Filled.AddAPhoto, null, tint = OnSurfaceVariant, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(12.dp))
                     Column {
-                        Text("Añadir foto", style = BodyMdMedium, color = OnSurface)
-                        Text("Toma una foto o elige de tu galería", style = BodySm, color = OnSurfaceVariant)
+                        Text(L.t("Añadir foto", "Add photo"), style = BodyMdMedium, color = OnSurface)
+                        Text(L.t("Toma una foto o elige de tu galería", "Take a photo or choose from your gallery"), style = BodySm, color = OnSurfaceVariant)
                     }
                 }
             } else {
@@ -268,7 +277,7 @@ fun PublicarComunidadSheet(onDismiss: () -> Unit) {
             //----UBICACIÓN (OPCIONAL)----
             // Igual que la foto: vacía → fila "Añadir ubicación"; con dato →
             // dirección legible (geocodificación inversa) con editar/quitar.
-            Text("UBICACIÓN (OPCIONAL)", style = LabelCapsMd, color = OnSurfaceVariant)
+            Text(L.t("UBICACIÓN (OPCIONAL)", "LOCATION (OPTIONAL)"), style = LabelCapsMd, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             val ubic = ubicacion
             if (ubic == null) {
@@ -284,8 +293,8 @@ fun PublicarComunidadSheet(onDismiss: () -> Unit) {
                     Icon(Icons.Filled.LocationOn, null, tint = OnSurfaceVariant, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(12.dp))
                     Column {
-                        Text("Añadir ubicación", style = BodyMdMedium, color = OnSurface)
-                        Text("Marca el punto exacto en el mapa", style = BodySm, color = OnSurfaceVariant)
+                        Text(L.t("Añadir ubicación", "Add location"), style = BodyMdMedium, color = OnSurface)
+                        Text(L.t("Marca el punto exacto en el mapa", "Mark the exact spot on the map"), style = BodySm, color = OnSurfaceVariant)
                     }
                 }
             } else {
@@ -336,7 +345,7 @@ fun PublicarComunidadSheet(onDismiss: () -> Unit) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "Publicar",
+                    L.t("Publicar", "Post"),
                     style = HeadlineSm,
                     color = if (habilitado) Color.White else OnSurfaceVariant
                 )
@@ -367,11 +376,11 @@ fun PublicarComunidadSheet(onDismiss: () -> Unit) {
     if (showSuccess) {
         AlertDialog(
             onDismissRequest = onDismiss,
-            title = { Text("Publicado en la comunidad") },
-            text = { Text("Gracias por aportar a la comunidad UTP.") },
+            title = { Text(L.t("Publicado en la comunidad", "Posted to the community")) },
+            text = { Text(L.t("Gracias por aportar a la comunidad UTP.", "Thanks for contributing to the UTP community.")) },
             confirmButton = {
                 TextButton(onClick = onDismiss) {
-                    Text("Listo", style = BodyMdMedium, color = AppPrimary)
+                    Text(L.t("Listo", "Done"), style = BodyMdMedium, color = AppPrimary)
                 }
             }
         )

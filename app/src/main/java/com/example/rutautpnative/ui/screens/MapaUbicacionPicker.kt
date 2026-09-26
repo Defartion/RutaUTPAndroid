@@ -23,6 +23,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.ubicacion.UbicacionUnaVez
+import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -108,7 +109,7 @@ fun MapaUbicacionPicker(
             // Pin fijo visual en el centro de la pantalla (no es un Marker del mapa).
             Icon(
                 Icons.Filled.Place,
-                contentDescription = "Pin de ubicación",
+                contentDescription = L.t("Pin de ubicación", "Location pin"),
                 tint = AppPrimary,
                 modifier = Modifier
                     .align(Alignment.Center)
@@ -133,11 +134,11 @@ fun MapaUbicacionPicker(
                         .clickable(onClick = onCerrar),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Filled.Close, "Cerrar", tint = OnSurface, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Filled.Close, L.t("Cerrar", "Close"), tint = OnSurface, modifier = Modifier.size(20.dp))
                 }
                 Spacer(Modifier.width(14.dp))
                 Text(
-                    "Arrastra el mapa para marcar el lugar",
+                    L.t("Arrastra el mapa para marcar el lugar", "Drag the map to mark the place"),
                     style = BodyMdMedium,
                     color = OnSurface,
                     modifier = Modifier
@@ -171,7 +172,7 @@ fun MapaUbicacionPicker(
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Filled.MyLocation, "Mi ubicación", tint = AppPrimary, modifier = Modifier.size(22.dp))
+                    Icon(Icons.Filled.MyLocation, L.t("Mi ubicación", "My location"), tint = AppPrimary, modifier = Modifier.size(22.dp))
                 }
                 Spacer(Modifier.height(12.dp))
 
@@ -194,7 +195,7 @@ fun MapaUbicacionPicker(
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)
                         ) {
-                            Text("Confirmar ubicación", style = HeadlineSm, color = Color.White)
+                            Text(L.t("Confirmar ubicación", "Confirm location"), style = HeadlineSm, color = Color.White)
                         }
                     }
                 }

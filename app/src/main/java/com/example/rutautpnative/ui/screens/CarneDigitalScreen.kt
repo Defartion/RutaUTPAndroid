@@ -31,6 +31,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.rutautpnative.ui.components.CodigoBarras
 import com.example.rutautpnative.ui.components.rememberSelectorFoto
+import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
 
 //----Carné Digital (port de CarneDigitalView)----
@@ -45,7 +46,7 @@ fun CarneDigitalScreen(
     onCerrar: () -> Unit
 ) {
     // Selector cámara/galería compartido (ui/components/SelectorFoto.kt).
-    val abrirSelectorFoto = rememberSelectorFoto(titulo = "Foto del carné") { onFotoChange(it) }
+    val abrirSelectorFoto = rememberSelectorFoto(titulo = L.t("Foto del carné", "ID card photo")) { onFotoChange(it) }
 
     Dialog(
         onDismissRequest = onCerrar,
@@ -74,7 +75,7 @@ fun CarneDigitalScreen(
                         Icon(Icons.Filled.Badge, null, tint = AppPrimary, modifier = Modifier.size(20.dp))
                     }
                     Spacer(Modifier.width(12.dp))
-                    Text("Carné Digital", style = HeadlineLg, color = AppPrimary)
+                    Text(L.t("Carné Digital", "Digital ID Card"), style = HeadlineLg, color = AppPrimary)
                 }
                 Spacer(Modifier.height(24.dp))
 
@@ -132,14 +133,14 @@ fun CarneDigitalScreen(
                         }
                         Spacer(Modifier.height(14.dp))
                         Text(nombre, style = HeadlineMd, color = OnSurface)
-                        Text("Estudiante UTP", style = BodySm, color = OnSurfaceVariant)
+                        Text(L.t("Estudiante UTP", "UTP Student"), style = BodySm, color = OnSurfaceVariant)
                         Spacer(Modifier.height(18.dp))
 
                         Divider(modifier = Modifier.padding(horizontal = 20.dp))
                         Spacer(Modifier.height(16.dp))
 
                         //----Código UTP----
-                        Text("CÓDIGO UTP", style = LabelCapsMd, color = OnSurfaceVariant)
+                        Text(L.t("CÓDIGO UTP", "UTP CODE"), style = LabelCapsMd, color = OnSurfaceVariant)
                         Spacer(Modifier.height(4.dp))
                         Text(
                             CODIGO_UTP,
@@ -154,7 +155,7 @@ fun CarneDigitalScreen(
                         Spacer(Modifier.height(16.dp))
 
                         //----Código de barras Code 128 (generado local)----
-                        Text("Ingresa al campus mostrando este código", style = BodySm, color = OnSurfaceVariant)
+                        Text(L.t("Ingresa al campus mostrando este código", "Enter campus by showing this code"), style = BodySm, color = OnSurfaceVariant)
                         Spacer(Modifier.height(12.dp))
                         BoxWithConstraints {
                             val anchoDp = maxWidth - 48.dp
@@ -187,7 +188,7 @@ fun CarneDigitalScreen(
                                 .padding(vertical = 12.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("ÚLTIMO CICLO MATRICULADO", style = LabelCapsMd, color = Color.White, letterSpacing = 2.sp)
+                            Text(L.t("ÚLTIMO CICLO MATRICULADO", "LAST ENROLLED TERM"), style = LabelCapsMd, color = Color.White, letterSpacing = 2.sp)
                         }
                     }
                 }
@@ -210,7 +211,12 @@ fun CarneDigitalScreen(
                         )
                         Spacer(Modifier.width(12.dp))
                         Text(
-                            "Recuerda que compartir tus credenciales de identificación es una infracción muy grave que conlleva la máxima sanción bajo el Reglamento de Disciplina.",
+                            // Advertencia de disciplina: tono formal, la traducción
+                            // mantiene el nivel legal de la original (no casual).
+                            L.t(
+                                "Recuerda que compartir tus credenciales de identificación es una infracción muy grave que conlleva la máxima sanción bajo el Reglamento de Disciplina.",
+                                "Please be advised that sharing your identification credentials is a serious disciplinary offense, subject to the maximum penalty under the Disciplinary Regulations."
+                            ),
                             style = BodySm,
                             color = Color(0xFF4A3700)
                         )
@@ -225,7 +231,7 @@ fun CarneDigitalScreen(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)
                 ) {
-                    Text("Cerrar", style = BodyMdMedium, color = Color.White)
+                    Text(L.t("Cerrar", "Close"), style = BodyMdMedium, color = Color.White)
                 }
                 Spacer(Modifier.height(24.dp))
             }

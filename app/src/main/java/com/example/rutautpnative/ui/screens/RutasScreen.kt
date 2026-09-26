@@ -139,7 +139,7 @@ private fun ListaRutasScreen(
                 ) {
                     Icon(Icons.Filled.DirectionsBus, null, tint = AppPrimary, modifier = Modifier.size(26.dp))
                     Spacer(Modifier.width(10.dp))
-                    Text("Rutas", style = HeadlineLg, color = AppPrimary, modifier = Modifier.weight(1f))
+                    Text(L.t("Rutas", "Routes"), style = HeadlineLg, color = AppPrimary, modifier = Modifier.weight(1f))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
@@ -149,7 +149,7 @@ private fun ListaRutasScreen(
                     ) {
                         Box(modifier = Modifier.size(7.dp).clip(CircleShape).background(AppPrimary))
                         Spacer(Modifier.width(5.dp))
-                        Text("EN VIVO", style = LabelCapsSm, color = AppPrimary)
+                        Text(L.t("EN VIVO", "LIVE"), style = LabelCapsSm, color = AppPrimary)
                     }
                 }
             }
@@ -272,7 +272,7 @@ private fun RutaOpcionCard(ruta: RutaGTFS, onClick: () -> Unit) {
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(ruta.frecuenciaTexto, style = BodyMdMedium, color = ruta.color)
-                Text("frecuencia", style = LabelCapsSm, color = OnSurfaceVariant)
+                Text(L.t("frecuencia", "frequency"), style = LabelCapsSm, color = OnSurfaceVariant)
             }
             Spacer(Modifier.width(8.dp))
             Icon(Icons.Filled.ChevronRight, null, tint = OnSurfaceVariant.copy(alpha = 0.4f), modifier = Modifier.size(16.dp))
@@ -333,7 +333,7 @@ private fun DetalleRutaScreen(
                     Spacer(Modifier.width(4.dp))
                     Icon(Icons.Filled.DirectionsBus, null, tint = AppPrimary, modifier = Modifier.size(28.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Ruta ${ruta.linea}", style = HeadlineLg, color = AppPrimary, modifier = Modifier.weight(1f))
+                    Text(L.t("Ruta", "Route") + " ${ruta.linea}", style = HeadlineLg, color = AppPrimary, modifier = Modifier.weight(1f))
                 }
             }
 
@@ -393,7 +393,7 @@ private fun DetalleRutaScreen(
                             .background(Tertiary)
                             .padding(horizontal = 12.dp, vertical = 6.dp)
                     ) {
-                        Text("Ruta Segura", style = LabelCapsMd, color = Color.White)
+                        Text(L.t("Ruta Segura", "Safe Route"), style = LabelCapsMd, color = Color.White)
                     }
                     // Overlay: indicación de que el mapa es tocable
                     Row(
@@ -407,7 +407,7 @@ private fun DetalleRutaScreen(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Icon(Icons.Filled.OpenInFull, null, tint = OnSurface, modifier = Modifier.size(14.dp))
-                        Text("Toca para ver el recorrido completo", style = BodyXsMedium, color = OnSurface)
+                        Text(L.t("Toca para ver el recorrido completo", "Tap to see the full route"), style = BodyXsMedium, color = OnSurface)
                     }
                 }
                 Spacer(Modifier.height(20.dp))
@@ -423,14 +423,14 @@ private fun DetalleRutaScreen(
                         Spacer(Modifier.width(14.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(ruta.empresa, style = HeadlineSm, color = OnSurface)
-                            Text("Destino: UTP Trujillo", style = BodySm, color = OnSurfaceVariant)
+                            Text(L.t("Destino: UTP Trujillo", "Destination: UTP Trujillo"), style = BodySm, color = OnSurfaceVariant)
                         }
                         Box(
                             modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(PrimaryContainer).padding(horizontal = 12.dp, vertical = 8.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("FRECUENCIA", style = LabelCapsMd, color = OnPrimaryContainer)
+                                Text(L.t("FRECUENCIA", "FREQUENCY"), style = LabelCapsMd, color = OnPrimaryContainer)
                                 Text(if (ruta.headwayMin > 0) "${ruta.headwayMin} min" else "—", style = DisplayNumberMd, color = OnPrimaryContainer)
                             }
                         }
@@ -440,27 +440,27 @@ private fun DetalleRutaScreen(
 
                 // Stats grid
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    StatTile("TIEMPO", if (ruta.duracionMin > 0) "${ruta.duracionMin} min" else "—", Icons.Filled.Schedule, AppPrimary, Modifier.weight(1f))
-                    StatTile("COSTO", ruta.precioTexto, Icons.Filled.Payments, AppPrimary, Modifier.weight(1f))
+                    StatTile(L.t("TIEMPO", "TIME"), if (ruta.duracionMin > 0) "${ruta.duracionMin} min" else "—", Icons.Filled.Schedule, AppPrimary, Modifier.weight(1f))
+                    StatTile(L.t("COSTO", "PRICE"), ruta.precioTexto, Icons.Filled.Payments, AppPrimary, Modifier.weight(1f))
                 }
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    StatTile("TRANSBORDOS", "0", Icons.Filled.SwapCalls, AppPrimary, Modifier.weight(1f))
-                    StatTile("CONGESTIÓN", "—", Icons.Filled.BarChart, Secondary, Modifier.weight(1f))
+                    StatTile(L.t("TRANSBORDOS", "TRANSFERS"), "0", Icons.Filled.SwapCalls, AppPrimary, Modifier.weight(1f))
+                    StatTile(L.t("CONGESTIÓN", "CONGESTION"), "—", Icons.Filled.BarChart, Secondary, Modifier.weight(1f))
                 }
                 Spacer(Modifier.height(20.dp))
 
                 // Pasos
-                Text("Guía paso a paso", style = HeadlineXs, color = OnSurface)
+                Text(L.t("Guía paso a paso", "Step-by-step guide"), style = HeadlineXs, color = OnSurface)
                 Spacer(Modifier.height(16.dp))
                 PasoRow(
                     "1",
-                    "Camina al paradero ${paraderoSubida?.nombre ?: "más cercano"}",
-                    if (paraderoSubida != null) "$metrosCaminata metros • $minutosCaminata min aprox." else "A pie a tu paradero",
+                    L.t("Camina al paradero ${paraderoSubida?.nombre ?: "más cercano"}", "Walk to stop ${paraderoSubida?.nombre ?: "nearest one"}"),
+                    if (paraderoSubida != null) "$metrosCaminata " + L.t("metros", "meters") + " • $minutosCaminata " + L.t("min aprox.", "min approx.") else L.t("A pie a tu paradero", "Walk to your stop"),
                     Icons.Filled.DirectionsWalk, SurfaceContainerHighest, OnSurface, isLast = false
                 )
-                PasoRow("2", "Sube a la línea ${ruta.linea}", "${ruta.empresa} • ${ruta.duracionMin} min de viaje", Icons.Filled.DirectionsBus, AppPrimary, Color.White, isLast = false)
-                PasoRow("3", "Baja en ${paraderoDestino?.nombre ?: "destino final"}", "Llegada a destino final", Icons.Filled.School, Tertiary, Color.White, isLast = true)
+                PasoRow("2", L.t("Sube a la línea", "Get on route") + " ${ruta.linea}", "${ruta.empresa} • ${ruta.duracionMin} " + L.t("min de viaje", "min ride"), Icons.Filled.DirectionsBus, AppPrimary, Color.White, isLast = false)
+                PasoRow("3", L.t("Baja en", "Get off at") + " ${paraderoDestino?.nombre ?: L.t("destino final", "final destination")}", L.t("Llegada a destino final", "Final destination arrival"), Icons.Filled.School, Tertiary, Color.White, isLast = true)
                 Spacer(Modifier.height(20.dp))
 
                 // Botón Iniciar Navegación (señable: con el Modo Señas activo

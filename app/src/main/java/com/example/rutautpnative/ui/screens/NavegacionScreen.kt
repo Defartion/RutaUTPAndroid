@@ -31,6 +31,7 @@ import com.example.rutautpnative.model.Negocio
 import com.example.rutautpnative.ui.components.cuponVigente
 import com.example.rutautpnative.ui.components.formatoVenceCupon
 import com.example.rutautpnative.ui.components.iconoParaCategoria
+import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -43,12 +44,15 @@ data class NavInstruccion(
     val icono: ImageVector
 )
 
-private val instrucciones = listOf(
-    NavInstruccion(0, "Camina 250m hasta Av. España",       "250 m",  Icons.Filled.DirectionsWalk),
-    NavInstruccion(1, "Sube al bus en el paradero",          "15 min", Icons.Filled.DirectionsBus),
-    NavInstruccion(2, "Continúa por Av. España 1.5 km",     "1.5 km", Icons.Filled.ArrowUpward),
-    NavInstruccion(3, "Baja en el frontis de UTP Trujillo", "200 m",  Icons.Filled.ArrowDownward),
-    NavInstruccion(4, "¡Llegaste a tu destino!",             "",       Icons.Filled.CheckCircle),
+// Textos de la guía paso a paso (demo de tracking): son interfaz traducible;
+// se construyen dentro del composable para que reaccionen al cambio de idioma
+// (si fueran un val top-level, se capturarían una sola vez en el idioma de inicio).
+private fun instruccionesTraducidas() = listOf(
+    NavInstruccion(0, L.t("Camina 250m hasta Av. España", "Walk 250m to Av. España"), "250 m", Icons.Filled.DirectionsWalk),
+    NavInstruccion(1, L.t("Sube al bus en el paradero", "Board the bus at the stop"), "15 min", Icons.Filled.DirectionsBus),
+    NavInstruccion(2, L.t("Continúa por Av. España 1.5 km", "Continue along Av. España for 1.5 km"), "1.5 km", Icons.Filled.ArrowUpward),
+    NavInstruccion(3, L.t("Baja en el frontis de UTP Trujillo", "Get off in front of UTP Trujillo"), "200 m", Icons.Filled.ArrowDownward),
+    NavInstruccion(4, L.t("¡Llegaste a tu destino!", "You have arrived at your destination!"), "", Icons.Filled.CheckCircle),
 )
 
 private val tiempos   = listOf("4 min", "3 min", "2 min", "1 min", "0 min")
@@ -82,6 +86,7 @@ fun NavegacionScreen(
     onFinish: () -> Unit
 ) {
     var instruccionIndex by remember { mutableIntStateOf(0) }
+    val instrucciones = instruccionesTraducidas() // re-evaluado en cada recomposición (idioma)
     val instruccionActual = instrucciones[instruccionIndex]
     val progreso = instruccionIndex.toFloat() / (instrucciones.size - 1).toFloat()
 
@@ -422,7 +427,7 @@ private fun NegocioDetailCard(
                 if (!cupon.vence.isNullOrBlank()) {
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "Vence: " + formatoVenceCupon(cupon.vence),
+                        L.t("Vence: ", "Expires: ") + formatoVenceCupon(cupon.vence),
                         style = BodySm,
                         color = OnSurfaceVariant
                     )
@@ -458,7 +463,7 @@ private fun NegocioDetailCard(
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(Modifier.width(4.dp))
-                        Text(if (copiado) "Copiado" else "Copiar", style = BodySm, color = if (copiado) Tertiary else AppPrimary)
+                        Text(if (copiado) L.t("Copiado", "Copied") else L.t("Copiar", "Copy"), style = BodySm, color = if (copiado) Tertiary else AppPrimary)
                     }
                 }
 
@@ -482,7 +487,7 @@ private fun NegocioDetailCard(
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            if (guardado) "Guardado" else "Guardar cupón",
+                            if (guardado) L.t("Guardado", "Saved") else L.t("Guardar cupón", "Save coupon"),
                             style = BodyMdMedium,
                             color = if (guardado) OnSecondaryContainer else Color.White
                         )
@@ -505,11 +510,11 @@ private fun TopBar(rutaNombre: String, onFinish: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                "NAVEGANDO",
-                style = LabelCapsSm,
-                color = Color.White.copy(alpha = 0.7f)
-            )
+                Text(
+                    L.t("NAVEGANDO", "NAVIGATING"),
+                    style = LabelCapsSm,
+                    color = Color.White.copy(alpha = 0.7f)
+                )
             Text(
                 rutaNombre,
                 style = HeadlineSm,
@@ -528,7 +533,7 @@ private fun TopBar(rutaNombre: String, onFinish: () -> Unit) {
             ) {
                 Icon(Icons.Filled.Close, null, tint = Color.White, modifier = Modifier.size(12.dp))
                 TextButton(onClick = onFinish, contentPadding = PaddingValues(0.dp)) {
-                    Text("Finalizar", style = LabelCapsMd, color = Color.White)
+                    Text(L.t("Finalizar", "Finish"), style = LabelCapsMd, color = Color.White)
                 }
             }
         }
@@ -597,12 +602,12 @@ private fun BottomPanel(
         // Tiempo y distancia
         Row(modifier = Modifier.fillMaxWidth()) {
             Column {
-                Text("TIEMPO", style = LabelCapsSm, color = Color.White.copy(alpha = 0.5f))
+                Text(L.t("TIEMPO", "TIME"), style = LabelCapsSm, color = Color.White.copy(alpha = 0.5f))
                 Text(tiempo, style = HeadlineSm, color = Color.White)
             }
             Spacer(Modifier.weight(1f))
             Column(horizontalAlignment = Alignment.End) {
-                Text("DISTANCIA", style = LabelCapsSm, color = Color.White.copy(alpha = 0.5f))
+                Text(L.t("DISTANCIA", "DISTANCE"), style = LabelCapsSm, color = Color.White.copy(alpha = 0.5f))
                 Text(distancia, style = HeadlineSm, color = Color.White)
             }
         }

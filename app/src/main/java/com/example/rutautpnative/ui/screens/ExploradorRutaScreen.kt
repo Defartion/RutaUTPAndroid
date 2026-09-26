@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.rutautpnative.data.gtfs.RutaGTFS
+import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -123,7 +124,7 @@ fun ExploradorRutaScreen(ruta: RutaGTFS, onCerrar: () -> Unit) {
                     Box(modifier = Modifier.width(4.dp).height(30.dp).clip(RoundedCornerShape(2.dp)).background(ruta.color))
                     Spacer(Modifier.width(8.dp))
                     Column {
-                        Text("Línea ${ruta.linea}", style = HeadlineBody, color = OnSurface, maxLines = 1)
+                        Text(L.t("Línea", "Route") + " ${ruta.linea}", style = HeadlineBody, color = OnSurface, maxLines = 1)
                         Text(ruta.empresa, style = BodySm, color = OnSurfaceVariant, maxLines = 1)
                     }
                 }
@@ -181,10 +182,10 @@ private fun LeyendaRuta(ruta: RutaGTFS) {
             }
             Spacer(Modifier.height(14.dp))
             Row(modifier = Modifier.fillMaxWidth()) {
-                DatoRuta(Icons.Filled.Schedule, if (ruta.duracionMin > 0) "${ruta.duracionMin} min" else "—", "Viaje", Modifier.weight(1f))
-                DatoRuta(Icons.Filled.Payments, ruta.precioTexto, "Tarifa", Modifier.weight(1f))
-                DatoRuta(Icons.Filled.LocationOn, "${ruta.paraderos.size}", "Paraderos", Modifier.weight(1f))
-                DatoRuta(Icons.Filled.Straighten, String.format(Locale.US, "%.1f km", ruta.distanciaKm), "Longitud", Modifier.weight(1f))
+                DatoRuta(Icons.Filled.Schedule, if (ruta.duracionMin > 0) "${ruta.duracionMin} min" else "—", L.t("Viaje", "Ride"), Modifier.weight(1f))
+                DatoRuta(Icons.Filled.Payments, ruta.precioTexto, L.t("Tarifa", "Fare"), Modifier.weight(1f))
+                DatoRuta(Icons.Filled.LocationOn, "${ruta.paraderos.size}", L.t("Paraderos", "Stops"), Modifier.weight(1f))
+                DatoRuta(Icons.Filled.Straighten, String.format(Locale.US, "%.1f km", ruta.distanciaKm), L.t("Longitud", "Length"), Modifier.weight(1f))
             }
         }
     }

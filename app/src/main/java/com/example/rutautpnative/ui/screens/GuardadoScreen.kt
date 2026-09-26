@@ -27,6 +27,7 @@ import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.ui.components.BottomNavBar
 import com.example.rutautpnative.ui.components.iconoParaCategoria
+import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
 
 // TODO(ver-en-mapa): el mecanismo ya existe (router.destinoPendiente consume el Mapa);
@@ -45,7 +46,7 @@ fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()
     var exploradorRuta by remember { mutableStateOf<RutaGTFS?>(null) }
 
     val borderColor = OutlineVariant.copy(alpha = 0.25f)
-    val tabs = listOf("Lugares", "Líneas")
+    val tabs = listOf(L.t("Lugares", "Places"), L.t("Líneas", "Routes"))
 
     Box(modifier = Modifier.fillMaxSize().background(AppBackground)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -61,7 +62,7 @@ fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()
             ) {
                 Icon(Icons.Filled.Bookmark, null, tint = AppPrimary, modifier = Modifier.size(28.dp))
                 Spacer(Modifier.width(12.dp))
-                Text("Guardado", style = HeadlineLg, color = AppPrimary, modifier = Modifier.weight(1f))
+                Text(L.t("Guardado", "Saved"), style = HeadlineLg, color = AppPrimary, modifier = Modifier.weight(1f))
                 Box(
                     modifier = Modifier.clip(CircleShape).background(PrimaryContainer)
                         .clickable { showAddSheet = true }
@@ -69,7 +70,7 @@ fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Icon(Icons.Filled.Add, null, tint = OnPrimaryContainer, modifier = Modifier.size(12.dp))
-                        Text("Añadir", style = LabelCapsMd, color = OnPrimaryContainer)
+                        Text(L.t("Añadir", "Add"), style = LabelCapsMd, color = OnPrimaryContainer)
                     }
                 }
             }
@@ -103,13 +104,13 @@ fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Icon(Icons.Filled.BookmarkBorder, null, tint = OnSurfaceVariant, modifier = Modifier.size(48.dp))
                                     Spacer(Modifier.height(14.dp))
-                                    Text("Aún no tienes lugares guardados", style = BodyMdMedium, color = OnSurface)
+                                    Text(L.t("Aún no tienes lugares guardados", "You don't have any saved places yet"), style = BodyMdMedium, color = OnSurface)
                                 }
                             }
                         } else {
                             Column(modifier = Modifier.padding(horizontal = 20.dp)) {
                                 Spacer(Modifier.height(8.dp))
-                                Text("Toca un lugar para ver más opciones.", style = BodySm, color = OnSurfaceVariant)
+                                Text(L.t("Toca un lugar para ver más opciones.", "Tap a place to see more options."), style = BodySm, color = OnSurfaceVariant)
                                 Spacer(Modifier.height(12.dp))
                                 lugares.forEach { lugar ->
                                     LugarRow(lugar = lugar, onClick = { selectedLugar = lugar })
@@ -124,14 +125,14 @@ fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("Líneas guardadas", style = BodyMdMedium, color = OnSurface, modifier = Modifier.weight(1f))
+                                Text(L.t("Líneas guardadas", "Saved routes"), style = BodyMdMedium, color = OnSurface, modifier = Modifier.weight(1f))
                                 IconButton(onClick = { showAddLineaSheet = true }) {
                                     Icon(Icons.Filled.Add, null, tint = AppPrimary)
                                 }
                             }
                             Spacer(Modifier.height(8.dp))
                             if (lineas.isEmpty()) {
-                                Text("Aún no guardas ninguna línea", style = BodySm, color = OnSurfaceVariant)
+                                Text(L.t("Aún no guardas ninguna línea", "You haven't saved any routes yet"), style = BodySm, color = OnSurfaceVariant)
                             } else {
                                 lineas.forEach { ruta ->
                                     LineaRow(ruta = ruta, onClick = { selectedLinea = ruta })
@@ -211,7 +212,7 @@ private fun LugarRow(lugar: LugarGuardado, onClick: () -> Unit) {
                     Text(lugar.nombre, style = BodyMdMedium, color = OnSurface)
                     if (lugar.esFrecuente) {
                         Box(modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(Tertiary).padding(horizontal = 6.dp, vertical = 2.dp)) {
-                            Text("FRECUENTE", style = LabelCapsMd, color = OnTertiary)
+                            Text(L.t("FRECUENTE", "FREQUENT"), style = LabelCapsMd, color = OnTertiary)
                         }
                     }
                 }
@@ -265,15 +266,15 @@ private fun LugarDetailSheet(lugar: LugarGuardado, router: AppRouter, onEliminar
             Divider()
             Spacer(Modifier.height(16.dp))
             Button(onClick = { router.navigate(AppScreen.MapaPrincipal); onDismiss() }, modifier = Modifier.fillMaxWidth().height(48.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)) {
-                Icon(Icons.Filled.Map, null); Spacer(Modifier.width(8.dp)); Text("Ver ruta desde mi posición", style = BodyMdMedium, color = Color.White)
+                Icon(Icons.Filled.Map, null); Spacer(Modifier.width(8.dp)); Text(L.t("Ver ruta desde mi posición", "See route from my location"), style = BodyMdMedium, color = Color.White)
             }
             Spacer(Modifier.height(10.dp))
             Button(onClick = { router.navigate(AppScreen.Rutas); onDismiss() }, modifier = Modifier.fillMaxWidth().height(48.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = PrimaryContainer)) {
-                Icon(Icons.Filled.DirectionsBus, null, tint = OnPrimaryContainer); Spacer(Modifier.width(8.dp)); Text("Buscar transporte cercano", style = BodyMdMedium, color = OnPrimaryContainer)
+                Icon(Icons.Filled.DirectionsBus, null, tint = OnPrimaryContainer); Spacer(Modifier.width(8.dp)); Text(L.t("Buscar transporte cercano", "Find nearby transport"), style = BodyMdMedium, color = OnPrimaryContainer)
             }
             Spacer(Modifier.height(10.dp))
             Button(onClick = onEliminar, enabled = !lugar.esFijo, modifier = Modifier.fillMaxWidth().height(48.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = ErrorContainer)) {
-                Icon(Icons.Filled.Delete, null, tint = OnErrorContainer); Spacer(Modifier.width(8.dp)); Text("Eliminar de guardados", style = BodyMdMedium, color = OnErrorContainer)
+                Icon(Icons.Filled.Delete, null, tint = OnErrorContainer); Spacer(Modifier.width(8.dp)); Text(L.t("Eliminar de guardados", "Remove from saved"), style = BodyMdMedium, color = OnErrorContainer)
             }
             Spacer(Modifier.height(24.dp))
         }
@@ -298,11 +299,11 @@ private fun LineaDetailSheet(ruta: RutaGTFS, onQuitar: () -> Unit, onVerRutaComp
                 }
             }
             Spacer(Modifier.height(16.dp)); Divider(); Spacer(Modifier.height(16.dp))
-            Text("RECORRIDO", style = LabelCapsMd, color = OnSurfaceVariant)
+            Text(L.t("RECORRIDO", "ROUTE"), style = LabelCapsMd, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             Text(ruta.recorrido, style = BodyMd, color = OnSurface)
             Spacer(Modifier.height(16.dp))
-            Text("PARADAS PRINCIPALES", style = LabelCapsMd, color = OnSurfaceVariant)
+            Text(L.t("PARADAS PRINCIPALES", "MAIN STOPS"), style = LabelCapsMd, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             ruta.paraderos.take(5).forEach { paradero ->
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
@@ -313,15 +314,15 @@ private fun LineaDetailSheet(ruta: RutaGTFS, onQuitar: () -> Unit, onVerRutaComp
             }
             Spacer(Modifier.height(20.dp))
             Button(onClick = onVerRutaCompleta, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)) {
-                Icon(Icons.Filled.LocationOn, null, tint = Color.White); Spacer(Modifier.width(8.dp)); Text("Ver ruta completa", style = HeadlineSm, color = Color.White)
+                Icon(Icons.Filled.LocationOn, null, tint = Color.White); Spacer(Modifier.width(8.dp)); Text(L.t("Ver ruta completa", "See full route"), style = HeadlineSm, color = Color.White)
             }
             Spacer(Modifier.height(8.dp))
             Button(onClick = onQuitar, modifier = Modifier.fillMaxWidth().height(48.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = ErrorContainer)) {
-                Icon(Icons.Filled.Delete, null, tint = OnErrorContainer); Spacer(Modifier.width(8.dp)); Text("Quitar de guardados", style = BodyMdMedium, color = OnErrorContainer)
+                Icon(Icons.Filled.Delete, null, tint = OnErrorContainer); Spacer(Modifier.width(8.dp)); Text(L.t("Quitar de guardados", "Remove from saved"), style = BodyMdMedium, color = OnErrorContainer)
             }
             Spacer(Modifier.height(8.dp))
             TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
-                Text("Cerrar", style = BodyMdMedium, color = OnSurfaceVariant)
+                Text(L.t("Cerrar", "Close"), style = BodyMdMedium, color = OnSurfaceVariant)
             }
             Spacer(Modifier.height(16.dp))
         }
@@ -353,12 +354,12 @@ private fun AddLineaSheet(
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(modifier = Modifier.padding(20.dp)) {
-            Text("Añadir línea", style = HeadlineMd, color = OnSurface)
+            Text(L.t("Añadir línea", "Add route"), style = HeadlineMd, color = OnSurface)
             Spacer(Modifier.height(16.dp))
             OutlinedTextField(
                 value = textoBusqueda,
                 onValueChange = { textoBusqueda = it },
-                placeholder = { Text("Buscar línea, empresa o avenida", style = BodySm, color = OnSurfaceVariant) },
+                placeholder = { Text(L.t("Buscar línea, empresa o avenida", "Search route, company or avenue"), style = BodySm, color = OnSurfaceVariant) },
                 leadingIcon = { Icon(Icons.Filled.Search, null, tint = OnSurfaceVariant) },
                 trailingIcon = {
                     if (textoBusqueda.isNotEmpty()) {
@@ -374,7 +375,7 @@ private fun AddLineaSheet(
             Spacer(Modifier.height(12.dp))
             if (disponibles.isEmpty()) {
                 Text(
-                    if (textoBusqueda.isNotBlank()) "No hay líneas que coincidan" else "No hay más líneas para agregar",
+                    if (textoBusqueda.isNotBlank()) L.t("No hay líneas que coincidan", "No matching routes") else L.t("No hay más líneas para agregar", "No more routes to add"),
                     style = BodySm,
                     color = OnSurfaceVariant
                 )
@@ -405,24 +406,24 @@ private fun AddLugarSheet(onSave: (LugarGuardado) -> Unit, onDismiss: () -> Unit
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(modifier = Modifier.padding(20.dp)) {
-            Text("Guardar lugar", style = HeadlineMd, color = OnSurface)
+            Text(L.t("Guardar lugar", "Save place"), style = HeadlineMd, color = OnSurface)
             Spacer(Modifier.height(16.dp))
-            Text("NOMBRE", style = LabelCapsMd, color = OnSurfaceVariant)
+            Text(L.t("NOMBRE", "NAME"), style = LabelCapsMd, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
-                placeholder = { Text("Ej. Mi trabajo") },
+                placeholder = { Text(L.t("Ej. Mi trabajo", "E.g. My job")) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             )
             Spacer(Modifier.height(12.dp))
-            Text("DIRECCIÓN", style = LabelCapsMd, color = OnSurfaceVariant)
+            Text(L.t("DIRECCIÓN", "ADDRESS"), style = LabelCapsMd, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
                 value = direccion,
                 onValueChange = { direccion = it },
-                placeholder = { Text("Ej. Av. España 123") },
+                placeholder = { Text(L.t("Ej. Av. España 123", "E.g. España Ave 123")) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             )
@@ -439,7 +440,7 @@ private fun AddLugarSheet(onSave: (LugarGuardado) -> Unit, onDismiss: () -> Unit
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)
             ) {
-                Text("Guardar", style = HeadlineSm, color = Color.White)
+                Text(L.t("Guardar", "Save"), style = HeadlineSm, color = Color.White)
             }
             Spacer(Modifier.height(24.dp))
         }

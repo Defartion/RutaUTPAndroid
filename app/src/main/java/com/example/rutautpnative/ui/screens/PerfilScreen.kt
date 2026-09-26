@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.rutautpnative.data.negocios.CuponesStore
 import com.example.rutautpnative.data.negocios.NegociosService
-import com.example.rutautpnative.data.TemaStore
 import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.model.CategoriaNegocio
 import com.example.rutautpnative.model.Negocio
@@ -49,10 +48,7 @@ fun PerfilScreen(router: AppRouter) {
     // Modo Señas: ESTA preferencia SÍ persiste en disco (DataStore), a diferencia
     // de las demás de arriba, porque la leen todas las pantallas de la app.
     val modoSenias by SeniasPrefs.observarActivo().collectAsState(initial = false)
-    // Tema oscuro: igualmente persistida (interruptor manual global, no sigue
-    // al sistema). Se aplica en MainActivity → la app entera reacciona al instante.
-    val modoOscuro by TemaStore.observarOscuro().collectAsState(initial = false)
-    // Idioma: la tercera preferencia persistida (ES por defecto, EN opcional).
+    // Idioma: la otra preferencia persistida de Perfil (ES por defecto, EN opcional).
     val esIngles = L.esIngles
     var carnetVerificado by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
@@ -129,7 +125,7 @@ fun PerfilScreen(router: AppRouter) {
                                     Box(modifier = Modifier.clip(CircleShape).background(Tertiary).padding(horizontal = 8.dp, vertical = 3.dp)) {
                                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                                             Icon(Icons.Filled.Verified, null, tint = Color.White, modifier = Modifier.size(10.dp))
-                                            Text("VERIFICADO", style = LabelCapsSm, color = Color.White)
+                                            Text(L.t("VERIFICADO", "VERIFIED"), style = LabelCapsSm, color = Color.White)
                                         }
                                     }
                                 }
@@ -200,10 +196,11 @@ fun PerfilScreen(router: AppRouter) {
                             scope.launch { SeniasPrefs.establecerActivo(activo) }
                         }
                         Divider(modifier = Modifier.padding(start = 56.dp))
-                        ToggleRow(Icons.Filled.DarkMode, AppPrimary, L.t("Tema oscuro", "Dark theme"), modoOscuro) { activo ->
-                            scope.launch { TemaStore.establecerOscuro(activo) }
-                        }
-                        Divider(modifier = Modifier.padding(start = 56.dp))
+                        // TODO(tema-en-perfil): aquí hubo un switch de tema oscuro
+                        // (ícono DarkMode) — lo retiramos por fidelidad al original
+                        // en iOS, que solo lo tiene en el Side Drawer (sección
+                        // APARIENCIA). Sería una mejora de UX tenerlo también aquí;
+                        // queda documentado como posible mejora futura, no olvidado.
                         // ES = switch apagado, EN = encendido. Persiste como las dos
                         // anteriores; toda la app reacciona al instante (L).
                         ToggleRow(

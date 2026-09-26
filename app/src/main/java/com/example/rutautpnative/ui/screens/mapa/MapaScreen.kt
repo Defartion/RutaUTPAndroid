@@ -91,7 +91,7 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             // Marcador usuario
             MarkerComposable(
                 state = MarkerState(position = LatLng(-8.1180, -79.0350)),
-                title = "Mi ubicación"
+                title = L.t("Mi ubicación", "My location")
             ) {
                 PulsingUserMarker()
             }
@@ -100,7 +100,7 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             vm.busSimulados.forEach { bus ->
                 MarkerComposable(
                     state = MarkerState(position = LatLng(bus.lat, bus.lon)),
-                    title = "Línea ${bus.linea}"
+                    title = L.t("Línea", "Route") + " ${bus.linea}"
                 ) {
                     BusMarker(linea = bus.linea)
                 }
@@ -182,7 +182,7 @@ private fun MapaHeader(onMenuClick: () -> Unit) {
                 Icon(Icons.Filled.Menu, null, tint = OnSurface, modifier = Modifier.size(22.dp))
             }
             Spacer(Modifier.width(12.dp))
-            Text("Mapa", style = HeadlineLg, color = AppPrimary)
+            Text(L.t("Mapa", "Map"), style = HeadlineLg, color = AppPrimary)
         }
     }
 }
@@ -306,12 +306,12 @@ private fun BottomPanel(router: AppRouter, rutas: List<RutaGTFS>, onReportar: ()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Icon(Icons.Filled.Warning, null, tint = Color.White, modifier = Modifier.size(14.dp))
-                    Text("REPORTAR", style = LabelCapsMd, color = Color.White)
+                    Text(L.t("REPORTAR", "REPORT"), style = LabelCapsMd, color = Color.White)
                 }
             }
             Spacer(Modifier.width(12.dp))
             Text(
-                if (rutas.size == 1) "1 línea operando ahora" else "${rutas.size} líneas operando ahora",
+                if (rutas.size == 1) L.t("1 línea operando ahora", "1 route operating now") else L.t("${rutas.size} líneas operando ahora", "${rutas.size} routes operating now"),
                 style = HeadlineBody,
                 color = OnSurface.copy(alpha = 0.85f),
                 modifier = Modifier.weight(1f)
@@ -325,7 +325,7 @@ private fun BottomPanel(router: AppRouter, rutas: List<RutaGTFS>, onReportar: ()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Box(modifier = Modifier.size(7.dp).clip(CircleShape).background(AppPrimary))
-                    Text("En vivo", style = LabelCapsSm, color = AppPrimary)
+                    Text(L.t("En vivo", "Live"), style = LabelCapsSm, color = AppPrimary)
                 }
             }
         }
@@ -357,7 +357,7 @@ private fun BusCard(ruta: RutaGTFS, onClick: () -> Unit) {
     ) {
         Box {
             Column(modifier = Modifier.padding(14.dp)) {
-                Text("LÍNEA ${ruta.linea}", style = LabelCapsMd, color = OnSurfaceVariant)
+                Text(L.t("LÍNEA", "ROUTE") + " ${ruta.linea}", style = LabelCapsMd, color = OnSurfaceVariant)
                 Text(ruta.empresa, style = HeadlineSm, color = OnSurface, maxLines = 1)
                 Spacer(Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -373,6 +373,14 @@ private fun BusCard(ruta: RutaGTFS, onClick: () -> Unit) {
 }
 
 // Panel de reporte
+// Etiqueta del tipo de reporte según idioma (el enum guarda etiquetas en español).
+private fun tipoLabelMapa(tipo: TipoReporte): String = when (tipo) {
+    TipoReporte.ALERTA     -> L.t("ALERTA", "ALERT")
+    TipoReporte.TRAFICO    -> L.t("TRÁFICO", "TRAFFIC")
+    TipoReporte.SUGERENCIA -> L.t("SUGERENCIA", "SUGGESTION")
+    TipoReporte.OTRO       -> L.t("OTRO", "OTHER")
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MapaReportarSheet(onDismiss: () -> Unit) {
@@ -382,22 +390,22 @@ private fun MapaReportarSheet(onDismiss: () -> Unit) {
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(modifier = Modifier.padding(20.dp)) {
-            Text("Reportar incidente", style = HeadlineMd, color = OnSurface)
+            Text(L.t("Reportar incidente", "Report incident"), style = HeadlineMd, color = OnSurface)
             Spacer(Modifier.height(20.dp))
-            Text("TIPO DE REPORTE", style = LabelCapsMd, color = OnSurfaceVariant)
+            Text(L.t("TIPO DE REPORTE", "REPORT TYPE"), style = LabelCapsMd, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(TipoReporte.ALERTA, TipoReporte.TRAFICO, TipoReporte.SUGERENCIA).forEach { t ->
-                    FilterChip(selected = tipo == t, onClick = { tipo = t }, label = { Text(t.label, style = BodySm) })
+                    FilterChip(selected = tipo == t, onClick = { tipo = t }, label = { Text(tipoLabelMapa(t), style = BodySm) })
                 }
             }
             Spacer(Modifier.height(16.dp))
-            Text("DESCRIPCIÓN", style = LabelCapsMd, color = OnSurfaceVariant)
+            Text(L.t("DESCRIPCIÓN", "DESCRIPTION"), style = LabelCapsMd, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
                 value = descripcion,
                 onValueChange = { descripcion = it },
-                placeholder = { Text("¿Qué sucede?") },
+                placeholder = { Text(L.t("¿Qué sucede?", "What happened?")) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3,
                 shape = RoundedCornerShape(12.dp)
@@ -410,7 +418,7 @@ private fun MapaReportarSheet(onDismiss: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = AppPrimary),
                 enabled = descripcion.isNotBlank()
             ) {
-                Text("Enviar reporte", style = HeadlineSm, color = Color.White)
+                Text(L.t("Enviar reporte", "Send report"), style = HeadlineSm, color = Color.White)
             }
             Spacer(Modifier.height(24.dp))
         }
@@ -419,8 +427,8 @@ private fun MapaReportarSheet(onDismiss: () -> Unit) {
     if (showSuccess) {
         AlertDialog(
             onDismissRequest = { onDismiss() },
-            title = { Text("Reporte enviado") },
-            text = { Text("Tu reporte fue enviado a la comunidad. Gracias por colaborar.") },
+            title = { Text(L.t("Reporte enviado", "Report sent")) },
+            text = { Text(L.t("Tu reporte fue enviado a la comunidad. Gracias por colaborar.", "Your report was sent to the community. Thanks for contributing.")) },
             confirmButton = { TextButton(onClick = { onDismiss() }) { Text("OK") } }
         )
     }
