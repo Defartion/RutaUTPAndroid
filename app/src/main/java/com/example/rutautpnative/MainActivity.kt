@@ -18,6 +18,7 @@ import com.example.rutautpnative.data.places.PlacesService
 import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.data.senias.SeniasService
 import com.example.rutautpnative.data.gtfs.GTFSRepository
+import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.ui.theme.RutaUTPNativeTheme
 
@@ -36,6 +37,7 @@ class MainActivity : ComponentActivity() {
         SeniasService.init(this)
         SeniasPrefs.init(this)
         TemaStore.init(this)
+        L.init(this)
         setContent {
             // Tema oscuro manual (persistido): la raíz de la app reacciona solo.
             val modoOscuro by TemaStore.observarOscuro().collectAsState(initial = false)

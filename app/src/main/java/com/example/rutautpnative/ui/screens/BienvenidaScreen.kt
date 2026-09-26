@@ -30,6 +30,7 @@ import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.data.senias.SeniasOverlay
 import com.example.rutautpnative.data.senias.SeniasPrefs
+import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -69,7 +70,7 @@ fun BienvenidaScreen(router: AppRouter) {
                     modifier = Modifier.weight(1f)
                 )
                 TextButton(onClick = { router.navigate(AppScreen.MapaPrincipal) }) {
-                    Text("Saltar", style = BodySm, color = OnSurfaceVariant)
+                    Text(L.t("Saltar", "Skip"), style = BodySm, color = OnSurfaceVariant)
                 }
             }
             // Content
@@ -107,14 +108,17 @@ fun BienvenidaScreen(router: AppRouter) {
 
                 // Hero text
                 Text(
-                    text = "Llega a la UTP sin perderte",
+                    text = L.t("Llega a la UTP sin perderte", "Get to UTP without getting lost"),
                     style = DisplayLg,
                     color = OnSurface,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "Encuentra la ruta exacta desde tu ubicación hasta el campus sin complicaciones.",
+                    text = L.t(
+                        "Encuentra la ruta exacta desde tu ubicación hasta el campus sin complicaciones.",
+                        "Find the exact route from your location to campus without complications."
+                    ),
                     style = BodyLg,
                     color = OnSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -141,15 +145,15 @@ fun BienvenidaScreen(router: AppRouter) {
                     FeatureCard(
                         icon = Icons.Filled.Favorite,
                         iconColor = AppPrimary,
-                        label = "SEGURIDAD",
-                        title = "Rutas nocturnas monitoreadas.",
+                        label = L.t("SEGURIDAD", "SAFETY"),
+                        title = L.t("Rutas nocturnas monitoreadas.", "Night routes monitored."),
                         modifier = Modifier.weight(1f)
                     )
                     FeatureCard(
                         icon = Icons.Filled.Payments,
                         iconColor = Tertiary,
-                        label = "AHORRO",
-                        title = "Precios de micros y combis actualizados.",
+                        label = L.t("AHORRO", "SAVINGS"),
+                        title = L.t("Precios de micros y combis actualizados.", "Up-to-date micro and combi fares."),
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -171,7 +175,7 @@ fun BienvenidaScreen(router: AppRouter) {
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)
                 ) {
-                    Text("Comenzar", style = DisplayLgPhone, color = Color.White)
+                    Text(L.t("Comenzar", "Get started"), style = DisplayLgPhone, color = Color.White)
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(Icons.Filled.ArrowForward, contentDescription = null, tint = Color.White)
                 }

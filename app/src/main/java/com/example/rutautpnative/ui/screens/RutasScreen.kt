@@ -31,6 +31,7 @@ import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.ui.components.BottomNavBar
 import com.example.rutautpnative.ui.components.Signable
+import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
 import kotlinx.coroutines.launch
 import com.google.android.gms.maps.model.CameraPosition
@@ -184,16 +185,16 @@ private fun ListaRutasScreen(
                     }
                     Column(modifier = Modifier.padding(horizontal = 20.dp)) {
                         Spacer(Modifier.height(20.dp))
-                        Signable(clave = "rutas.elegir") {
-                            Text("Elige tu ruta", style = HeadlineSm, color = OnSurface)
-                        }
-                        Text("Toca una ruta para ver el detalle", style = BodySm, color = OnSurfaceVariant)
+                        // Puerta única: texto traducible + señable en una sola llamada.
+                        Signable(clave = "rutas.elegir", es = "Elige tu ruta", en = "Choose your route",
+                            style = HeadlineSm, color = OnSurface)
+                        Text(L.t("Toca una ruta para ver el detalle", "Tap a route to see details"), style = BodySm, color = OnSurfaceVariant)
                         Spacer(Modifier.height(12.dp))
                         // Campo de búsqueda
                         OutlinedTextField(
                             value = textoBusqueda,
                             onValueChange = onSearchChange,
-                            placeholder = { Text("Buscar línea, empresa o avenida", style = BodyMd, color = OnSurfaceVariant) },
+                            placeholder = { Text(L.t("Buscar línea, empresa o avenida", "Search line, company or avenue"), style = BodyMd, color = OnSurfaceVariant) },
                             leadingIcon = { Icon(Icons.Filled.Search, null, tint = OnSurfaceVariant) },
                             trailingIcon = {
                                 if (textoBusqueda.isNotEmpty()) {
@@ -217,7 +218,10 @@ private fun ListaRutasScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                "No hay rutas que coincidan con \"${textoBusqueda.trim()}\"",
+                                L.t(
+                                    "No hay rutas que coincidan con \"${textoBusqueda.trim()}\"",
+                                    "No routes match \"${textoBusqueda.trim()}\""
+                                ),
                                 style = BodyMd,
                                 color = OnSurfaceVariant,
                                 textAlign = TextAlign.Center
@@ -475,7 +479,7 @@ private fun DetalleRutaScreen(
                 ) {
                     Icon(Icons.Filled.LocationOn, null, tint = OnPrimaryContainer)
                     Spacer(Modifier.width(10.dp))
-                    Text("Iniciar Navegación", style = HeadlineSm, color = OnPrimaryContainer)
+                    Text(L.t("Iniciar Navegación", "Start Navigation"), style = HeadlineSm, color = OnPrimaryContainer)
                 }
                 Spacer(Modifier.height(80.dp))
             }

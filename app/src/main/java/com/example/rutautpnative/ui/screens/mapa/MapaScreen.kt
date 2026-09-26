@@ -28,6 +28,7 @@ import com.example.rutautpnative.data.senias.SeniasOverlay
 import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.model.TipoReporte
 import com.example.rutautpnative.ui.components.BottomNavBar
+import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
 import kotlinx.coroutines.launch
 import com.google.android.gms.maps.model.LatLng
@@ -215,7 +216,7 @@ private fun SearchPanel(vm: MapaViewModel, onSearch: () -> Unit, modifier: Modif
                         vm.textoBusqueda = it
                         vm.buscarTexto(it)
                     },
-                    placeholder = { Text("¿A dónde vas hoy?", style = BodyMd, color = OnSurfaceVariant) },
+                    placeholder = { Text(L.t("¿A dónde vas hoy?", "Where are you going today?"), style = BodyMd, color = OnSurfaceVariant) },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -239,16 +240,24 @@ private fun SearchPanel(vm: MapaViewModel, onSearch: () -> Unit, modifier: Modif
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 vm.destinos.forEach { destino ->
-                        // Textos señables: el chip tiene su propio clickable, así que
-                        // la decisión "¿seña o acción normal?" va DENTRO del onClick.
-                        val claveSenia = when (destino.label) {
-                            "UTP"       -> "mapa.destino.utp"
-                            "Centro"    -> "mapa.destino.centro"
-                            "Huanchaco" -> "mapa.destino.huanchaco"
-                            else        -> null
+                        // Las claves de señas se mapean por ID (no por label) para no
+                        // romperse al traducir; el texto mostrado va por L.t.
+                        val claveSenia = when (destino.id) {
+                            2 -> "mapa.destino.utp"
+                            4 -> "mapa.destino.centro"
+                            5 -> "mapa.destino.huanchaco"
+                            else -> null
+                        }
+                        val etiqueta = when (destino.id) {
+                            1 -> L.t("Casa", "Home")
+                            2 -> "UTP"
+                            3 -> L.t("Trabajo", "Work")
+                            4 -> L.t("Centro", "Downtown")
+                            5 -> "Huanchaco"
+                            else -> destino.label
                         }
                         DestinoChipItem(
-                            destino = destino,
+                            destino = destino.copy(label = etiqueta),
                             isActive = vm.destinoSeleccionado?.id == destino.id,
                             onClick = {
                                 if (modoSenias && claveSenia != null) {

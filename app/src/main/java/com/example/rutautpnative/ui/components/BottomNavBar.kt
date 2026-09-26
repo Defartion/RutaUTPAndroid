@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
+import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
 import androidx.compose.foundation.background
 import androidx.compose.ui.draw.drawBehind
@@ -20,20 +21,21 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.ui.graphics.vector.ImageVector
 
-//Navtab
+//Navtab — etiquetas se traducen inline al renderizar (L.t reactiva al idioma)
 private data class NavTab(
-    val label: String,
+    val labelEs: String,
+    val labelEn: String,
     val iconOutlined: ImageVector,
-    val iconFilled: ImageVector,    
+    val iconFilled: ImageVector,
     val screen: AppScreen
 )
 
 private val tabs = listOf(
-    NavTab("Mapa",      Icons.Outlined.Map,          Icons.Filled.Map,          AppScreen.MapaPrincipal),
-    NavTab("Rutas",     Icons.Outlined.DirectionsBus, Icons.Filled.DirectionsBus, AppScreen.Rutas),
-    NavTab("Guardado",  Icons.Outlined.Bookmark,      Icons.Filled.Bookmark,     AppScreen.Guardado),
-    NavTab("Seguridad", Icons.Outlined.Lock,           Icons.Filled.Lock,         AppScreen.Seguridad),
-    NavTab("Perfil",    Icons.Outlined.Person,         Icons.Filled.Person,       AppScreen.Perfil),
+    NavTab("Mapa",      "Map",    Icons.Outlined.Map,           Icons.Filled.Map,           AppScreen.MapaPrincipal),
+    NavTab("Rutas",     "Routes", Icons.Outlined.DirectionsBus, Icons.Filled.DirectionsBus, AppScreen.Rutas),
+    NavTab("Guardado",  "Saved",  Icons.Outlined.Bookmark,      Icons.Filled.Bookmark,      AppScreen.Guardado),
+    NavTab("Seguridad", "Safety", Icons.Outlined.Lock,          Icons.Filled.Lock,          AppScreen.Seguridad),
+    NavTab("Perfil",    "Profile",Icons.Outlined.Person,        Icons.Filled.Person,        AppScreen.Perfil),
 )
 
 //boton de navbar
@@ -63,6 +65,7 @@ fun BottomNavBar(
     ) {
         tabs.forEach { tab ->
             val isActive = router.currentScreen == tab.screen
+            val label = L.t(tab.labelEs, tab.labelEn)
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
@@ -72,13 +75,13 @@ fun BottomNavBar(
             ) {
                 Icon(
                     imageVector = if (isActive) tab.iconFilled else tab.iconOutlined,
-                    contentDescription = tab.label,
+                    contentDescription = label,
                     tint = if (isActive) AppPrimary else OnSurfaceVariant.copy(alpha = 0.65f),
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.height(3.dp))
                 Text(
-                    text = tab.label,
+                    text = label,
                     style = LabelCapsSm,
                     color = if (isActive) AppPrimary else OnSurfaceVariant.copy(alpha = 0.65f),
                     maxLines = 1,

@@ -33,6 +33,7 @@ import com.example.rutautpnative.model.Negocio
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.ui.components.BottomNavBar
+import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.components.cuponVigente
 import com.example.rutautpnative.ui.components.formatoVenceCupon
 import com.example.rutautpnative.ui.components.iconoParaCategoria
@@ -51,6 +52,8 @@ fun PerfilScreen(router: AppRouter) {
     // Tema oscuro: igualmente persistida (interruptor manual global, no sigue
     // al sistema). Se aplica en MainActivity → la app entera reacciona al instante.
     val modoOscuro by TemaStore.observarOscuro().collectAsState(initial = false)
+    // Idioma: la tercera preferencia persistida (ES por defecto, EN opcional).
+    val esIngles = L.esIngles
     var carnetVerificado by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var newNameInput by remember { mutableStateOf("") }
@@ -120,7 +123,7 @@ fun PerfilScreen(router: AppRouter) {
                             Text(nombre, style = HeadlineLg, color = Color.White)
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Box(modifier = Modifier.clip(CircleShape).background(Color.White.copy(alpha = 0.20f)).padding(horizontal = 8.dp, vertical = 3.dp)) {
-                                    Text("ESTUDIANTE UTP", style = LabelCapsSm, color = Color.White.copy(alpha = 0.95f))
+                                    Text(L.t("ESTUDIANTE UTP", "UTP STUDENT"), style = LabelCapsSm, color = Color.White.copy(alpha = 0.95f))
                                 }
                                 if (carnetVerificado) {
                                     Box(modifier = Modifier.clip(CircleShape).background(Tertiary).padding(horizontal = 8.dp, vertical = 3.dp)) {
@@ -136,20 +139,20 @@ fun PerfilScreen(router: AppRouter) {
                     Spacer(Modifier.height(22.dp))
 
                     // Seccion de billetera
-                    Text("MI BILLETERA", style = LabelCapsSm, color = Color.White.copy(alpha = 0.85f), modifier = Modifier.padding(horizontal = 4.dp))
+                    Text(L.t("MI BILLETERA", "MY WALLET"), style = LabelCapsSm, color = Color.White.copy(alpha = 0.85f), modifier = Modifier.padding(horizontal = 4.dp))
                     Spacer(Modifier.height(10.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         WalletCard(
                             icon = Icons.Filled.CreditCard,
-                            title = "Método Pago",
-                            subtitle = metodoPagoUltimos4?.let { "•••• $it" } ?: "Agregar tarjeta",
+                            title = L.t("Método Pago", "Payment Method"),
+                            subtitle = metodoPagoUltimos4?.let { "•••• $it" } ?: L.t("Agregar tarjeta", "Add card"),
                             modifier = Modifier.weight(1f),
                             onClick = { showTarjetaForm = true }
                         )
                         WalletCard(
                             icon = Icons.Filled.Badge,
-                            title = "Carnet UTP",
-                            subtitle = if (carnetVerificado) "Verificado" else "Escanear ahora",
+                            title = L.t("Carnet UTP", "UTP Card"),
+                            subtitle = if (carnetVerificado) L.t("Verificado", "Verified") else L.t("Escanear ahora", "Scan now"),
                             modifier = Modifier.weight(1f),
                             // Ya verificado: abre el carné directo; si no, primero el scanner.
                             onClick = {
@@ -169,44 +172,52 @@ fun PerfilScreen(router: AppRouter) {
                 modifier = Modifier.padding(horizontal = 20.dp).offset(y = (-40).dp)
             ) {
                 Row(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                    StatColumn("47", "VIAJES", Modifier.weight(1f))
+                    StatColumn("47", L.t("VIAJES", "TRIPS"), Modifier.weight(1f))
                     Box(modifier = Modifier.width(1.dp).height(36.dp).background(OutlineVariant.copy(alpha = 0.5f)).align(Alignment.CenterVertically))
-                    StatColumn("12", "RUTAS", Modifier.weight(1f))
+                    StatColumn("12", L.t("RUTAS", "ROUTES"), Modifier.weight(1f))
                     Box(modifier = Modifier.width(1.dp).height(36.dp).background(OutlineVariant.copy(alpha = 0.5f)).align(Alignment.CenterVertically))
-                    StatColumn("3", "LOGROS", Modifier.weight(1f))
+                    StatColumn("3", L.t("LOGROS", "TROPHIES"), Modifier.weight(1f))
                 }
             }
 
             // Settings
             Column(modifier = Modifier.padding(horizontal = 20.dp).offset(y = (-28).dp)) {
-                Text("Preferencias", style = LabelCapsLg, color = OnSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp))
+                Text(L.t("Preferencias", "Preferences"), style = LabelCapsLg, color = OnSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp))
                 Card(
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest)
                 ) {
                     Column {
-                        ToggleRow(Icons.Filled.Notifications, AppPrimary, "Notificaciones", notifOn) { notifOn = it }
+                        ToggleRow(Icons.Filled.Notifications, AppPrimary, L.t("Notificaciones", "Notifications"), notifOn) { notifOn = it }
                         Divider(modifier = Modifier.padding(start = 56.dp))
-                        ToggleRow(Icons.Filled.LocationOn, Secondary, "Compartir ubicación", ubicacionOn) { ubicacionOn = it }
+                        ToggleRow(Icons.Filled.LocationOn, Secondary, L.t("Compartir ubicación", "Share location"), ubicacionOn) { ubicacionOn = it }
                         Divider(modifier = Modifier.padding(start = 56.dp))
-                        ToggleRow(Icons.Filled.CreditCard, Tertiary, "Modo económico", ecoOff) { ecoOff = it }
+                        ToggleRow(Icons.Filled.CreditCard, Tertiary, L.t("Modo económico", "Saver mode"), ecoOff) { ecoOff = it }
                         Divider(modifier = Modifier.padding(start = 56.dp))
                         // Persistida: reactiva vía Flow; al tocar textos señables
                         // en cualquier pantalla se muestra el clip de señas.
-                        ToggleRow(Icons.Filled.SignLanguage, AppPrimary, "Modo Señas", modoSenias) { activo ->
+                        ToggleRow(Icons.Filled.SignLanguage, AppPrimary, L.t("Modo Señas", "Sign language mode"), modoSenias) { activo ->
                             scope.launch { SeniasPrefs.establecerActivo(activo) }
                         }
                         Divider(modifier = Modifier.padding(start = 56.dp))
-                        ToggleRow(Icons.Filled.DarkMode, AppPrimary, "Tema oscuro", modoOscuro) { activo ->
+                        ToggleRow(Icons.Filled.DarkMode, AppPrimary, L.t("Tema oscuro", "Dark theme"), modoOscuro) { activo ->
                             scope.launch { TemaStore.establecerOscuro(activo) }
                         }
                         Divider(modifier = Modifier.padding(start = 56.dp))
-                        ChevronRow(Icons.Filled.Person, AppPrimary, "Nombre: $nombre") {
+                        // ES = switch apagado, EN = encendido. Persiste como las dos
+                        // anteriores; toda la app reacciona al instante (L).
+                        ToggleRow(
+                            Icons.Filled.Language, AppPrimary,
+                            if (esIngles) "Idioma: English" else "Idioma: Español",
+                            esIngles
+                        ) { activo -> L.establecer(if (activo) "en" else "es") }
+                        Divider(modifier = Modifier.padding(start = 56.dp))
+                        ChevronRow(Icons.Filled.Person, AppPrimary, L.t("Nombre: $nombre", "Name: $nombre")) {
                             newNameInput = nombre
                             showEditDialog = true
                         }
                         Divider(modifier = Modifier.padding(start = 56.dp))
-                        ChevronRow(Icons.Filled.Edit, OnSurfaceVariant, "Editar perfil") {
+                        ChevronRow(Icons.Filled.Edit, OnSurfaceVariant, L.t("Editar perfil", "Edit profile")) {
                             newNameInput = nombre
                             showEditDialog = true
                         }
@@ -233,12 +244,12 @@ fun PerfilScreen(router: AppRouter) {
     if (showEditDialog) {
         AlertDialog(
             onDismissRequest = { showEditDialog = false },
-            title = { Text("Editar nombre") },
+            title = { Text(L.t("Editar nombre", "Edit name")) },
             text = {
                 OutlinedTextField(
                     value = newNameInput,
                     onValueChange = { newNameInput = it },
-                    label = { Text("Nombre completo") },
+                    label = { Text(L.t("Nombre completo", "Full name")) },
                     shape = RoundedCornerShape(12.dp)
                 )
             },
@@ -246,9 +257,9 @@ fun PerfilScreen(router: AppRouter) {
                 TextButton(onClick = {
                     if (newNameInput.isNotBlank()) nombre = newNameInput
                     showEditDialog = false
-                }) { Text("Guardar") }
+                }) { Text(L.t("Guardar", "Save")) }
             },
-            dismissButton = { TextButton(onClick = { showEditDialog = false }) { Text("Cancelar") } }
+            dismissButton = { TextButton(onClick = { showEditDialog = false }) { Text(L.t("Cancelar", "Cancel")) } }
         )
     }
 
@@ -389,17 +400,17 @@ private fun PerfilCuponCard(negocio: Negocio, onQuitar: () -> Unit) {
                         .background(if (vigente) SecondaryContainer else ErrorContainer)
                         .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
-                    Text(
-                        if (vigente) "Guardado" else "Vencido",
-                        style = LabelCapsSm,
+                        Text(
+                            if (vigente) L.t("Guardado", "Saved") else L.t("Vencido", "Expired"),
+                            style = LabelCapsSm,
                         color = if (vigente) OnSecondaryContainer else OnErrorContainer
                     )
                 }
-                Text("Cupón demo", style = LabelCapsSm, color = OnSurfaceVariant)
+                Text(L.t("Cupón demo", "Demo coupon"), style = LabelCapsSm, color = OnSurfaceVariant)
             }
             if (!cupon.vence.isNullOrBlank()) {
                 Spacer(Modifier.height(4.dp))
-                Text("Vence: ${formatoVenceCupon(cupon.vence)}", style = BodySm, color = OnSurfaceVariant)
+                Text(L.t("Vence: ", "Expires: ") + formatoVenceCupon(cupon.vence), style = BodySm, color = OnSurfaceVariant)
             }
 
             Spacer(Modifier.height(10.dp))
@@ -434,7 +445,7 @@ private fun PerfilCuponCard(negocio: Negocio, onQuitar: () -> Unit) {
                 }
             }
             if (copiado) {
-                Text("Código copiado", style = BodyXs, color = Tertiary)
+                Text(L.t("Código copiado", "Code copied"), style = BodyXs, color = Tertiary)
             }
             Spacer(Modifier.height(4.dp))
 
@@ -442,7 +453,7 @@ private fun PerfilCuponCard(negocio: Negocio, onQuitar: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // TODO(negocios-detalle): abrir NegocioDetailCard del negocio.
                 // Pendiente del sub-paso de burbujas en NavegacionScreen; por ahora sin acción.
-                Text("Ver promoción", style = BodySm, color = AppPrimary)
+                Text(L.t("Ver promoción", "View promotion"), style = BodySm, color = AppPrimary)
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = onQuitar) {
                     Icon(Icons.Filled.BookmarkRemove, "Quitar cupón", tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
@@ -465,7 +476,7 @@ private fun MisCuponesSection(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Filled.ConfirmationNumber, null, tint = AppPrimary, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
-            Text("Mis cupones", style = HeadlineSm, color = OnSurface)
+            Text(L.t("Mis cupones", "My coupons"), style = HeadlineSm, color = OnSurface)
             Spacer(Modifier.width(8.dp))
             // Badge con el total.
             Box(
@@ -476,7 +487,7 @@ private fun MisCuponesSection(
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text("Tus promociones guardadas en Tracking Demo.", style = BodySm, color = OnSurfaceVariant)
+        Text(L.t("Tus promociones guardadas en Tracking Demo.", "Your promotions saved in Tracking Demo."), style = BodySm, color = OnSurfaceVariant)
         Spacer(Modifier.height(12.dp))
 
         if (cupones.isEmpty()) {
@@ -492,10 +503,11 @@ private fun MisCuponesSection(
                 ) {
                     Icon(Icons.Filled.ConfirmationNumber, null, tint = OnSurfaceVariant, modifier = Modifier.size(40.dp))
                     Spacer(Modifier.height(12.dp))
-                    Text("Tu próxima promo te espera", style = BodyMdMedium, color = OnSurface)
+                    Text(L.t("Tu próxima promo te espera", "Your next promo awaits"), style = BodyMdMedium, color = OnSurface)
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        "Abre un negocio en el mapa y toca Guardar en su cupón. Aparecerá aquí.",
+                        L.t("Abre un negocio en el mapa y toca Guardar en su cupón. Aparecerá aquí.",
+                            "Open a business on the map and tap Save on its coupon. It will show up here."),
                         style = BodySm,
                         color = OnSurfaceVariant,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -506,7 +518,7 @@ private fun MisCuponesSection(
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)
                     ) {
-                        Text("Explorar negocios", style = BodyMdMedium, color = Color.White)
+                        Text(L.t("Explorar negocios", "Explore businesses"), style = BodyMdMedium, color = Color.White)
                     }
                 }
             }
