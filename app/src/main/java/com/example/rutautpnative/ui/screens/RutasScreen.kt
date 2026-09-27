@@ -228,6 +228,23 @@ private fun ListaRutasScreen(
                             )
                         }
                     }
+                } else if (rutas.isEmpty()) {
+                    // Catálogo vacío total (borde teórico: asset empaquetado).
+                    // Igual que el resto del proyecto: nunca una pantalla en blanco
+                    // sin explicación, aunque el caso sea remoto.
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                L.t("No hay rutas disponibles", "No routes available"),
+                                style = BodyMd,
+                                color = OnSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
                 } else {
                     items(rutas, key = { it.id }) { ruta ->
                         Column(modifier = Modifier.padding(horizontal = 20.dp)) {

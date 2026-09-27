@@ -1,6 +1,7 @@
 package com.example.rutautpnative.ui.screens
 
 import android.Manifest
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -81,10 +82,18 @@ fun MapaUbicacionPicker(
     }
 
     // Tras conceder permiso desde el botón, se ejecuta la búsqueda pendiente.
+    // Si se niega, breve Toast explicativo (no queda el silencio sin explicación).
     LaunchedEffect(permisoUbicacion.status.isGranted) {
         if (permisoUbicacion.status.isGranted && pendienteMiUbicacion) {
             pendienteMiUbicacion = false
             miUbicacion()
+        } else if (!permisoUbicacion.status.isGranted && pendienteMiUbicacion) {
+            pendienteMiUbicacion = false
+            Toast.makeText(
+                context,
+                L.t("Sin acceso a tu ubicación no se puede usar el botón \"Mi ubicación\".", "Without location access, the \"My location\" button can't be used."),
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
