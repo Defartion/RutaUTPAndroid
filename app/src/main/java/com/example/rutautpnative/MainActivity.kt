@@ -4,8 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.rutautpnative.data.LineasGuardadasStore
 import com.example.rutautpnative.data.LugaresStore
@@ -39,8 +37,9 @@ class MainActivity : ComponentActivity() {
         TemaStore.init(this)
         L.init(this)
         setContent {
-            // Tema oscuro manual (persistido): la raíz de la app reacciona solo.
-            val modoOscuro by TemaStore.observarOscuro().collectAsState(initial = false)
+            // Tema oscuro manual (persistido): la raíz lee el espejo reactivo
+            // del TemaStore — cambia al instante sin depender del timing del flow.
+            val modoOscuro = TemaStore.oscuroActual
             RutaUTPNativeTheme(modoOscuro = modoOscuro) {
                 val router: AppRouter = viewModel()
                 RootView(router)

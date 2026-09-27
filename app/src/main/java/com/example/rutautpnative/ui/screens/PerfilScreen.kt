@@ -78,11 +78,13 @@ fun PerfilScreen(router: AppRouter) {
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            // Hero gradient header
+            // Hero gradient header: envuelve SOLO avatar + nombre + billetera
+            // (wrapContentHeight, sin alto fijo). Como en iOS: termina ahí y todo
+            // lo demás (Mis cupones, stats, preferencias) va afuera, sobre fondo normal.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(380.dp)
+                    .wrapContentHeight()
                     .background(
                         Brush.linearGradient(listOf(AppPrimary, PrimaryContainer, Tertiary))
                     )
@@ -93,9 +95,9 @@ fun PerfilScreen(router: AppRouter) {
 
                 Column(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.statusBars)
-                        .padding(top = 56.dp, start = 20.dp, end = 20.dp)
+                        .padding(top = 56.dp, start = 20.dp, end = 20.dp, bottom = 28.dp)
                 ) {
                     // Avatar + name
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -160,12 +162,23 @@ fun PerfilScreen(router: AppRouter) {
                 }
             }
 
-            // Stats card
+            //----Mis cupones (orden iOS: justo después de la billetera)----
+            // Hermana del hero, ya fuera del degradado y sin offsets negativos.
+            Spacer(Modifier.height(16.dp))
+            MisCuponesSection(
+                cupones = cuponesGuardados,
+                onExplorar = { router.navigate(AppScreen.MapaPrincipal) },
+                onQuitar = { negocio -> scope.launch { CuponesStore.alternarCupon(negocio) } },
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+            Spacer(Modifier.height(16.dp))
+
+            // Stats card (sin offsets: flujo normal tras el hero ajustado)
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest),
                 elevation = CardDefaults.cardElevation(8.dp),
-                modifier = Modifier.padding(horizontal = 20.dp).offset(y = (-40).dp)
+                modifier = Modifier.padding(horizontal = 20.dp)
             ) {
                 Row(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                     StatColumn("47", L.t("VIAJES", "TRIPS"), Modifier.weight(1f))
@@ -175,9 +188,10 @@ fun PerfilScreen(router: AppRouter) {
                     StatColumn("3", L.t("LOGROS", "TROPHIES"), Modifier.weight(1f))
                 }
             }
+            Spacer(Modifier.height(16.dp))
 
             // Settings
-            Column(modifier = Modifier.padding(horizontal = 20.dp).offset(y = (-28).dp)) {
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
                 Text(L.t("Preferencias", "Preferences"), style = LabelCapsLg, color = OnSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp))
                 Card(
                     shape = RoundedCornerShape(16.dp),
@@ -222,13 +236,6 @@ fun PerfilScreen(router: AppRouter) {
                 }
             }
 
-            //----Mis cupones (persistidos, reactivos)----
-            MisCuponesSection(
-                cupones = cuponesGuardados,
-                onExplorar = { router.navigate(AppScreen.MapaPrincipal) },
-                onQuitar = { negocio -> scope.launch { CuponesStore.alternarCupon(negocio) } },
-                modifier = Modifier.padding(horizontal = 20.dp).offset(y = (-16).dp)
-            )
             Spacer(Modifier.height(90.dp))
         }
 

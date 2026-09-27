@@ -242,8 +242,9 @@ private fun CiudadSheet(onDismiss: () -> Unit) {
 private fun AjustesSheet(onDismiss: () -> Unit) {
     val scope = rememberCoroutineScope()
     // Conectado a TemaStore (persistido): es el ÚNICO control de tema real,
-    // igual que en iOS (SideDrawer.swift).
-    val isDark by TemaStore.observarOscuro().collectAsState(initial = false)
+    // igual que en iOS (SideDrawer.swift). Lee el espejo en memoria para
+    // reflejar el cambio al instante (sin depender del timing DataStore→Flow).
+    val isDark = TemaStore.oscuroActual
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(modifier = Modifier.padding(20.dp)) {
