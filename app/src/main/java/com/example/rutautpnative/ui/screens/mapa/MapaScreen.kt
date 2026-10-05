@@ -96,13 +96,27 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                 PulsingUserMarker()
             }
 
-            // Buses simulados
+            // Buses simulados: bus 3D (tira de giros) con la etiqueta de la
+            // línea encima. El ancla NO es el centro del marcador completo:
+            // con la etiqueta arriba, el punto que cae en la coordenada real
+            // es el centro vertical del modelo (ver BusMarkerAncla).
             vm.busSimulados.forEach { bus ->
                 MarkerComposable(
                     state = MarkerState(position = LatLng(bus.lat, bus.lon)),
+                    anchor = BusMarkerAncla,
                     title = L.t("Línea", "Route") + " ${bus.linea}"
                 ) {
-                    BusMarker(linea = bus.linea)
+                    BusMarker3D(
+                        linea = bus.linea,
+                        // Color de la línea según el feed GTFS (si esa línea no
+                        // pasa por este punto, se usa el color de marca).
+                        color = vm.rutasCercanas.firstOrNull { it.linea == bus.linea }?.color ?: AppPrimary,
+                        // bus.angulo es matemático (0° = este, 90° = norte,
+                        // porque el movimiento usa lat += sin, lon += cos).
+                        // La tira de giros espera rumbo de brújula (0° = norte,
+                        // horario): heading = 90° - angulo, normalizado a [0,360).
+                        heading = ((90.0 - bus.angulo) % 360.0 + 360.0) % 360.0
+                    )
                 }
             }
 
