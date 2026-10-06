@@ -44,6 +44,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun MapaUbicacionPicker(
     inicial: LatLng?,          // si el usuario ya había marcado antes, arranca ahí
+    titulo: String? = null,     // texto de la instrucción (null = el de Publicar)
+    textoConfirmar: String? = null, // texto del botón (null = "Confirmar ubicación")
     onConfirmar: (LatLng) -> Unit,
     onCerrar: () -> Unit
 ) {
@@ -147,7 +149,7 @@ fun MapaUbicacionPicker(
                 }
                 Spacer(Modifier.width(14.dp))
                 Text(
-                    L.t("Arrastra el mapa para marcar el lugar", "Drag the map to mark the place"),
+                    titulo ?: L.t("Arrastra el mapa para marcar el lugar", "Drag the map to mark the place"),
                     style = BodyMdMedium,
                     color = OnSurface,
                     modifier = Modifier
@@ -204,7 +206,7 @@ fun MapaUbicacionPicker(
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)
                         ) {
-                            Text(L.t("Confirmar ubicación", "Confirm location"), style = HeadlineSm, color = Color.White)
+                            Text(textoConfirmar ?: L.t("Confirmar ubicación", "Confirm location"), style = HeadlineSm, color = Color.White)
                         }
                     }
                 }

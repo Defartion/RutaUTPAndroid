@@ -29,6 +29,22 @@ object PlacesService {
         object Error : Resultado()
     }
 
+    // Sugerencia de autocompletado: nombre + direccion legible (para el
+    // dropdown del buscador del Mapa, hasta 5 resultados como el
+    // MKLocalSearchCompleter de iOS).
+    data class Sugerencia(
+        val nombre: String,
+        val direccion: String,
+        val lat: Double,
+        val lon: Double
+    )
+
+    sealed class ResultadoSugerencias {
+        data class Exito(val sugerencias: List<Sugerencia>) : ResultadoSugerencias()
+        object SinResultados : ResultadoSugerencias()
+        object Error : ResultadoSugerencias()
+    }
+
     private var appContext: Context? = null
 
     fun init(context: Context) {
@@ -90,5 +106,50 @@ object PlacesService {
             ?.getString("com.google.android.geo.API_KEY")
     } catch (e: Exception) {
         null
+    }
+
+    //----Sugerencias de autocompletado (dropdown del buscador del Mapa)----
+    suspend fun buscarSugerencias(consulta: String): ResultadoSugerencias = withContext(Dispatchers.IO) {
+        val apiKey = leerApiKey() ?: return@withContext ResultadoSugerencias.Error
+        val centro = GTFSRepository.coordenadaUTP
+        val url = "https://maps.googleapis.com/maps/api/place/textsearch/json" +
+            "?query=" + URLEncoder.encode(consulta, "UTF-8") +
+            "&location=${centro.latitude},${centro.longitude}" +
+            "&radius=8000" +
+            "&language=es" +
+            "&key=$apiKey"
+
+        try {
+            val con = URL(url).openConnection() as HttpURLConnection
+            con.connectTimeout = 10_000
+            con.readTimeout = 10_000
+            val texto = try {
+                con.inputStream.bufferedReader().use { it.readText() }
+            } finally {
+                con.disconnect()
+            }
+
+            val raiz = Json.parseToJsonElement(texto).jsonObject
+            when (raiz["status"]?.jsonPrimitive?.content) {
+                "OK" -> {
+                    val resultados = raiz["results"]?.jsonArray ?: return@withContext ResultadoSugerencias.SinResultados
+                    val sugerencias = resultados.take(5).mapNotNull { entrada ->
+                        val obj = entrada.jsonObject
+                        val nombre = obj["name"]?.jsonPrimitive?.content ?: return@mapNotNull null
+                        val direccion = obj["formatted_address"]?.jsonPrimitive?.content ?: ""
+                        val loc = obj["geometry"]?.jsonObject?.get("location")?.jsonObject ?: return@mapNotNull null
+                        val lat = loc["lat"]?.jsonPrimitive?.double ?: return@mapNotNull null
+                        val lon = loc["lng"]?.jsonPrimitive?.double ?: return@mapNotNull null
+                        Sugerencia(nombre = nombre, direccion = direccion, lat = lat, lon = lon)
+                    }
+                    if (sugerencias.isEmpty()) ResultadoSugerencias.SinResultados
+                    else ResultadoSugerencias.Exito(sugerencias)
+                }
+                "ZERO_RESULTS" -> ResultadoSugerencias.SinResultados
+                else -> ResultadoSugerencias.Error
+            }
+        } catch (e: Exception) {
+            ResultadoSugerencias.Error
+        }
     }
 }

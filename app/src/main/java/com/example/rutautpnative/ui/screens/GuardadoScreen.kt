@@ -1,5 +1,6 @@
 package com.example.rutautpnative.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,20 +19,22 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.rutautpnative.data.geo.Geocodificacion
 import com.example.rutautpnative.data.gtfs.RutaGTFS
 import com.example.rutautpnative.model.CategoriaLugar
 import com.example.rutautpnative.model.LugarGuardado
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
+import com.example.rutautpnative.navigation.DestinoPendiente
 import com.example.rutautpnative.ui.components.BottomNavBar
 import com.example.rutautpnative.ui.components.iconoParaCategoria
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
+import kotlinx.coroutines.launch
 
-// TODO(ver-en-mapa): el mecanismo ya existe (router.destinoPendiente consume el Mapa);
-// falta conectar el "ver en el mapa" de un lugar guardado desde esta pantalla.
 // Pantalla
 @Composable
 fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()) {
@@ -249,6 +252,33 @@ private fun LineaRow(ruta: RutaGTFS, onClick: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LugarDetailSheet(lugar: LugarGuardado, router: AppRouter, onEliminar: () -> Unit, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    // Resuelve la coordenada del lugar: la guardada, o la geocodificacion de
+    // su direccion ("direccion, Trujillo, Peru") si aun no tiene — mismo
+    // comportamiento del LugarDetailSheet de iOS.
+    fun resolverCoordenada(alResolver: (Double, Double) -> Unit) {
+        val lat = lugar.lat
+        val lon = lugar.lon
+        if (lat != null && lon != null) {
+            alResolver(lat, lon)
+        } else {
+            scope.launch {
+                val punto = Geocodificacion.coordenadaDe("${lugar.direccion}, Trujillo, Perú", context)
+                if (punto != null) {
+                    alResolver(punto.latitude, punto.longitude)
+                } else {
+                    Toast.makeText(
+                        context,
+                        L.t("No se pudo ubicar la dirección de este lugar.", "Couldn't locate this place's address."),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(modifier = Modifier.padding(20.dp)) {
             val isUTP = lugar.nombre == "UTP"
@@ -265,11 +295,27 @@ private fun LugarDetailSheet(lugar: LugarGuardado, router: AppRouter, onEliminar
             Spacer(Modifier.height(16.dp))
             Divider()
             Spacer(Modifier.height(16.dp))
-            Button(onClick = { router.navigate(AppScreen.MapaPrincipal); onDismiss() }, modifier = Modifier.fillMaxWidth().height(48.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)) {
+            // "Como llegar": publica destinoPendiente y el Mapa calcula la
+            // ruta desde la posicion real del usuario (consumido en MapaScreen).
+            Button(onClick = {
+                resolverCoordenada { lat, lon ->
+                    router.destinoPendiente = DestinoPendiente(lugar.nombre, lat, lon)
+                    router.navigate(AppScreen.MapaPrincipal)
+                    onDismiss()
+                }
+            }, modifier = Modifier.fillMaxWidth().height(48.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)) {
                 Icon(Icons.Filled.Map, null); Spacer(Modifier.width(8.dp)); Text(L.t("Ver ruta desde mi posición", "See route from my location"), style = BodyMdMedium, color = Color.White)
             }
             Spacer(Modifier.height(10.dp))
-            Button(onClick = { router.navigate(AppScreen.Rutas); onDismiss() }, modifier = Modifier.fillMaxWidth().height(48.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = PrimaryContainer)) {
+            // "Transporte cerca de este lugar": filtro de Rutas por paraderos a
+            // <300 m del punto (lugarCercanoPendiente, consumido en RutasScreen).
+            Button(onClick = {
+                resolverCoordenada { lat, lon ->
+                    router.lugarCercanoPendiente = DestinoPendiente(lugar.nombre, lat, lon)
+                    router.navigate(AppScreen.Rutas)
+                    onDismiss()
+                }
+            }, modifier = Modifier.fillMaxWidth().height(48.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = PrimaryContainer)) {
                 Icon(Icons.Filled.DirectionsBus, null, tint = OnPrimaryContainer); Spacer(Modifier.width(8.dp)); Text(L.t("Buscar transporte cercano", "Find nearby transport"), style = BodyMdMedium, color = OnPrimaryContainer)
             }
             Spacer(Modifier.height(10.dp))

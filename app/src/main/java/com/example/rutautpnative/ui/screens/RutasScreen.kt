@@ -29,6 +29,7 @@ import com.example.rutautpnative.data.gtfs.RutaGTFS
 import com.example.rutautpnative.data.senias.SeniasOverlay
 import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.navigation.AppRouter
+import com.example.rutautpnative.navigation.DestinoPendiente
 import com.example.rutautpnative.ui.components.BottomNavBar
 import com.example.rutautpnative.ui.components.Signable
 import com.example.rutautpnative.ui.idioma.L
@@ -49,7 +50,8 @@ private const val VELOCIDAD_CAMINATA_KMH = 5.0
 fun RutasScreen(router: AppRouter, viewModel: RutasViewModel = viewModel()) {
     val rutas by viewModel.rutas.collectAsState()
     val textoBusqueda by viewModel.textoBusqueda.collectAsState()
-    val rutasFiltradas by viewModel.rutasFiltradas.collectAsState()
+    val filtro by viewModel.rutasFiltradas.collectAsState()
+    val lugarCercano by viewModel.lugarCercano.collectAsState()
 
     var rutaSeleccionada by remember { mutableStateOf<RutaGTFS?>(null) }
     var mostrarNavegacion by remember { mutableStateOf(false) }
@@ -65,6 +67,13 @@ fun RutasScreen(router: AppRouter, viewModel: RutasViewModel = viewModel()) {
             router.rutaPendiente = null
             rutaSeleccionada = ruta
         }
+    }
+
+    // Consume el filtro "transporte cerca de este lugar" (Guardado/paraderos).
+    LaunchedEffect(router.lugarCercanoPendiente) {
+        val lugar = router.lugarCercanoPendiente ?: return@LaunchedEffect
+        router.lugarCercanoPendiente = null
+        viewModel.filtrarCercaDe(lugar)
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -89,10 +98,14 @@ fun RutasScreen(router: AppRouter, viewModel: RutasViewModel = viewModel()) {
             } else {
                 ListaRutasScreen(
                     router = router,
-                    rutas = rutasFiltradas,
+                    rutas = filtro.rutas,
+                    distancias = filtro.distancias,
+                    lugarCercano = lugarCercano,
+                    totalRutas = rutas.size,
                     textoBusqueda = textoBusqueda,
                     onSearchChange = viewModel::actualizarBusqueda,
                     onClearSearch = viewModel::limpiarBusqueda,
+                    onQuitarFiltro = { viewModel.filtrarCercaDe(null) },
                     onSelectRuta = { rutaSeleccionada = it }
                 )
             }
@@ -112,9 +125,13 @@ fun RutasScreen(router: AppRouter, viewModel: RutasViewModel = viewModel()) {
 private fun ListaRutasScreen(
     router: AppRouter,
     rutas: List<RutaGTFS>,
+    distancias: Map<String, Int>,
+    lugarCercano: DestinoPendiente?,
+    totalRutas: Int,
     textoBusqueda: String,
     onSearchChange: (String) -> Unit,
     onClearSearch: () -> Unit,
+    onQuitarFiltro: () -> Unit,
     onSelectRuta: (RutaGTFS) -> Unit
 ) {
     val borderColor = OutlineVariant.copy(alpha = 0.25f)
@@ -190,23 +207,55 @@ private fun ListaRutasScreen(
                             style = HeadlineSm, color = OnSurface)
                         Text(L.t("Toca una ruta para ver el detalle", "Tap a route to see details"), style = BodySm, color = OnSurfaceVariant)
                         Spacer(Modifier.height(12.dp))
-                        // Campo de búsqueda
-                        OutlinedTextField(
-                            value = textoBusqueda,
-                            onValueChange = onSearchChange,
-                            placeholder = { Text(L.t("Buscar línea, empresa o avenida", "Search line, company or avenue"), style = BodyMd, color = OnSurfaceVariant) },
-                            leadingIcon = { Icon(Icons.Filled.Search, null, tint = OnSurfaceVariant) },
-                            trailingIcon = {
-                                if (textoBusqueda.isNotEmpty()) {
-                                    IconButton(onClick = onClearSearch) {
-                                        Icon(Icons.Filled.Close, null, tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
-                                    }
+                        if (lugarCercano != null) {
+                            // Banner del filtro de cercanía (reemplaza al
+                            // buscador, como iOS): título + contador + quitar.
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(SurfaceContainerLow)
+                                    .padding(horizontal = 14.dp, vertical = 10.dp)
+                            ) {
+                                Icon(Icons.Filled.Place, null, tint = AppPrimary, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(10.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        L.t("Líneas cerca de", "Lines near") + " ${lugarCercano.titulo}",
+                                        style = BodyMdMedium, color = OnSurface, maxLines = 1
+                                    )
+                                    Text(
+                                        L.t(
+                                            "${rutas.size} de $totalRutas líneas con paradero a menos de 300 m",
+                                            "${rutas.size} of $totalRutas lines with a stop within 300 m"
+                                        ),
+                                        style = BodyXs, color = OnSurfaceVariant, maxLines = 1
+                                    )
                                 }
-                            },
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                                IconButton(onClick = onQuitarFiltro, modifier = Modifier.size(28.dp)) {
+                                    Icon(Icons.Filled.Close, null, tint = OnSurfaceVariant, modifier = Modifier.size(16.dp))
+                                }
+                            }
+                        } else {
+                            // Campo de búsqueda
+                            OutlinedTextField(
+                                value = textoBusqueda,
+                                onValueChange = onSearchChange,
+                                placeholder = { Text(L.t("Buscar línea, empresa o avenida", "Search line, company or avenue"), style = BodyMd, color = OnSurfaceVariant) },
+                                leadingIcon = { Icon(Icons.Filled.Search, null, tint = OnSurfaceVariant) },
+                                trailingIcon = {
+                                    if (textoBusqueda.isNotEmpty()) {
+                                        IconButton(onClick = onClearSearch) {
+                                            Icon(Icons.Filled.Close, null, tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
+                                        }
+                                    }
+                                },
+                                singleLine = true,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                         Spacer(Modifier.height(16.dp))
                     }
                 }
@@ -248,7 +297,11 @@ private fun ListaRutasScreen(
                 } else {
                     items(rutas, key = { it.id }) { ruta ->
                         Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                            RutaOpcionCard(ruta = ruta, onClick = { onSelectRuta(ruta) })
+                            RutaOpcionCard(
+                                ruta = ruta,
+                                distanciaLugar = distancias[ruta.id],
+                                onClick = { onSelectRuta(ruta) }
+                            )
                             Spacer(Modifier.height(12.dp))
                         }
                     }
@@ -263,7 +316,7 @@ private fun ListaRutasScreen(
 
 //----Card de ruta----
 @Composable
-private fun RutaOpcionCard(ruta: RutaGTFS, onClick: () -> Unit) {
+private fun RutaOpcionCard(ruta: RutaGTFS, distanciaLugar: Int? = null, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest),
@@ -283,9 +336,16 @@ private fun RutaOpcionCard(ruta: RutaGTFS, onClick: () -> Unit) {
                 Text(ruta.linea, color = ruta.color, fontSize = 16.sp, style = HeadlineSm)
             }
             Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
+            Column(Modifier.weight(1f)) {
                 Text(ruta.empresa, style = BodyMdMedium, color = OnSurface)
                 Text(ruta.recorrido, style = BodySm, color = OnSurfaceVariant, maxLines = 1)
+                if (distanciaLugar != null) {
+                    // Solo con el filtro activo: cercanía al lugar consultado.
+                    Text(
+                        L.t("a $distanciaLugar m del lugar", "$distanciaLugar m from the place"),
+                        style = LabelCapsSm, color = AppPrimary
+                    )
+                }
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(ruta.frecuenciaTexto, style = BodyMdMedium, color = ruta.color)

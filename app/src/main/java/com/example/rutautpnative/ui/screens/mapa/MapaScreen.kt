@@ -24,15 +24,20 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
+import com.example.rutautpnative.data.LugaresStore
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.RutaGTFS
+import com.example.rutautpnative.data.geo.Geocodificacion
 import com.example.rutautpnative.data.routing.TransitPlanner
 import com.example.rutautpnative.data.senias.SeniasOverlay
 import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.data.ubicacion.LocationService
+import com.example.rutautpnative.model.LugarGuardado
 import com.example.rutautpnative.model.TipoReporte
 import com.example.rutautpnative.ui.components.BottomNavBar
+import com.example.rutautpnative.ui.components.iconoParaCategoria
 import com.example.rutautpnative.ui.idioma.L
+import com.example.rutautpnative.ui.screens.MapaUbicacionPicker
 import com.example.rutautpnative.ui.theme.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -46,7 +51,12 @@ import com.google.android.gms.maps.model.PatternItem
 import com.google.maps.android.compose.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 
@@ -62,16 +72,18 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
     val permisoUbicacion = rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
     val autorizadoGPS = permisoUbicacion.status.isGranted
 
-    // Inicializar destinos con iconos
-    LaunchedEffect(Unit) {
-        vm.destinos = listOf(
-            DestinoChip(1, "Casa",      Icons.Filled.Home,       -8.1180, -79.0350),
-            DestinoChip(2, "UTP",       Icons.Filled.School,     GTFSRepository.coordenadaUTP.latitude, GTFSRepository.coordenadaUTP.longitude),
-            DestinoChip(3, "Trabajo",   Icons.Filled.Work,       -8.1050, -79.0200),
-            DestinoChip(4, "Centro",    Icons.Filled.Business,   -8.1090, -79.0270),
-            DestinoChip(5, "Huanchaco", Icons.Filled.BeachAccess,-8.0825, -79.1197),
-        )
+    // Chips de destino: fijos (UTP/Centro/Huanchaco, con seña) + lugares
+    // guardados del usuario (con coordenada), dedup por nombre y tope 6 —
+    // el refrescarDestinos del iOS. Reaccionan a cambios en Guardado.
+    val lugaresGuardados by LugaresStore.observar().collectAsState(initial = emptyList())
+    LaunchedEffect(lugaresGuardados) {
+        vm.destinos = chipsDesde(lugaresGuardados)
     }
+
+    // "Elegir en el mapa": picker a pantalla completa + geocodificación inversa.
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    var mostrarElegirDestino by remember { mutableStateOf(false) }
 
     // Enciende el GPS en cuanto haya permiso (al concederlo o al entrar con
     // permiso ya dado). El conteo de consumidores apaga el hardware al salir.
@@ -226,6 +238,7 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             SearchPanel(
                 vm = vm,
                 onSearch = { focusManager.clearFocus() },
+                onElegirEnMapa = { mostrarElegirDestino = true },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             )
 
@@ -328,6 +341,48 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
     if (showReportarSheet) {
         MapaReportarSheet(onDismiss = { showReportarSheet = false })
     }
+
+    //----"Elegir en el mapa" (Fase 4): picker a pantalla completa +----
+    //----geocodificacion inversa (calle + sublocalidad + ciudad).        ----
+    if (mostrarElegirDestino) {
+        MapaUbicacionPicker(
+            inicial = null,
+            titulo = L.t("Arrastra el mapa hasta tu destino", "Drag the map to your destination"),
+            textoConfirmar = L.t("Usar este destino", "Use this destination"),
+            onConfirmar = { punto ->
+                scope.launch {
+                    val titulo = Geocodificacion.direccionDe(punto, context)
+                        ?: L.t("Punto en el mapa", "Point on the map")
+                    vm.seleccionarLugarExterno(titulo, punto.latitude, punto.longitude)
+                }
+            },
+            onCerrar = { mostrarElegirDestino = false }
+        )
+    }
+}
+
+/// Chips de destino: fijos (UTP/Centro/Huanchaco, con clave de seña) + lugares
+/// guardados del usuario con coordenada, sin duplicar los fijos por nombre,
+/// tope 6 — el refrescarDestinos del iOS.
+private fun chipsDesde(lugares: List<LugarGuardado>): List<DestinoChip> {
+    val fijos = listOf(
+        DestinoChip(2, "UTP", Icons.Filled.School, GTFSRepository.coordenadaUTP.latitude, GTFSRepository.coordenadaUTP.longitude),
+        DestinoChip(4, L.t("Centro", "Downtown"), Icons.Filled.Business, -8.1090, -79.0270),
+        DestinoChip(5, "Huanchaco", Icons.Filled.BeachAccess, -8.0825, -79.1197)
+    )
+    val nombresFijos = fijos.map { it.label.lowercase() }.toSet()
+    val deLugares = lugares
+        .filter { it.nombre.lowercase() !in nombresFijos && it.lat != null && it.lon != null }
+        .map { lugar ->
+            DestinoChip(
+                id = "lug|${lugar.nombre}".hashCode(),
+                label = lugar.nombre,
+                icon = iconoParaCategoria(lugar.categoria),
+                lat = lugar.lat!!,
+                lon = lugar.lon!!
+            )
+        }
+    return (fijos + deLugares).take(6)
 }
 
 // Header
@@ -364,9 +419,17 @@ private fun MapaHeader(onMenuClick: () -> Unit) {
 
 // Panel de busqueda
 @Composable
-private fun SearchPanel(vm: MapaViewModel, onSearch: () -> Unit, modifier: Modifier = Modifier) {
+private fun SearchPanel(
+    vm: MapaViewModel,
+    onSearch: () -> Unit,
+    onElegirEnMapa: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
     val modoSenias by SeniasPrefs.observarActivo().collectAsState(initial = false)
+    var campoEnfocado by remember { mutableStateOf(false) }
+
     Card(
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = AppSurface.copy(alpha = 0.92f)),
@@ -387,10 +450,7 @@ private fun SearchPanel(vm: MapaViewModel, onSearch: () -> Unit, modifier: Modif
                 Spacer(Modifier.width(10.dp))
                 TextField(
                     value = vm.textoBusqueda,
-                    onValueChange = {
-                        vm.textoBusqueda = it
-                        vm.buscarTexto(it)
-                    },
+                    onValueChange = { vm.actualizarTextoBusqueda(it, campoEnfocado) },
                     placeholder = { Text(L.t("¿A dónde vas hoy?", "Where are you going today?"), style = BodyMd, color = OnSurfaceVariant) },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
@@ -399,7 +459,15 @@ private fun SearchPanel(vm: MapaViewModel, onSearch: () -> Unit, modifier: Modif
                         unfocusedIndicatorColor = Color.Transparent
                     ),
                     singleLine = true,
-                    modifier = Modifier.weight(1f).padding(0.dp),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = {
+                        vm.buscarTexto(vm.textoBusqueda)
+                        focusManager.clearFocus()
+                    }),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(0.dp)
+                        .onFocusChanged { campoEnfocado = it.isFocused },
                     textStyle = BodyMd.copy(color = OnSurface)
                 )
                 if (vm.textoBusqueda.isNotEmpty()) {
@@ -407,7 +475,63 @@ private fun SearchPanel(vm: MapaViewModel, onSearch: () -> Unit, modifier: Modif
                         Icon(Icons.Filled.Cancel, null, tint = OnSurfaceVariant.copy(alpha = 0.5f))
                     }
                 }
+                Spacer(Modifier.width(8.dp))
+                // "Elegir en el mapa" (círculo gris con brújula, como iOS).
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(CircleShape)
+                        .background(SurfaceContainerHighest)
+                        .clickable { onSearch(); onElegirEnMapa() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Filled.Explore,
+                        contentDescription = L.t("Elegir en el mapa", "Pick on map"),
+                        tint = OnSurfaceVariant,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
+
+            // Sugerencias de autocompletado (Places, hasta 5 — como el
+            // MKLocalSearchCompleter del iOS). Solo con el campo enfocado.
+            if (campoEnfocado && (vm.sugerencias.isNotEmpty() || vm.buscandoSugerencias)) {
+                Spacer(Modifier.height(8.dp))
+                if (vm.buscandoSugerencias && vm.sugerencias.isEmpty()) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = AppPrimary)
+                        Text(L.t("Buscando lugares…", "Searching places…"), style = BodySm, color = OnSurfaceVariant)
+                    }
+                }
+                vm.sugerencias.take(5).forEach { s ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .clickable {
+                                vm.seleccionarSugerencia(s)
+                                focusManager.clearFocus()
+                            }
+                            .padding(horizontal = 10.dp, vertical = 8.dp)
+                    ) {
+                        Icon(Icons.Filled.Place, null, tint = AppPrimary, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(10.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(s.titulo, style = BodySmMedium, color = OnSurface, maxLines = 1)
+                            if (s.subtitulo.isNotBlank()) {
+                                Text(s.subtitulo, style = BodyXs, color = OnSurfaceVariant, maxLines = 1)
+                            }
+                        }
+                    }
+                }
+            }
+
             Spacer(Modifier.height(10.dp))
             // Chips
             Row(
@@ -424,9 +548,7 @@ private fun SearchPanel(vm: MapaViewModel, onSearch: () -> Unit, modifier: Modif
                             else -> null
                         }
                         val etiqueta = when (destino.id) {
-                            1 -> L.t("Casa", "Home")
                             2 -> "UTP"
-                            3 -> L.t("Trabajo", "Work")
                             4 -> L.t("Centro", "Downtown")
                             5 -> "Huanchaco"
                             else -> destino.label

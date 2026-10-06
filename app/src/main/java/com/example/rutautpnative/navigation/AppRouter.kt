@@ -38,6 +38,10 @@ class AppRouter : ViewModel() {
     // Se limpia al consumirse; convive con rutaPendiente sin interferencia.
     var destinoPendiente: DestinoPendiente? by mutableStateOf(null)
 
+    // Consume RutasScreen: "transporte cerca de este lugar" (Guardado, paraderos):
+    // filtra las líneas con paradero a menos de 300 m del punto.
+    var lugarCercanoPendiente: DestinoPendiente? by mutableStateOf(null)
+
     fun navigate(to: AppScreen) {
         currentScreen = to
     }

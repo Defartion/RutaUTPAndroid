@@ -13,6 +13,7 @@ import com.example.rutautpnative.data.directions.DirectionsService
 import com.example.rutautpnative.data.geo.PolylineMatching
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.RutaGTFS
+import com.example.rutautpnative.data.places.PlacesService
 import com.example.rutautpnative.data.routing.TransitPlanner
 import com.example.rutautpnative.data.ubicacion.LocationService
 import com.example.rutautpnative.ui.idioma.L
@@ -73,6 +74,14 @@ data class DestinoChip(
     val lon: Double
 )
 
+//----Sugerencia de autocompletado del buscador (Fase 4)----
+data class SugerenciaLugar(
+    val titulo: String,
+    val subtitulo: String,
+    val lat: Double,
+    val lon: Double
+)
+
 // Modelo de vista
 // NOTA (convención del proyecto): este ViewModel usa mutableStateOf de Compose
 // (fue de los primeros escritos). Los ViewModels nuevos usan StateFlow puro
@@ -101,6 +110,54 @@ class MapaViewModel : ViewModel() {
     private var ultimasPublicadas: List<BusAnimado> = emptyList()
 
     var textoBusqueda by mutableStateOf("")
+
+    //----Sugerencias del buscador (Fase 4)----
+    var sugerencias by mutableStateOf<List<SugerenciaLugar>>(emptyList())
+        private set
+
+    var buscandoSugerencias by mutableStateOf(false)
+        private set
+
+    private var sugerenciasJob: Job? = null
+
+    /// Consulta sugerencias con debounce. SOLO con el campo enfocado (igual
+    /// que iOS): el texto que pone un chip, una sugerencia o un lugar externo
+    /// no dispara consultas.
+    fun actualizarTextoBusqueda(texto: String, campoEnfocado: Boolean) {
+        textoBusqueda = texto
+        sugerenciasJob?.cancel()
+        val t = texto.trim()
+        if (!campoEnfocado || t.length < 3) {
+            sugerencias = emptyList()
+            buscandoSugerencias = false
+            return
+        }
+        buscandoSugerencias = true
+        sugerenciasJob = viewModelScope.launch {
+            delay(400)   // debounce
+            when (val r = PlacesService.buscarSugerencias(t)) {
+                is PlacesService.ResultadoSugerencias.Exito ->
+                    sugerencias = r.sugerencias.map {
+                        SugerenciaLugar(it.nombre, it.direccion, it.lat, it.lon)
+                    }
+                else -> sugerencias = emptyList()
+            }
+            buscandoSugerencias = false
+        }
+    }
+
+    fun limpiarSugerencias() {
+        sugerenciasJob?.cancel()
+        sugerencias = emptyList()
+        buscandoSugerencias = false
+    }
+
+    /// Tap en una sugerencia: entra por el mismo flujo que un lugar externo
+    /// (camara + flota + itinerario). Equivale a seleccionarSugerencia iOS.
+    fun seleccionarSugerencia(s: SugerenciaLugar) {
+        limpiarSugerencias()
+        seleccionarLugarExterno(titulo = s.titulo, lat = s.lat, lon = s.lon)
+    }
 
     var destinoSeleccionado by mutableStateOf<DestinoChip?>(null)
         private set
@@ -282,13 +339,25 @@ class MapaViewModel : ViewModel() {
     fun buscarTexto(texto: String) {
         val t = texto.trim()
         if (t.isEmpty()) return
+        // 1. Coincidencia directa con un chip.
         destinos.firstOrNull { it.label.lowercase().contains(t.lowercase()) }
-            ?.let { seleccionar(it) }
+            ?.let { seleccionar(it); return }
+        // 2. Sugerencia ya cargada en el dropdown.
+        sugerencias.firstOrNull()?.let { seleccionarSugerencia(it); return }
+        // 3. Consulta directa a Places (submit del teclado).
+        viewModelScope.launch {
+            when (val r = PlacesService.buscarTexto(t)) {
+                is PlacesService.Resultado.Exito ->
+                    seleccionarLugarExterno(r.nombre, r.lat, r.lon)
+                else -> Unit  // sin resultados: el usuario sigue viendo el dropdown
+            }
+        }
     }
 
     fun limpiar() {
         textoBusqueda = ""
         destinoSeleccionado = null
+        limpiarSugerencias()
         detenerAnimacion()
         flotaBuses = emptyList()
         busesAnimados = emptyList()
