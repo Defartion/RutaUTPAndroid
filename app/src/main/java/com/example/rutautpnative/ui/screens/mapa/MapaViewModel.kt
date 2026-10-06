@@ -43,8 +43,9 @@ data class BusAnimado(
     val lat: Double,
     val lon: Double,
     val heading: Double,                  // rumbo de brujula [0,360); -1 desconocido
-    val rutaCoordenadas: List<LatLng>,    // waypoints decimados (max 240)
+    val rutaCoordenadas: List<LatLng>,    // waypoints decimados
     val acumulados: DoubleArray,          // distancia acumulada por waypoint (m)
+    val rumbosSegmento: DoubleArray,       // rumbo forward [0,360) de cada segmento
     val longitudTotalM: Double,
     val distanciaM: Double,               // avance sobre el shape (0...longitudTotalM)
     val velocidadMS: Double,              // crucero propia del vehiculo
@@ -249,11 +250,19 @@ class MapaViewModel : ViewModel() {
     private fun busesDesde(rutas: List<RutaGTFS>, ancla: LatLng): List<BusAnimado> {
         val n = rutas.size.coerceAtLeast(1)
         return rutas.mapIndexedNotNull { index, ruta ->
-            val shape = PolylineMatching.decimate(ruta.shape, 240)
+            // 480 puntos (mejora intencional sobre los 240 del iOS): cuerdas de
+            // ~18 m que siguen las curvas reales del feed sin cortar esquinas.
+            val shape = PolylineMatching.decimate(ruta.shape, 480)
             if (shape.size < 2) return@mapIndexedNotNull null
             val acumulados = PolylineMatching.distanciasAcumuladas(shape)
             val total = acumulados.last()
             if (total <= 0.0) return@mapIndexedNotNull null
+
+            // Rumbo de cada segmento (sentido forward). -1 = segmento degenerado.
+            val rumbos = DoubleArray(shape.size - 1)
+            for (i in rumbos.indices) {
+                rumbos[i] = PolylineMatching.headingDegrees(shape[i], shape[i + 1])
+            }
 
             // Nacimiento repartido por el corredor: waypoint mas cercano al
             // ancla + offsets escalonados por fracciones de Fibonacci (+-1.8 km)
@@ -277,7 +286,7 @@ class MapaViewModel : ViewModel() {
             val paso = max(1.0, ruta.headwayMin / n.toDouble())
             val minutos = max(1, (2 + index * paso).roundToInt())
 
-            val p = proyectarEnShape(shape, acumulados, nacimiento, haciaAdelante, 0)
+            val p = proyectarEnShape(shape, acumulados, rumbos, nacimiento, haciaAdelante, 0)
             BusAnimado(
                 id = "simulated-${ruta.id}",
                 linea = ruta.linea,
@@ -292,6 +301,7 @@ class MapaViewModel : ViewModel() {
                 heading = p.heading,
                 rutaCoordenadas = shape,
                 acumulados = acumulados,
+                rumbosSegmento = rumbos,
                 longitudTotalM = total,
                 distanciaM = nacimiento,
                 velocidadMS = velocidad,
@@ -302,8 +312,10 @@ class MapaViewModel : ViewModel() {
     }
 
     /// Interpolacion dentro del segmento donde cae `distancia` (busqueda
-    /// incremental desde `tramoInicial`, no desde cero) y rumbo del segmento
-    /// en el sentido de la marcha.
+    /// incremental desde `tramoInicial`, no desde cero). El rumbo se
+    /// INTERPOLA del segmento actual hacia el siguiente conforme avanza:
+    /// el bus gira gradualmente al entrar en una curva en vez de mantenerse
+    /// estatico y saltar 90 de golpe en la esquina.
     private data class PosicionInterpolada(
         val lat: Double,
         val lon: Double,
@@ -314,6 +326,7 @@ class MapaViewModel : ViewModel() {
     private fun proyectarEnShape(
         shape: List<LatLng>,
         acumulados: DoubleArray,
+        rumbos: DoubleArray,
         distancia: Double,
         haciaAdelante: Boolean,
         tramoInicial: Int
@@ -326,12 +339,26 @@ class MapaViewModel : ViewModel() {
         val f = if (b > a) ((distancia - a) / (b - a)).coerceIn(0.0, 1.0) else 0.0
         val lat = shape[i].latitude + (shape[i + 1].latitude - shape[i].latitude) * f
         val lon = shape[i].longitude + (shape[i + 1].longitude - shape[i].longitude) * f
-        val heading = if (haciaAdelante) {
-            PolylineMatching.headingDegrees(shape[i], shape[i + 1])
-        } else {
-            PolylineMatching.headingDegrees(shape[i + 1], shape[i])
+
+        val hActual = rumbos[i]
+        val hSiguiente = if (i + 1 < rumbos.size) rumbos[i + 1] else hActual
+        val rumboForward = when {
+            hActual >= 0 && hSiguiente >= 0 -> lerpAngulo(hActual, hSiguiente, f)
+            hActual >= 0 -> hActual
+            hSiguiente >= 0 -> hSiguiente
+            else -> -1.0
         }
+        // La vuelta (rebote en el extremo) invierte el sentido de la marcha.
+        val heading = if (haciaAdelante) rumboForward else ((rumboForward + 180.0) % 360.0)
+
         return PosicionInterpolada(lat, lon, heading, i)
+    }
+
+    /// Interpolacion de rumbos por el camino corto (maneja el salto 359->0:
+    /// girar de 350 a 10 debe ser +20, no -340).
+    private fun lerpAngulo(desde: Double, hasta: Double, t: Double): Double {
+        val delta = ((hasta - desde + 540.0) % 360.0) - 180.0
+        return (((desde + delta * t) % 360.0) + 360.0) % 360.0
     }
 
     /// Avanza la flota `dt` segundos y REBOTA en los extremos del recorrido
@@ -348,7 +375,7 @@ class MapaViewModel : ViewModel() {
                 distancia = 0.0
                 haciaAdelante = true
             }
-            val p = proyectarEnShape(bus.rutaCoordenadas, bus.acumulados, distancia, haciaAdelante, bus.tramoActual)
+            val p = proyectarEnShape(bus.rutaCoordenadas, bus.acumulados, bus.rumbosSegmento, distancia, haciaAdelante, bus.tramoActual)
             bus.copy(
                 lat = p.lat,
                 lon = p.lon,
@@ -393,6 +420,17 @@ class MapaViewModel : ViewModel() {
     fun detenerAnimacion() {
         animacionJob?.cancel()
         animacionJob = null
+    }
+
+    /// Reanuda la flota y el GPS al volver a la pantalla. El ViewModel
+    /// SOBREVIVE a la navegacion (la flota queda intacta), pero el bucle se
+    /// detiene en onDispose al irse a otra pestaña (bateria); al recomponer
+    /// la pantalla hay que encenderlo otra vez. Idempotente.
+    fun reanudar() {
+        if (flotaBuses.isNotEmpty() && animacionJob?.isActive != true) {
+            iniciarAnimacion()
+        }
+        iniciarGPS()
     }
 
     override fun onCleared() {

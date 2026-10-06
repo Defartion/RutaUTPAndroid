@@ -72,6 +72,12 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
         if (autorizadoGPS) vm.iniciarGPS()
     }
 
+    // Al volver de otra pestaña (p.ej. tras "Ver Ruta Completa") el bucle de
+    // la flota quedo detenido en onDispose: reanudar flota + GPS aqui.
+    LaunchedEffect(Unit) {
+        vm.reanudar()
+    }
+
     DisposableEffect(Unit) {
         onDispose {
             vm.detenerAnimacion()
