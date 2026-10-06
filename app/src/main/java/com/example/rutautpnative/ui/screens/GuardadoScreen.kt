@@ -33,6 +33,9 @@ import com.example.rutautpnative.ui.components.BottomNavBar
 import com.example.rutautpnative.ui.components.iconoParaCategoria
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
+import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 // Pantalla
@@ -443,12 +446,53 @@ private fun AddLineaSheet(
     }
 }
 
+// Estado de la geocodificación de la dirección (AddLugarSheet).
+private enum class EstadoDireccion {
+    SIN_BUSCAR,      // campo vacío o muy corto
+    BUSCANDO,        // debounce/geocoder en vuelo
+    ENCONTRADA,      // coordenada resuelta ✓
+    NO_ENCONTRADA,   // el geocoder no la reconoció → ajustar en el mapa
+    AJUSTADA         // el usuario la fijó manualmente en el mapa
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddLugarSheet(onSave: (LugarGuardado) -> Unit, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
     var nombre by remember { mutableStateOf("") }
     var direccion by remember { mutableStateOf("") }
     var categoria by remember { mutableStateOf(CategoriaLugar.OTRO) }
+    var coordenada by remember { mutableStateOf<LatLng?>(null) }
+    var estadoDireccion by remember { mutableStateOf(EstadoDireccion.SIN_BUSCAR) }
+    var geocodeJob by remember { mutableStateOf<Job?>(null) }
+    var mostrarPicker by remember { mutableStateOf(false) }
+
+    // Geocodificación con debounce (puerto del AddLugarSheet de iOS: misma
+    // consulta "direccion, Trujillo, Peru" y 0.7 s de espera). Una edición
+    // invalida la coordenada anterior hasta resolver la nueva.
+    fun programarBusqueda(texto: String) {
+        geocodeJob?.cancel()
+        val t = texto.trim()
+        if (t.length < 5) {
+            estadoDireccion = EstadoDireccion.SIN_BUSCAR
+            if (coordenada != null) coordenada = null
+            return
+        }
+        estadoDireccion = EstadoDireccion.BUSCANDO
+        coordenada = null
+        geocodeJob = scope.launch {
+            delay(700)
+            val punto = Geocodificacion.coordenadaDe("$t, Trujillo, Perú", context)
+            coordenada = punto
+            estadoDireccion = if (punto != null) EstadoDireccion.ENCONTRADA else EstadoDireccion.NO_ENCONTRADA
+        }
+    }
+
+    // Solo se guarda con nombre + dirección + COORDENADA resuelta (o ajustada
+    // en el mapa): sin coordenada no puede ser chip ni destino.
+    val puedeGuardar = nombre.isNotBlank() && direccion.isNotBlank() && coordenada != null
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(modifier = Modifier.padding(20.dp)) {
@@ -468,20 +512,70 @@ private fun AddLugarSheet(onSave: (LugarGuardado) -> Unit, onDismiss: () -> Unit
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(
                 value = direccion,
-                onValueChange = { direccion = it },
+                onValueChange = {
+                    direccion = it
+                    programarBusqueda(it)
+                },
                 placeholder = { Text(L.t("Ej. Av. España 123", "E.g. España Ave 123")) },
+                trailingIcon = {
+                    Icon(Icons.Filled.LocationOn, null, tint = OnSurfaceVariant.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
+                },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             )
+
+            // Estado de la geocodificación (con coordenada visible).
+            Spacer(Modifier.height(6.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                when (estadoDireccion) {
+                    EstadoDireccion.SIN_BUSCAR -> {}
+                    EstadoDireccion.BUSCANDO -> {
+                        CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = AppPrimary)
+                        Text(L.t("Buscando dirección…", "Looking up address…"), style = BodyXs, color = OnSurfaceVariant)
+                    }
+                    EstadoDireccion.ENCONTRADA -> {
+                        Icon(Icons.Filled.CheckCircle, null, tint = AppPrimary, modifier = Modifier.size(14.dp))
+                        Text(L.t("Dirección encontrada", "Address found"), style = BodyXs, color = OnSurfaceVariant)
+                    }
+                    EstadoDireccion.NO_ENCONTRADA -> {
+                        Icon(Icons.Filled.Info, null, tint = OnSurfaceVariant, modifier = Modifier.size(14.dp))
+                        Text(L.t("No la encontramos; ubícala en el mapa", "Couldn't find it; set it on the map"), style = BodyXs, color = OnSurfaceVariant)
+                    }
+                    EstadoDireccion.AJUSTADA -> {
+                        Icon(Icons.Filled.CheckCircle, null, tint = AppPrimary, modifier = Modifier.size(14.dp))
+                        Text(L.t("Ubicación ajustada en el mapa", "Location set on the map"), style = BodyXs, color = OnSurfaceVariant)
+                    }
+                }
+            }
+            coordenada?.let {
+                Text("%.4f, %.4f".format(it.latitude, it.longitude), style = BodyXs, color = OnSurfaceVariant)
+            }
+
+            Spacer(Modifier.height(10.dp))
+            // Ajuste manual en el mapa (equivale al mini-mapa tocable del iOS).
+            OutlinedButton(
+                onClick = { mostrarPicker = true },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(Icons.Filled.Map, null, tint = AppPrimary, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(L.t("Ubicar en el mapa", "Set on map"), style = BodyMdMedium, color = AppPrimary)
+            }
+
             Spacer(Modifier.height(20.dp))
             Button(
                 onClick = {
+                    val p = coordenada ?: return@Button
                     onSave(LugarGuardado(
                         nombre = nombre.ifBlank { "Nuevo lugar" },
                         direccion = direccion.ifBlank { "Sin dirección" },
-                        categoria = categoria
+                        categoria = categoria,
+                        lat = p.latitude,
+                        lon = p.longitude
                     ))
                 },
+                enabled = puedeGuardar,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = AppPrimary)
@@ -490,5 +584,18 @@ private fun AddLugarSheet(onSave: (LugarGuardado) -> Unit, onDismiss: () -> Unit
             }
             Spacer(Modifier.height(24.dp))
         }
+    }
+
+    if (mostrarPicker) {
+        MapaUbicacionPicker(
+            inicial = coordenada,
+            titulo = L.t("Arrastra el mapa hasta el lugar", "Drag the map to the place"),
+            textoConfirmar = L.t("Usar esta ubicación", "Use this location"),
+            onConfirmar = { punto ->
+                coordenada = punto
+                estadoDireccion = EstadoDireccion.AJUSTADA
+            },
+            onCerrar = { mostrarPicker = false }
+        )
     }
 }
