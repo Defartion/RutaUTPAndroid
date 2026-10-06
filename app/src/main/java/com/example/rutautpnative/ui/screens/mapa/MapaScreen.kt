@@ -133,7 +133,18 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             // en el mapa por rendimiento; las cards del panel muestran TODAS
             // las líneas (igual que iOS). Tocar uno abre su popup de detalle.
             vm.busesAnimados.take(8).forEach { bus ->
+                val seleccionado = vm.busSeleccionado?.id == bus.id
                 MarkerComposable(
+                    // IMPORTANTE (maps-compose): el contenido de un
+                    // MarkerComposable se dibuja a UN BITMAP que solo se
+                    // re-renderiza cuando cambia una de estas claves. La
+                    // POSICION actualiza aparte (via state), pero el giro del
+                    // bus y la flechita del rumbo viajan POR AQUI: sin el
+                    // fotograma como key, el bitmap queda congelado en el
+                    // rumbo del nacimiento del marcador. Con la key = frame,
+                    // en avenidas rectas no se re-renderiza nada (frame
+                    // constante) aunque el bus avance.
+                    keys = arrayOf<Any>(bus.id, indiceFotogramaBus(bus.heading), seleccionado),
                     state = MarkerState(position = LatLng(bus.lat, bus.lon)),
                     anchor = BusMarkerAncla,
                     title = L.t("Línea", "Route") + " ${bus.linea}",
@@ -146,7 +157,7 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                         linea = bus.linea,
                         color = bus.color,
                         heading = bus.heading,
-                        seleccionado = vm.busSeleccionado?.id == bus.id
+                        seleccionado = seleccionado
                     )
                 }
             }

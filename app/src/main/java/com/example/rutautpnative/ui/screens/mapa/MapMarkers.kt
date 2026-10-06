@@ -56,6 +56,16 @@ import kotlin.math.roundToInt
 private const val BusFotogramas = 36
 private const val GradosPorFotograma = 360.0 / BusFotogramas
 
+/// Fotograma que corresponde a un rumbo de brujula: round(rumbo/10) % 36.
+/// Rumbo desconocido (negativo o no finito) -> 0 (bus mirando al norte):
+/// mejor un bus quieto bien dibujado que un hueco en el mapa.
+/// Es PUBLICO porque MapaScreen lo pasa como `key` del MarkerComposable: el
+/// bitmap del marcador en maps-compose SOLO se re-renderiza cuando cambia una
+/// de sus claves, asi que el giro del bus viaja por aqui.
+fun indiceFotogramaBus(rumbo: Double): Int =
+    if (!rumbo.isFinite() || rumbo < 0) 0
+    else ((rumbo % 360.0) / GradosPorFotograma).roundToInt() % BusFotogramas
+
 /// El bus visto desde arriba y atrás, girado según su rumbo.
 @Composable
 fun BusEn3D(
@@ -63,15 +73,9 @@ fun BusEn3D(
     lado: Dp = 56.dp,
     seleccionado: Boolean = false
 ) {
-    // Fotograma correspondiente al rumbo: round(rumbo_normalizado / 10) % 36.
-    // Un rumbo desconocido (negativo o no finito) devuelve el 0 (mirando al
-    // norte) en lugar de fallar: mejor un bus quieto bien dibujado que un
-    // hueco en el mapa.
-    val indice = if (!rumbo.isFinite() || rumbo < 0) {
-        0
-    } else {
-        ((rumbo % 360.0) / GradosPorFotograma).roundToInt() % BusFotogramas
-    }
+    // Fotograma correspondiente al rumbo (misma formula que usa MapaScreen
+    // para las keys del MarkerComposable).
+    val indice = indiceFotogramaBus(rumbo)
 
     // Un bus seleccionado se dibuja un 18% más grande, con transición suave.
     val escala by animateFloatAsState(
