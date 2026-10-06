@@ -9,13 +9,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.rutautpnative.data.directions.DirectionsService
 import com.example.rutautpnative.data.geo.PolylineMatching
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.RutaGTFS
+import com.example.rutautpnative.data.routing.TransitPlanner
 import com.example.rutautpnative.data.ubicacion.LocationService
 import com.example.rutautpnative.ui.idioma.L
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.CameraPositionState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -112,6 +116,21 @@ class MapaViewModel : ViewModel() {
     var rutasCercanas by mutableStateOf<List<RutaGTFS>>(emptyList())
         private set
 
+    //----Itinerario a pie + bus (Fase 3)----
+    // Puerto del bloque `itinerario` del MapaViewModel.swift de iOS: plan
+    // puerta-a-puerta caminata -> bus GTFS -> caminata.
+    var itinerario by mutableStateOf<TransitPlanner.Plan?>(null)
+        private set
+
+    var calculandoItinerario by mutableStateOf(false)
+        private set
+
+    // "Necesitamos tu ubicacion..." / "No encontramos una linea directa...".
+    var mensajeRuta by mutableStateOf<String?>(null)
+        private set
+
+    private var itinerarioJob: Job? = null
+
     //----GPS real (Fase 1)----
     // Posicion del usuario en vivo: nula hasta el primer fix. Dibuja el
     // marcador del mapa y sera el origen de rutas/itinerarios (fases 3+).
@@ -126,8 +145,15 @@ class MapaViewModel : ViewModel() {
         if (gpsJob?.isActive == true) return
         if (!LocationService.estaAutorizado) return
         gpsJob = viewModelScope.launch {
+            var primerFixPendiente = userRealCoordinate == null
             LocationService.currentLocation().collect { loc ->
                 userRealCoordinate = LatLng(loc.latitude, loc.longitude)
+                // El destino pudo elegirse antes del primer fix (con el mensaje
+                // de "necesitamos tu ubicacion"): al llegar el GPS se recalcula.
+                if (primerFixPendiente) {
+                    primerFixPendiente = false
+                    destinoSeleccionado?.let { calcularRutaHacia(LatLng(it.lat, it.lon)) }
+                }
             }
         }
     }
@@ -175,6 +201,67 @@ class MapaViewModel : ViewModel() {
         viewModelScope.launch {
             actualizarRutasCercanas(LatLng(destino.lat, destino.lon))
         }
+        // Itinerario puerta-a-puerta desde la posicion real del usuario.
+        calcularRutaHacia(LatLng(destino.lat, destino.lon))
+    }
+
+    //----Calculo del itinerario (puerto de calcularRutaHacia, iOS)----
+    fun calcularRutaHacia(destino: LatLng) {
+        val origen = userRealCoordinate
+        if (origen == null) {
+            itinerario = null
+            mensajeRuta = L.t(
+                "Necesitamos tu ubicación para calcular la ruta. Activa la ubicación con el botón de la derecha.",
+                "We need your location to calculate the route. Enable it with the button on the right."
+            )
+            return
+        }
+        itinerarioJob?.cancel()
+        itinerarioJob = viewModelScope.launch {
+            calculandoItinerario = true
+            mensajeRuta = null
+            itinerario = null
+            try {
+                val rutas = GTFSRepository.rutas()
+                val plan = TransitPlanner.plan(origen, destino, rutas) { a, b -> caminataReal(a, b) }
+                itinerario = plan
+                if (plan == null) {
+                    mensajeRuta = L.t(
+                        "No encontramos una línea directa con paraderos a menos de 800 m de ambos extremos.",
+                        "No direct line found with stops within 800 m of both ends."
+                    )
+                } else {
+                    enfocarItinerario(plan)
+                }
+            } finally {
+                calculandoItinerario = false
+            }
+        }
+    }
+
+    // Caminata real via Google Directions; si falla el planificador cae a
+    // linea recta (aproximada). Distancia 0 = campo ausente -> recta.
+    private suspend fun caminataReal(a: LatLng, b: LatLng): TransitPlanner.Caminata? {
+        return when (val r = DirectionsService.rutaPeatonal(a, b)) {
+            is DirectionsService.Resultado.Exito -> {
+                val metros = if (r.distanciaMetros > 0) r.distanciaMetros.toDouble()
+                else GTFSRepository.distanciaMetros(a, b)
+                TransitPlanner.Caminata(r.puntos, metros, aproximada = false)
+            }
+            else -> null
+        }
+    }
+
+    // Encuadra la camara en el plan completo (equivalente al
+    // itinerarioFocusTick de iOS, que ajusta el boundingRect del itinerario).
+    private fun enfocarItinerario(plan: TransitPlanner.Plan) {
+        val builder = LatLngBounds.builder()
+        plan.walkToBoard.forEach(builder::include)
+        plan.busDibujo.forEach(builder::include)
+        plan.walkToDestination.forEach(builder::include)
+        viewModelScope.launch {
+            cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(builder.build(), 120))
+        }
     }
 
     // Selecciona un lugar que llega de fuera del mapa (router.destinoPendiente,
@@ -206,6 +293,10 @@ class MapaViewModel : ViewModel() {
         flotaBuses = emptyList()
         busesAnimados = emptyList()
         busSeleccionado = null
+        itinerarioJob?.cancel()
+        itinerario = null
+        mensajeRuta = null
+        calculandoItinerario = false
         viewModelScope.launch {
             actualizarRutasCercanas(GTFSRepository.coordenadaUTP)
         }

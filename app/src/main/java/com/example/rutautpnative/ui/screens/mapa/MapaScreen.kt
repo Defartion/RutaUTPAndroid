@@ -26,6 +26,7 @@ import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.RutaGTFS
+import com.example.rutautpnative.data.routing.TransitPlanner
 import com.example.rutautpnative.data.senias.SeniasOverlay
 import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.data.ubicacion.LocationService
@@ -37,8 +38,14 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
+import com.google.android.gms.maps.model.Dash
+import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.PatternItem
 import com.google.maps.android.compose.*
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
@@ -162,6 +169,51 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                 }
             }
 
+            // Itinerario a pie + bus (Fase 3): caminatas punteadas y tramo en
+            // bus a DOBLE trazo (blanco grueso + color de la linea), como iOS.
+            val it = vm.itinerario
+            if (it != null) {
+                val dens = LocalDensity.current
+                val anchoPie = with(dens) { 4.dp.toPx() }
+                val patron = listOf(
+                    Dash(with(dens) { 3.dp.toPx() }),
+                    Gap(with(dens) { 7.dp.toPx() })
+                )
+                Polyline(points = it.walkToBoard, color = Secondary, width = anchoPie, pattern = patron)
+                Polyline(points = it.walkToDestination, color = Secondary, width = anchoPie, pattern = patron)
+                Polyline(points = it.busDibujo, color = AppSurface, width = with(dens) { 8.dp.toPx() }, zIndex = 1f)
+                Polyline(points = it.busDibujo, color = it.ruta.color, width = with(dens) { 5.dp.toPx() }, zIndex = 2f)
+
+                // Paradas del plan: 1 SUBE (azul) y 2 BAJA (fucsia), ancla abajo.
+                MarkerComposable(
+                    state = MarkerState(it.board.coordinate),
+                    anchor = Offset(0.5f, 1f),
+                    title = it.board.nombre
+                ) {
+                    MarcadorParada("1", L.t("SUBE", "BOARD"), Secondary)
+                }
+                MarkerComposable(
+                    state = MarkerState(it.alight.coordinate),
+                    anchor = Offset(0.5f, 1f),
+                    title = it.alight.nombre
+                ) {
+                    MarcadorParada("2", L.t("BAJA", "EXIT"), AppPrimary)
+                }
+            }
+
+            // Marcador del destino buscado (iOS lo oculta si es la UTP).
+            vm.destinoSeleccionado?.let { d ->
+                if (d.label != "UTP") {
+                    MarkerComposable(
+                        state = MarkerState(LatLng(d.lat, d.lon)),
+                        anchor = Offset(0.5f, 1f),
+                        title = d.label
+                    ) {
+                        MarcadorDestinoBuscado(d.label)
+                    }
+                }
+            }
+
             // Recorrido de ruta: pospuesto a propósito (ver TODO en MapaViewModel.kt).
         }
 
@@ -176,6 +228,20 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                 onSearch = { focusManager.clearFocus() },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             )
+
+            // Resumen del itinerario a pie + bus (Fase 3): pasos, precio y ETA.
+            vm.destinoSeleccionado?.let { destino ->
+                ResumenItinerario(
+                    destino = destino.label,
+                    calculando = vm.calculandoItinerario,
+                    itinerario = vm.itinerario,
+                    mensaje = vm.mensajeRuta,
+                    onQuitar = { vm.limpiar() },
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 8.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -457,6 +523,125 @@ private fun BottomPanel(
             }
         }
         Spacer(Modifier.height(8.dp))
+    }
+}
+
+//----Resumen del itinerario (puerto del resumenItinerario de iOS)----
+@Composable
+private fun ResumenItinerario(
+    destino: String,
+    calculando: Boolean,
+    itinerario: TransitPlanner.Plan?,
+    mensaje: String?,
+    onQuitar: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = AppSurface.copy(alpha = 0.92f)),
+        elevation = CardDefaults.cardElevation(4.dp),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Place, null, tint = AppPrimary, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    L.t("Hacia", "To") + " $destino",
+                    style = HeadlineSm, color = OnSurface,
+                    maxLines = 1, modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onQuitar, modifier = Modifier.size(26.dp)) {
+                    Icon(Icons.Filled.Close, null, tint = OnSurfaceVariant, modifier = Modifier.size(16.dp))
+                }
+            }
+
+            when {
+                calculando -> Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = AppPrimary
+                    )
+                    Text(
+                        L.t("Buscando paradero y transporte…", "Finding stop and route…"),
+                        style = BodySm, color = OnSurfaceVariant
+                    )
+                }
+
+                itinerario != null -> {
+                    val plan = itinerario
+                    Spacer(Modifier.height(10.dp))
+                    PasoItinerario(
+                        icon = Icons.Filled.DirectionsWalk,
+                        texto = L.t(
+                            "Camina ${plan.caminataBoardMetros.roundToInt()} m · ${plan.board.nombre}",
+                            "Walk ${plan.caminataBoardMetros.roundToInt()} m · ${plan.board.nombre}"
+                        )
+                    )
+                    PasoItinerario(
+                        icon = Icons.Filled.DirectionsBus,
+                        color = plan.ruta.color,
+                        texto = L.t(
+                            "Toma la línea ${plan.ruta.linea} · ${plan.ruta.precioTexto}",
+                            "Take line ${plan.ruta.linea} · ${plan.ruta.precioTexto}"
+                        )
+                    )
+                    PasoItinerario(
+                        icon = Icons.Filled.Flag,
+                        texto = L.t("Baja en ${plan.alight.nombre}", "Get off at ${plan.alight.nombre}")
+                    )
+                    if (plan.caminataDestinoMetros.roundToInt() > 0) {
+                        Text(
+                            L.t(
+                                "Luego camina ${plan.caminataDestinoMetros.roundToInt()} m hasta tu destino",
+                                "Then walk ${plan.caminataDestinoMetros.roundToInt()} m to your destination"
+                            ),
+                            style = BodySm, color = OnSurfaceVariant
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(L.t("··· A pie", "··· Walking"), style = BodyXs, color = OnSurfaceVariant)
+                        Text(L.t("━━ En bus", "━━ By bus"), style = BodyXs, color = plan.ruta.color)
+                        Text("· ~${plan.etaMinutos} min", style = BodyXs, color = OnSurface)
+                    }
+                    if (plan.caminataAproximada) {
+                        Spacer(Modifier.height(6.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(Icons.Filled.Warning, null, tint = AppError, modifier = Modifier.size(14.dp))
+                            Text(
+                                L.t("Caminata estimada en línea recta", "Walking legs estimated as straight lines"),
+                                style = BodyXs, color = OnSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                mensaje != null -> Text(mensaje, style = BodySm, color = OnSurfaceVariant)
+            }
+        }
+    }
+}
+
+@Composable
+private fun PasoItinerario(icon: ImageVector, texto: String, color: Color = OnSurface) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(vertical = 3.dp)
+    ) {
+        Icon(icon, null, tint = color, modifier = Modifier.size(16.dp))
+        Text(texto, style = BodySm, color = OnSurface, maxLines = 1)
     }
 }
 

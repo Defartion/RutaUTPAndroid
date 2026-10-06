@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Navigation
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -274,6 +275,69 @@ fun MarcadorUTP() {
             contentAlignment = Alignment.Center
         ) {
             Icon(Icons.Filled.School, null, tint = Color.White, modifier = Modifier.size(18.dp))
+        }
+    }
+}
+
+// ---- Parada de subida/bajada del itinerario (puerto del TransitStopMarker) ----
+// Capsula con el titulo ("SUBE"/"BAJA") y debajo el circulo numerado que se
+// clava en la coordenada (el marcador se usa con anchor bottom-center).
+@Composable
+fun MarcadorParada(numero: String, titulo: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            modifier = Modifier
+                .shadow(2.dp, CircleShape)
+                .clip(CircleShape)
+                .background(color)
+                .padding(horizontal = 8.dp, vertical = 3.dp)
+        ) {
+            Text(titulo, style = LabelCapsSm, color = Color.White)
+        }
+        Spacer(Modifier.height(2.dp))
+        Box(
+            modifier = Modifier
+                .size(30.dp)
+                .shadow(3.dp, CircleShape)
+                .clip(CircleShape)
+                .background(color)
+                .border(2.dp, Color.White, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(numero, style = HeadlineXs, color = Color.White)
+        }
+    }
+}
+
+// ---- Marcador del destino buscado (puerto del MarcadorDestinoBuscado) ----
+@Composable
+fun MarcadorDestinoBuscado(titulo: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            modifier = Modifier
+                .shadow(2.dp, CircleShape)
+                .clip(CircleShape)
+                .background(Secondary)
+                .padding(horizontal = 8.dp, vertical = 3.dp)
+        ) {
+            Text(titulo, style = LabelCapsSm, color = Color.White, maxLines = 1)
+        }
+        Spacer(Modifier.height(2.dp))
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .shadow(4.dp, CircleShape)
+                .clip(CircleShape)
+                .background(Secondary)
+                .border(2.dp, Color.White, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Filled.Place,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(16.dp)
+            )
         }
     }
 }
