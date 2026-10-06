@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.RutaGTFS
+import com.example.rutautpnative.data.ubicacion.LocationService
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraPositionState
@@ -66,6 +67,46 @@ class MapaViewModel : ViewModel() {
     // (destino seleccionado o campus UTP por defecto).
     var rutasCercanas by mutableStateOf<List<RutaGTFS>>(emptyList())
         private set
+
+    //----GPS real (Fase 1)----
+    // Posicion del usuario en vivo: nula hasta el primer fix. Dibuja el
+    // marcador del mapa y sera el origen de rutas/itinerarios (fases 3+).
+    var userRealCoordinate: LatLng? by mutableStateOf(null)
+        private set
+
+    private var gpsJob: Job? = null
+
+    // Enciende el GPS si hay permiso (idempotente). El conteo de consumidores
+    // del LocationService apaga el hardware cuando nadie escucha.
+    fun iniciarGPS() {
+        if (gpsJob?.isActive == true) return
+        if (!LocationService.estaAutorizado) return
+        gpsJob = viewModelScope.launch {
+            LocationService.currentLocation().collect { loc ->
+                userRealCoordinate = LatLng(loc.latitude, loc.longitude)
+            }
+        }
+    }
+
+    fun detenerGPS() {
+        gpsJob?.cancel()
+        gpsJob = null
+    }
+
+    // Boton "Mi Ubicacion": recentra la camara sobre el usuario (o relanza el
+    // GPS si aun no hay fix). Equivale a recenterOnUser() en iOS.
+    fun recenterOnUser() {
+        val pos = userRealCoordinate
+        if (pos != null) {
+            viewModelScope.launch {
+                cameraPositionState.animate(
+                    com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(pos, 16f)
+                )
+            }
+        } else {
+            iniciarGPS()
+        }
+    }
 
     // Al abrir el mapa (sin destino), muestra las líneas cercanas al campus UTP.
     init {
@@ -191,5 +232,6 @@ class MapaViewModel : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         detenerAnimacion()
+        detenerGPS()
     }
 }

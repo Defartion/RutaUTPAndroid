@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
@@ -26,10 +27,14 @@ import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.RutaGTFS
 import com.example.rutautpnative.data.senias.SeniasOverlay
 import com.example.rutautpnative.data.senias.SeniasPrefs
+import com.example.rutautpnative.data.ubicacion.LocationService
 import com.example.rutautpnative.model.TipoReporte
 import com.example.rutautpnative.ui.components.BottomNavBar
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
@@ -37,11 +42,17 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
     val focusManager = LocalFocusManager.current
     var mostrarDrawer by remember { mutableStateOf(false) }
     var showReportarSheet by remember { mutableStateOf(false) }
+
+    // Permiso de ubicacion (pedir solo cuando el usuario toca el boton, como
+    // en iOS: no se pide al abrir la pantalla).
+    val permisoUbicacion = rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
+    val autorizadoGPS = permisoUbicacion.status.isGranted
 
     // Inicializar destinos con iconos
     LaunchedEffect(Unit) {
@@ -54,8 +65,17 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
         )
     }
 
+    // Enciende el GPS en cuanto haya permiso (al concederlo o al entrar con
+    // permiso ya dado). El conteo de consumidores apaga el hardware al salir.
+    LaunchedEffect(autorizadoGPS) {
+        if (autorizadoGPS) vm.iniciarGPS()
+    }
+
     DisposableEffect(Unit) {
-        onDispose { vm.detenerAnimacion() }
+        onDispose {
+            vm.detenerAnimacion()
+            vm.detenerGPS()
+        }
     }
 
     // Consumir un destino pendiente publicado por otra pestaña (p.ej. zonas de
@@ -88,12 +108,15 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                 MarcadorUTP()
             }
 
-            // Marcador usuario
-            MarkerComposable(
-                state = MarkerState(position = LatLng(-8.1180, -79.0350)),
-                title = L.t("Mi ubicación", "My location")
-            ) {
-                PulsingUserMarker()
+            // Marcador usuario: GPS REAL (nulo hasta el primer fix; antes era
+            // una posicion fija de demostracion).
+            vm.userRealCoordinate?.let { pos ->
+                MarkerComposable(
+                    state = MarkerState(position = pos),
+                    title = L.t("Mi ubicación", "My location")
+                ) {
+                    PulsingUserMarker()
+                }
             }
 
             // Buses simulados: bus 3D (tira de giros) con la etiqueta de la
@@ -136,6 +159,34 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             )
 
             Spacer(modifier = Modifier.weight(1f))
+
+            // Boton "Mi Ubicacion" GPS: siempre en la misma posicion (derecha,
+            // sobre el panel inferior), como en iOS.
+            // - Sin permiso: gris, lo pide al tocar.
+            // - Con permiso sin fix: primario, recentra al tocar (relanza GPS).
+            // - Con posicion: primario, recentra la camara sobre el usuario.
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Box(
+                    modifier = Modifier
+                        .padding(end = 20.dp, bottom = 8.dp)
+                        .size(48.dp)
+                        .shadow(4.dp, CircleShape)
+                        .clip(CircleShape)
+                        .background(AppSurface)
+                        .clickable {
+                            if (!autorizadoGPS) permisoUbicacion.launchPermissionRequest()
+                            else vm.recenterOnUser()
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        if (autorizadoGPS) Icons.Filled.MyLocation else Icons.Filled.LocationOff,
+                        contentDescription = L.t("Mi ubicación", "My location"),
+                        tint = if (autorizadoGPS) AppPrimary else OnSurfaceVariant.copy(alpha = 0.6f),
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+            }
 
             // Bottom panel
             BottomPanel(

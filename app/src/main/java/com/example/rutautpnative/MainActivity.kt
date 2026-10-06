@@ -16,6 +16,7 @@ import com.example.rutautpnative.data.places.PlacesService
 import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.data.senias.SeniasService
 import com.example.rutautpnative.data.gtfs.GTFSRepository
+import com.example.rutautpnative.data.ubicacion.LocationService
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.ui.theme.RutaUTPNativeTheme
@@ -35,6 +36,7 @@ class MainActivity : ComponentActivity() {
         SeniasService.init(this)
         SeniasPrefs.init(this)
         TemaStore.init(this)
+        LocationService.init(this)
         L.init(this)
         setContent {
             // Tema oscuro manual (persistido): la raíz lee el espejo reactivo
@@ -45,5 +47,11 @@ class MainActivity : ComponentActivity() {
                 RootView(router)
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // El permiso puede haber cambiado en Ajustes con la app en segundo plano.
+        LocationService.refrescarEstadoAutorizacion()
     }
 }
