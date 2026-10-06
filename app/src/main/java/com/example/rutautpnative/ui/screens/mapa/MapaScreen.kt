@@ -3,6 +3,7 @@ package com.example.rutautpnative.ui.screens.mapa
 import com.google.maps.android.compose.MarkerState
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -96,7 +97,10 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                     WindowInsets.statusBars.getTop(this).toDp()
                 }),
             cameraPositionState = vm.cameraPositionState,
-            onMapClick = { focusManager.clearFocus() },
+            onMapClick = {
+                focusManager.clearFocus()
+                vm.seleccionarBus(null)
+            },
             properties = MapProperties(isMyLocationEnabled = false),
             uiSettings = MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false)
         ) {
@@ -119,26 +123,24 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                 }
             }
 
-            // Buses simulados: bus 3D (tira de giros) con la etiqueta de la
-            // línea encima. El ancla NO es el centro del marcador completo:
-            // con la etiqueta arriba, el punto que cae en la coordenada real
-            // es el centro vertical del modelo (ver BusMarkerAncla).
-            vm.busSimulados.forEach { bus ->
+            // Buses animados sobre shapes GTFS REALES. Tope de 8 marcadores
+            // en el mapa por rendimiento; las cards del panel muestran TODAS
+            // las líneas (igual que iOS). Tocar uno abre su popup de detalle.
+            vm.busesAnimados.take(8).forEach { bus ->
                 MarkerComposable(
                     state = MarkerState(position = LatLng(bus.lat, bus.lon)),
                     anchor = BusMarkerAncla,
-                    title = L.t("Línea", "Route") + " ${bus.linea}"
+                    title = L.t("Línea", "Route") + " ${bus.linea}",
+                    onClick = {
+                        vm.seleccionarBus(bus)
+                        true
+                    }
                 ) {
                     BusMarker3D(
                         linea = bus.linea,
-                        // Color de la línea según el feed GTFS (si esa línea no
-                        // pasa por este punto, se usa el color de marca).
-                        color = vm.rutasCercanas.firstOrNull { it.linea == bus.linea }?.color ?: AppPrimary,
-                        // bus.angulo es matemático (0° = este, 90° = norte,
-                        // porque el movimiento usa lat += sin, lon += cos).
-                        // La tira de giros espera rumbo de brújula (0° = norte,
-                        // horario): heading = 90° - angulo, normalizado a [0,360).
-                        heading = ((90.0 - bus.angulo) % 360.0 + 360.0) % 360.0
+                        color = bus.color,
+                        heading = bus.heading,
+                        seleccionado = vm.busSeleccionado?.id == bus.id
                     )
                 }
             }
@@ -190,11 +192,36 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
 
             // Bottom panel
             BottomPanel(
-                router = router,
                 rutas = vm.rutasCercanas,
-                onReportar = { showReportarSheet = true }
+                buses = vm.busesAnimados,
+                onReportar = { showReportarSheet = true },
+                onSeleccionarBus = { vm.seleccionarBus(it) }
             )
             Spacer(modifier = Modifier.height(100.dp)) // espacio para BottomNavBar
+        }
+
+        // POPUP DETALLE DE BUS (encima del panel inferior, como el
+        // BusDetailPopup de iOS). Tocar el mapa o la X lo cierra.
+        AnimatedVisibility(
+            visible = vm.busSeleccionado != null,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 258.dp)
+        ) {
+            vm.busSeleccionado?.let { bus ->
+                BusDetailPopup(
+                    bus = bus,
+                    onClose = { vm.seleccionarBus(null) },
+                    onVerRuta = {
+                        vm.seleccionarBus(null)
+                        // Abre el detalle de ESA línea en Rutas, no la lista.
+                        router.rutaPendiente = bus.rutaId
+                        router.navigate(AppScreen.Rutas)
+                    }
+                )
+            }
         }
 
         // Nav boton
@@ -356,7 +383,12 @@ private fun DestinoChipItem(destino: DestinoChip, isActive: Boolean, onClick: ()
 
 // Boton del panel
 @Composable
-private fun BottomPanel(router: AppRouter, rutas: List<RutaGTFS>, onReportar: () -> Unit) {
+private fun BottomPanel(
+    rutas: List<RutaGTFS>,
+    buses: List<BusAnimado>,
+    onReportar: () -> Unit,
+    onSeleccionarBus: (BusAnimado) -> Unit
+) {
     Column(modifier = Modifier.padding(bottom = 8.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
@@ -401,19 +433,88 @@ private fun BottomPanel(router: AppRouter, rutas: List<RutaGTFS>, onReportar: ()
                 .padding(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            rutas.forEach { ruta ->
-                BusCard(ruta = ruta) {
-                    router.rutaPendiente = ruta.id
-                    router.navigate(AppScreen.Rutas)
-                }
+            // Cards con TODAS las líneas que pasan por el punto (el tope de 8
+            // es solo para los marcadores del mapa). Tap → popup del bus.
+            buses.forEach { bus ->
+                BusCard(bus = bus) { onSeleccionarBus(bus) }
             }
         }
         Spacer(Modifier.height(8.dp))
     }
 }
 
+//----Popup de detalle del bus (puerto del BusDetailPopup de iOS)----
 @Composable
-private fun BusCard(ruta: RutaGTFS, onClick: () -> Unit) {
+private fun BusDetailPopup(
+    bus: BusAnimado,
+    onClose: () -> Unit,
+    onVerRuta: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .shadow(10.dp, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .background(AppSurface)
+            .border(1.dp, bus.color.copy(alpha = 0.35f), RoundedCornerShape(16.dp))
+            .padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Ícono circular con el color de la línea (fondo tintado al 18%).
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(bus.color.copy(alpha = 0.18f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Filled.DirectionsBus, null, tint = bus.color, modifier = Modifier.size(22.dp))
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(L.t("LÍNEA", "ROUTE") + " ${bus.linea}", style = HeadlineXs, color = OnSurface)
+                    Spacer(Modifier.width(8.dp))
+                    // Cápsula de llegada con el color de la línea.
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(bus.color)
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Text(bus.etiquetaLlegada, style = LabelCapsSm, color = Color.White)
+                    }
+                }
+                Text(
+                    "${bus.empresa} • ${bus.tipo} (${bus.ramalTexto})",
+                    style = BodySm, color = OnSurfaceVariant, maxLines = 1
+                )
+            }
+            IconButton(onClick = onClose, modifier = Modifier.size(32.dp)) {
+                Icon(Icons.Filled.Close, null, tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
+            }
+        }
+        Spacer(Modifier.height(14.dp))
+        // CTA con el color del bus: abre el detalle de ESA línea en Rutas.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(46.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(bus.color)
+                .clickable { onVerRuta() },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(L.t("Ver Ruta Completa", "View Full Route"), style = HeadlineXs, color = Color.White)
+        }
+    }
+}
+
+// Card de línea del panel inferior (puerto del BusCard de iOS): línea,
+// empresa, cápsula de llegada y "tipo • ramal". Tap → popup del bus.
+@Composable
+private fun BusCard(bus: BusAnimado, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = AppSurface.copy(alpha = 0.85f)),
@@ -422,17 +523,25 @@ private fun BusCard(ruta: RutaGTFS, onClick: () -> Unit) {
     ) {
         Box {
             Column(modifier = Modifier.padding(14.dp)) {
-                Text(L.t("LÍNEA", "ROUTE") + " ${ruta.linea}", style = LabelCapsMd, color = OnSurfaceVariant)
-                Text(ruta.empresa, style = HeadlineSm, color = OnSurface, maxLines = 1)
+                Text(L.t("LÍNEA", "ROUTE") + " ${bus.linea}", style = LabelCapsMd, color = OnSurfaceVariant)
+                Text(bus.empresa, style = HeadlineSm, color = OnSurface, maxLines = 1)
                 Spacer(Modifier.height(6.dp))
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(PrimaryContainer).padding(horizontal = 8.dp, vertical = 3.dp)) {
-                        Text(ruta.precioTexto, style = LabelCapsMd, color = OnPrimaryContainer)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(bus.color)
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                    ) {
+                        Text(bus.etiquetaLlegada, style = LabelCapsSm, color = Color.White)
                     }
-                    Text(ruta.frecuenciaTexto, style = BodySm, color = OnSurfaceVariant, maxLines = 1)
+                    Text(
+                        "${bus.tipo} • ${bus.ramalTexto}",
+                        style = BodySm, color = OnSurfaceVariant, maxLines = 1
+                    )
                 }
             }
-            Box(modifier = Modifier.width(4.dp).height(56.dp).clip(RoundedCornerShape(2.dp)).background(ruta.color).align(Alignment.CenterStart))
+            Box(modifier = Modifier.width(4.dp).height(56.dp).clip(RoundedCornerShape(2.dp)).background(bus.color).align(Alignment.CenterStart))
         }
     }
 }
