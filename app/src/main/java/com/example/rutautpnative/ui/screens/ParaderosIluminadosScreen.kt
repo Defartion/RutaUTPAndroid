@@ -93,7 +93,10 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
     }
 
     var selectedId by remember { mutableStateOf<String?>(null) }
-    var guardados by remember { mutableStateOf<List<LugarGuardado>>(emptyList()) }
+    // Suscripcion REACTIVA a LugaresStore (antes: snapshot unico con cargar()
+    // que podia pisar lugares guardados por el usuario en la pestaña Guardado
+    // mientras esta pantalla estaba abierta).
+    val guardados by LugaresStore.observar().collectAsState(initial = emptyList())
 
     // Caminata a pie (Directions API)
     var walkingLoading by remember { mutableStateOf(false) }
@@ -129,28 +132,27 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
     }
 
     fun alternarGuardado(paradero: ParaderoGTFS) {
-        val existente = guardados.firstOrNull { g ->
+        // Opera sobre el ULTIMO estado del Flow reactivo (no sobre un
+        // snapshot que puede estar obsoleto). El Flow se actualiza solo
+        // tras persistir, asi que el bookmark refleja el estado real.
+        val actuales = guardados
+        val existente = actuales.firstOrNull { g ->
             g.nombre == paradero.nombre &&
                 g.lat != null && g.lon != null &&
                 GTFSRepository.distanciaMetros(LatLng(g.lat!!, g.lon!!), paradero.coordinate) < 5.0
         }
-        guardados = when {
-            existente == null -> guardados + LugarGuardado(
+        val nueva = when {
+            existente == null -> actuales + LugarGuardado(
                 nombre = paradero.nombre,
                 direccion = "Trujillo",
                 categoria = CategoriaLugar.OTRO,
                 lat = paradero.lat,
                 lon = paradero.lon
             )
-            existente.esFijo -> guardados
-            else -> guardados.filter { it.id != existente.id }
+            existente.esFijo -> actuales
+            else -> actuales.filter { it.id != existente.id }
         }
-        scope.launch { LugaresStore.guardar(guardados) }
-    }
-
-    // Carga los lugares guardados una vez (para íconos de bookmark en los pins).
-    LaunchedEffect(Unit) {
-        guardados = LugaresStore.cargar()
+        scope.launch { LugaresStore.guardar(nueva) }
     }
 
     LaunchedEffect(locationPermission.status) {
