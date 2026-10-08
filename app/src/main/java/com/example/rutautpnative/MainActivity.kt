@@ -16,6 +16,8 @@ import com.example.rutautpnative.data.places.PlacesService
 import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.data.senias.SeniasService
 import com.example.rutautpnative.data.gtfs.GTFSRepository
+import com.example.rutautpnative.data.monedero.MonederoStore
+import com.example.rutautpnative.data.tarjetas.TarjetasStore
 import com.example.rutautpnative.data.tracking.PassiveTrackingCoordinator
 import com.example.rutautpnative.data.ubicacion.LocationService
 import com.example.rutautpnative.ui.idioma.L
@@ -34,6 +36,8 @@ class MainActivity : ComponentActivity() {
         PlacesService.init(this)
         NegociosService.init(this)
         CuponesStore.init(this)
+        MonederoStore.init(this)
+        TarjetasStore.init(this)
         SeniasService.init(this)
         SeniasPrefs.init(this)
         TemaStore.init(this)

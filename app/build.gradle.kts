@@ -83,6 +83,7 @@ dependencies {
     implementation(libs.sh.reorderable)
     implementation(libs.zxing.core)
     implementation(libs.paho.mqtt)
+    implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
 

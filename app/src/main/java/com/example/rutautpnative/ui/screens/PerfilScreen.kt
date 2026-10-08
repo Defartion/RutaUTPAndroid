@@ -3,6 +3,7 @@ package com.example.rutautpnative.ui.screens
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -57,9 +58,10 @@ fun PerfilScreen(router: AppRouter) {
     var showCarneDigital by remember { mutableStateOf(false) }
     // Foto del carné: estado de sesión (no persiste), compartido con el avatar.
     var fotoPerfil by remember { mutableStateOf<Bitmap?>(null) }
-    // Método de pago: solo los últimos 4 dígitos, estado de sesión (no persiste).
-    var metodoPagoUltimos4 by remember { mutableStateOf<String?>(null) }
-    var showTarjetaForm by remember { mutableStateOf(false) }
+    // Sheets del monedero (Fase 11) y de tarjetas.
+    var showRecargar by remember { mutableStateOf(false) }
+    var showQRPasaje by remember { mutableStateOf(false) }
+    var showMetodosPago by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     // Cupones guardados: SÍ persisten (DataStore). Reactivo via Flow de ids,
@@ -136,20 +138,19 @@ fun PerfilScreen(router: AppRouter) {
                     }
                     Spacer(Modifier.height(22.dp))
 
-                    // Seccion de billetera
+                    // Seccion de billetera (puerto del PerfilView.swift):
+                    // MonederoCard + carnets + acceso a "Mis tarjetas".
                     Text(L.t("MI BILLETERA", "MY WALLET"), style = LabelCapsSm, color = Color.White.copy(alpha = 0.85f), modifier = Modifier.padding(horizontal = 4.dp))
                     Spacer(Modifier.height(10.dp))
+                    MonederoCard(
+                        onRecargar = { showRecargar = true },
+                        onPagarQR = { showQRPasaje = true }
+                    )
+                    Spacer(Modifier.height(12.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         WalletCard(
-                            icon = Icons.Filled.CreditCard,
-                            title = L.t("Método Pago", "Payment Method"),
-                            subtitle = metodoPagoUltimos4?.let { "•••• $it" } ?: L.t("Agregar tarjeta", "Add card"),
-                            modifier = Modifier.weight(1f),
-                            onClick = { showTarjetaForm = true }
-                        )
-                        WalletCard(
                             icon = Icons.Filled.Badge,
-                            title = L.t("Carnet UTP", "UTP Card"),
+                            title = L.t("Carnet Universitario", "University ID"),
                             subtitle = if (carnetVerificado) L.t("Verificado", "Verified") else L.t("Escanear ahora", "Scan now"),
                             modifier = Modifier.weight(1f),
                             // Ya verificado: abre el carné directo; si no, primero el scanner.
@@ -158,6 +159,36 @@ fun PerfilScreen(router: AppRouter) {
                                 else showCarnetScanner = true
                             }
                         )
+                        WalletCard(
+                            icon = Icons.Filled.School,
+                            title = L.t("Carné Digital", "Digital ID"),
+                            subtitle = L.t("Muestra · sin validez", "Display · not valid"),
+                            modifier = Modifier.weight(1f),
+                            onClick = { showCarneDigital = true }
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    // "Mis tarjetas": referencias locales (badge LOCAL, borde
+                    // discontinuo, como el iOS).
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White.copy(alpha = 0.10f))
+                            .border(
+                                1.dp, Color.White.copy(alpha = 0.45f),
+                                RoundedCornerShape(12.dp)
+                            )
+                            .clickable { showMetodosPago = true }
+                            .padding(horizontal = 14.dp, vertical = 12.dp)
+                    ) {
+                        Icon(Icons.Filled.CreditCard, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                        Text(L.t("Mis tarjetas", "My cards"), style = BodyMdMedium, color = Color.White, modifier = Modifier.weight(1f))
+                        Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(Color.White.copy(alpha = 0.22f)).padding(horizontal = 8.dp, vertical = 2.dp)) {
+                            Text("LOCAL", style = LabelCapsSm, color = Color.White)
+                        }
                     }
                 }
             }
@@ -268,14 +299,15 @@ fun PerfilScreen(router: AppRouter) {
     }
 
     // Formulario de tarjeta (simulación: solo salen los últimos 4 dígitos).
-    if (showTarjetaForm) {
-        TarjetaFormSheet(
-            onGuardar = { ultimos4 ->
-                metodoPagoUltimos4 = ultimos4
-                showTarjetaForm = false
-            },
-            onCancelar = { showTarjetaForm = false }
-        )
+    // Sheets del monedero (Fase 11) y de tarjetas.
+    if (showRecargar) {
+        RecargarSaldoSheet(onDismiss = { showRecargar = false })
+    }
+    if (showQRPasaje) {
+        QRPasajeSheet(onDismiss = { showQRPasaje = false })
+    }
+    if (showMetodosPago) {
+        MetodosPagoSheet(onDismiss = { showMetodosPago = false })
     }
 
     // Carnet scanner: al "escanear", abre el carné digital.

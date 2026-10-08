@@ -20,6 +20,7 @@ reorderable = "3.1.0"
 zxingCore = "3.5.3"
 media3 = "1.5.1"
 pahoMqtt = "1.2.5"
+securityCrypto = "1.1.0-alpha06"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -51,6 +52,7 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 sh-reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.ref = "reorderable" }
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxingCore" }
 paho-mqtt = { group = "org.eclipse.paho", name = "org.eclipse.paho.client.mqttv3", version.ref = "pahoMqtt" }
+androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 androidx-media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
 androidx-media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3" }
 
