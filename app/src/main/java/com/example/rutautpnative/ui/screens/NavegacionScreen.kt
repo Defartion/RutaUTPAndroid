@@ -1,615 +1,600 @@
 package com.example.rutautpnative.ui.screens
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.Canvas
+import android.Manifest
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DepartureBoard
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.LocationOff
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.NearMe
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.rutautpnative.data.geo.PolylineMatching
+import com.example.rutautpnative.data.gtfs.GTFSRepository
+import com.example.rutautpnative.data.gtfs.ParaderoGTFS
+import com.example.rutautpnative.data.gtfs.RutaGTFS
+import com.example.rutautpnative.data.ubicacion.LocationService
+import com.example.rutautpnative.ui.idioma.L
+import com.example.rutautpnative.ui.screens.mapa.PulsingUserMarker
+import com.example.rutautpnative.ui.theme.*
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.*
-import com.example.rutautpnative.data.gtfs.GTFSRepository
-import com.example.rutautpnative.data.negocios.CuponesStore
-import com.example.rutautpnative.data.negocios.NegociosService
-import com.example.rutautpnative.model.Negocio
-import com.example.rutautpnative.ui.components.cuponVigente
-import com.example.rutautpnative.ui.components.formatoVenceCupon
-import com.example.rutautpnative.ui.components.iconoParaCategoria
-import com.example.rutautpnative.ui.idioma.L
-import com.example.rutautpnative.ui.theme.*
+import com.google.android.gms.maps.model.LatLngBounds
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.MarkerComposable
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.Polyline
+import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.math.ceil
 
-//----Instrucciones de navegación----
-data class NavInstruccion(
-    val id: Int,
-    val texto: String,
-    val distancia: String,
-    val icono: ImageVector
-)
+//----Navegacion activa (puerto del NavegacionRutaView.swift + ViewModel)----
+// Sigue al USUARIO viajando sobre el recorrido REAL de la linea (aqui no se
+// rastrea al bus: el que viaja es el usuario). Reglas del iOS:
+//   - Proyeccion sobre el shape con umbral 60 m; fueraDeRuta(m) con metros al trazado.
+//   - Fixes filtrados: precision <= 65 m y antiguedad < 30 s.
+//   - Anti-jitter: el progreso NO retrocede salvo caida > 0.03 (re-embarque atras).
+//   - Final: restante <= 25 m y a <= 35 m del ultimo punto.
+//   - Cerca del destino: < 180 m restantes.
+//   - Minutos restantes = duracion GTFS x (1 - progreso).
+//   - Demo ~72 s: tick 80 ms, +1/900 por tick, interpolando sobre el shape.
+//
+// El panel es oscuro (#141414, como el iOS que fuerza .dark en su ventana);
+// los negocios demo ya no viven aqui (pertenecen a TrackingDemo, Fase 10:
+// ver NegociosDemoComponents.kt).
 
-// Textos de la guía paso a paso (demo de tracking): son interfaz traducible;
-// se construyen dentro del composable para que reaccionen al cambio de idioma
-// (si fueran un val top-level, se capturarían una sola vez en el idioma de inicio).
-private fun instruccionesTraducidas() = listOf(
-    NavInstruccion(0, L.t("Camina 250m hasta Av. España", "Walk 250m to Av. España"), "250 m", Icons.Filled.DirectionsWalk),
-    NavInstruccion(1, L.t("Sube al bus en el paradero", "Board the bus at the stop"), "15 min", Icons.Filled.DirectionsBus),
-    NavInstruccion(2, L.t("Continúa por Av. España 1.5 km", "Continue along Av. España for 1.5 km"), "1.5 km", Icons.Filled.ArrowUpward),
-    NavInstruccion(3, L.t("Baja en el frontis de UTP Trujillo", "Get off in front of UTP Trujillo"), "200 m", Icons.Filled.ArrowDownward),
-    NavInstruccion(4, L.t("¡Llegaste a tu destino!", "You have arrived at your destination!"), "", Icons.Filled.CheckCircle),
-)
+private enum class EstadoNav { ESPERANDO_GPS, SIN_PERMISO, EN_RUTA, FUERA_RUTA, CERCA_DESTINO, FINALIZADO }
 
-private val tiempos   = listOf("4 min", "3 min", "2 min", "1 min", "0 min")
-private val distancias = listOf("2.0 km", "1.8 km", "1.5 km", "0.5 km", "0 m")
+// Paleta oscura propia de la pantalla (no se toca el tema global).
+private val PanelOscuro = Color(0xFF141414)
+private val PanelOscuroTexto = Color(0xFFE4E8EA)
+private val PanelOscuroTextoVariante = Color(0xFF9AA0A3)
+private val VerdeExito = Color(0xFF43A047)
+private val RojoPeligro = Color(0xFFE53935)
 
-private val routePoints = listOf(
-    LatLng(-8.1180, -79.0350),
-    LatLng(-8.1140, -79.0320),
-    LatLng(-8.1116, -79.0287)
-)
+private class NavegacionVM(val ruta: RutaGTFS) {
 
-// Punto sobre la polilínea para un progreso [0,1].
-private fun puntoEnRuta(progreso: Float): LatLng {
-    if (routePoints.size < 2) return routePoints.first()
-    val totalTramos = routePoints.size - 1
-    val posicion = (progreso.coerceIn(0f, 1f)) * totalTramos
-    val tramo = posicion.toInt().coerceAtMost(totalTramos - 1)
-    val f = posicion - tramo
-    val a = routePoints[tramo]
-    val b = routePoints[tramo + 1]
-    return LatLng(
-        a.latitude + (b.latitude - a.latitude) * f,
-        a.longitude + (b.longitude - a.longitude) * f
-    )
+    val shape = PolylineMatching.decimate(ruta.shape, 240)
+    val acumulados = PolylineMatching.distanciasAcumuladas(shape)
+    val totalM = acumulados.lastOrNull() ?: 0.0
+
+    // Paraderos proyectados sobre el shape (umbral 80 m, como el iOS), por fraccion.
+    data class ParaderoProy(val paradero: ParaderoGTFS, val fraccion: Double)
+
+    val paraderosProy: List<ParaderoProy> = ruta.paraderos.mapNotNull { p ->
+        val proy = PolylineMatching.proyectarEnShape(p.coordinate, shape) ?: return@mapNotNull null
+        if (proy.distanciaM <= 80.0) ParaderoProy(p, proy.fraccion) else null
+    }.sortedBy { it.fraccion }
+
+    //----Estado observable----
+    var estado by mutableStateOf(EstadoNav.ESPERANDO_GPS)
+    var posicion by mutableStateOf<LatLng?>(null)
+        private set
+    var progreso by mutableStateOf(0.0)
+        private set
+    var metrosFuera by mutableStateOf(0.0)
+        private set
+    var demoActivo by mutableStateOf(false)
+        private set
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var gpsJob: Job? = null
+    private var demoJob: Job? = null
+
+    //----GPS real----
+    fun iniciarGPS() {
+        if (gpsJob?.isActive == true) return
+        gpsJob = scope.launch {
+            LocationService.currentLocation().collect { loc -> procesarFix(loc) }
+        }
+    }
+
+    private fun procesarFix(loc: android.location.Location) {
+        if (demoActivo) return   // el modo demo manda mientras este activo
+        // Filtros del iOS: precision y frescura del fix.
+        if (!loc.hasAccuracy() || loc.accuracy > 65f) return
+        val antiguedadMs = System.currentTimeMillis() - loc.time
+        if (antiguedadMs > 30_000) return
+        aplicarPosicion(LatLng(loc.latitude, loc.longitude))
+    }
+
+    /// Nucleo: proyecta la posicion sobre el shape y actualiza estados.
+    private fun aplicarPosicion(pos: LatLng) {
+        posicion = pos
+        val proy = PolylineMatching.proyectarEnShape(pos, shape)
+        if (proy == null || proy.distanciaM > UMBRAL_RUTA_M) {
+            estado = EstadoNav.FUERA_RUTA
+            metrosFuera = proy?.distanciaM ?: 999.0
+            return   // fuera de ruta: el progreso queda congelado
+        }
+        metrosFuera = 0.0
+        val nuevo = proy.fraccion
+        // Anti-jitter: pequenos retrocesos (GPS ruidoso) no mueven el progreso;
+        // solo una caida > 0.03 (re-embarque atras) lo retrocede.
+        if (!(nuevo < progreso && (progreso - nuevo) <= 0.03)) {
+            progreso = nuevo
+        }
+
+        val restanteM = (1.0 - progreso) * totalM
+        val distUltimo = GTFSRepository.distanciaMetros(pos, shape.last())
+        estado = when {
+            restanteM <= 25.0 && distUltimo <= 35.0 -> EstadoNav.FINALIZADO
+            restanteM < 180.0 -> EstadoNav.CERCA_DESTINO
+            else -> EstadoNav.EN_RUTA
+        }
+    }
+
+    //----Demo (~72 s)----
+    fun iniciarDemo() {
+        detenerDemo()
+        demoActivo = true
+        progreso = 0.0
+        demoJob = scope.launch {
+            while (isActive) {
+                delay(80)
+                val nuevo = progreso + 1.0 / 900.0
+                if (nuevo >= 1.0) {
+                    aplicarPosicion(shape.last())
+                    break
+                }
+                progreso = nuevo
+                aplicarPosicion(puntoEnFraccion(nuevo))
+            }
+        }
+    }
+
+    fun detenerDemo() {
+        demoJob?.cancel()
+        demoJob = null
+        demoActivo = false
+    }
+
+    /// Interpolacion de la coordenada a una fraccion del shape (busqueda
+    /// binaria sobre las distancias acumuladas).
+    fun puntoEnFraccion(fraccion: Double): LatLng {
+        val objetivo = fraccion.coerceIn(0.0, 1.0) * totalM
+        var lo = 0
+        var hi = acumulados.size - 1
+        while (lo < hi - 1) {
+            val mid = (lo + hi) / 2
+            if (acumulados[mid] <= objetivo) lo = mid else hi = mid
+        }
+        val a = acumulados[lo]
+        val b = acumulados[lo + 1]
+        val f = if (b > a) ((objetivo - a) / (b - a)).coerceIn(0.0, 1.0) else 0.0
+        return LatLng(
+            shape[lo].latitude + (shape[lo + 1].latitude - shape[lo].latitude) * f,
+            shape[lo].longitude + (shape[lo + 1].longitude - shape[lo].longitude) * f
+        )
+    }
+
+    //----Derivados para la UI----
+    val restanteM: Double get() = (1.0 - progreso) * totalM
+    val paraderosRestantes: Int get() = paraderosProy.count { it.fraccion > progreso }
+    val minutosRestantes: Int
+        get() = if (ruta.duracionMin > 0) ceil(ruta.duracionMin * (1.0 - progreso)).toInt() else 0
+    val proximoParadero: ParaderoProy? get() = paraderosProy.firstOrNull { it.fraccion > progreso }
+
+    fun detener() {
+        gpsJob?.cancel()
+        gpsJob = null
+        detenerDemo()
+    }
+
+    companion object {
+        const val UMBRAL_RUTA_M = 60.0
+    }
 }
 
-//----Main Screen----
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun NavegacionScreen(
-    rutaNombre: String,
-    onFinish: () -> Unit
-) {
-    var instruccionIndex by remember { mutableIntStateOf(0) }
-    val instrucciones = instruccionesTraducidas() // re-evaluado en cada recomposición (idioma)
-    val instruccionActual = instrucciones[instruccionIndex]
-    val progreso = instruccionIndex.toFloat() / (instrucciones.size - 1).toFloat()
+fun NavegacionScreen(ruta: RutaGTFS, onFinish: () -> Unit) {
+    val context = LocalContext.current
+    val vm = remember(ruta.id) { NavegacionVM(ruta) }
+    val permisoUbicacion = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
 
-    // Auto-advance instructions every 4 seconds
+    // GPS en cuanto haya permiso; al salir, el conteo de consumidores del
+    // LocationService apaga el hardware.
+    LaunchedEffect(permisoUbicacion.status.isGranted) {
+        if (permisoUbicacion.status.isGranted) {
+            vm.estado = EstadoNav.ESPERANDO_GPS
+            vm.iniciarGPS()
+        } else {
+            vm.estado = EstadoNav.SIN_PERMISO
+        }
+    }
+    DisposableEffect(Unit) {
+        onDispose { vm.detener() }
+    }
+
+    //----Camara----
+    val camera = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(ruta.shape.firstOrNull() ?: GTFSRepository.coordenadaUTP, 15f)
+    }
+    var seguirUsuario by remember { mutableStateOf(true) }
+    var animandoCamara by remember { mutableStateOf(false) }
+
+    // Encuadre inicial de toda la ruta (una sola vez).
+    var encuadreInicialPendiente by remember { mutableStateOf(true) }
     LaunchedEffect(Unit) {
-        while (instruccionIndex < instrucciones.size - 1) {
-            delay(4000)
-            instruccionIndex++
+        if (encuadreInicialPendiente && ruta.shape.isNotEmpty()) {
+            encuadreInicialPendiente = false
+            val builder = LatLngBounds.builder()
+            ruta.shape.forEach(builder::include)
+            animandoCamara = true
+            camera.animate(CameraUpdateFactory.newLatLngBounds(builder.build(), 140))
+            animandoCamara = false
         }
     }
 
-    //----Posición animada del bus sobre la polilínea----
-    // Se interpola suavemente cada vez que avanza la instrucción.
-    var posicionBus by remember { mutableStateOf(routePoints.first()) }
-    LaunchedEffect(instruccionIndex) {
-        val desde = posicionBus
-        val hasta = puntoEnRuta(progreso)
-        val pasos = 24
-        for (i in 1..pasos) {
-            val f = i.toFloat() / pasos
-            posicionBus = LatLng(
-                desde.latitude + (hasta.latitude - desde.latitude) * f,
-                desde.longitude + (hasta.longitude - desde.longitude) * f
-            )
-            delay(40)
+    // Seguimiento del usuario: se re-activa con el toggle y con cada fix
+    // mientras nadie haya hecho pan manual.
+    LaunchedEffect(vm.posicion, seguirUsuario) {
+        val pos = vm.posicion
+        if (seguirUsuario && pos != null) {
+            animandoCamara = true
+            camera.animate(CameraUpdateFactory.newLatLngZoom(pos, 17f))
+            animandoCamara = false
         }
     }
-
-    //----Negocios visibles durante el tracking----
-    // Recalcula SOLO si la posición se movió al menos 120 m desde el último
-    // cálculo (no en cada frame de la animación).
-    var negociosVisibles by remember { mutableStateOf<List<Negocio>>(emptyList()) }
-    var ultimoCalculo by remember { mutableStateOf<LatLng?>(null) }
-    var negocioSeleccionado by remember { mutableStateOf<Negocio?>(null) }
-    LaunchedEffect(posicionBus) {
-        val prev = ultimoCalculo
-        if (prev == null || GTFSRepository.distanciaMetros(prev, posicionBus) >= 120.0) {
-            ultimoCalculo = posicionBus
-            negociosVisibles = NegociosService.distribuidos(
-                centro = posicionBus,
-                radioMetros = 900.0,
-                limite = 14
-            )
-        }
+    // Pan manual => se deja de seguir (la animacion propia no cuenta).
+    LaunchedEffect(camera.isMoving) {
+        if (camera.isMoving && !animandoCamara) seguirUsuario = false
     }
 
-    val cameraState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(-8.1116, -79.0287), 14f)
-    }
+    Box(modifier = Modifier.fillMaxSize().background(PanelOscuro)) {
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF0a0a0a))
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Top bar
-            TopBar(rutaNombre = rutaNombre, onFinish = onFinish)
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = camera,
+            uiSettings = MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false)
+        ) {
+            // Recorrido oficial.
+            Polyline(points = vm.shape, color = ruta.color, width = 12f, zIndex = 2f)
 
-            // Map (60% height)
-            Box(modifier = Modifier.weight(1f)) {
-                GoogleMap(
-                    modifier = Modifier.fillMaxSize(),
-                    cameraPositionState = cameraState,
-                    properties = MapProperties(mapStyleOptions = null),
-                    uiSettings = MapUiSettings(
-                        zoomControlsEnabled = false,
-                        scrollGesturesEnabled = false,
-                        zoomGesturesEnabled = false,
-                        rotationGesturesEnabled = false
-                    )
+            // Paraderos proyectados (tope 70, inicio y fin siempre), como el iOS.
+            val visibles = remember(vm.paraderosProy) {
+                if (vm.paraderosProy.size <= 70) vm.paraderosProy
+                else {
+                    val paso = (vm.paraderosProy.size - 1).toDouble() / 69
+                    val intermedios = (0 until 69).map { i -> vm.paraderosProy[(i * paso).toInt().coerceAtMost(vm.paraderosProy.size - 2)] }
+                    (intermedios + vm.paraderosProy.last()).distinctBy { it.paradero.id }
+                }
+            }
+            visibles.forEachIndexed { i, pp ->
+                val esInicio = i == 0
+                val esFin = pp == visibles.last()
+                MarkerComposable(
+                    state = MarkerState(pp.paradero.coordinate),
+                    anchor = androidx.compose.ui.geometry.Offset(0.5f, 0.5f),
+                    title = pp.paradero.nombre
                 ) {
-                    Polyline(
-                        points = routePoints,
-                        color = AppPrimary,
-                        width = 12f
-                    )
-                    MarkerComposable(
-                        state = MarkerState(position = routePoints.last()),
-                        title = "UTP Trujillo"
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(AppPrimary),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Filled.School, null, tint = Color.White, modifier = Modifier.size(16.dp))
-                        }
-                    }
-                    MarkerComposable(
-                        state = MarkerState(position = routePoints.first()),
-                        title = "Mi ubicación"
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clip(CircleShape)
-                                .background(Secondary),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Filled.MyLocation, null, tint = Color.White, modifier = Modifier.size(12.dp))
-                        }
-                    }
-                    //----Burbujas de negocios cercanos al trayecto----
-                    negociosVisibles.forEach { negocio ->
-                        MarkerComposable(
-                            state = MarkerState(LatLng(negocio.latitud, negocio.longitud)),
-                            anchor = Offset(0.5f, 1f),
-                            onClick = {
-                                negocioSeleccionado =
-                                    if (negocioSeleccionado?.id == negocio.id) null else negocio
-                                true
-                            }
-                        ) {
-                            NegocioBubbleMarker(
-                                negocio = negocio,
-                                seleccionado = negocioSeleccionado?.id == negocio.id
-                            )
-                        }
-                    }
-
-                    // Bus animado sobre el trayecto
-                    MarkerComposable(
-                        state = MarkerState(position = posicionBus),
-                        anchor = Offset(0.5f, 0.5f)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFF1a1a1a)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Filled.DirectionsBus, null, tint = Color.White, modifier = Modifier.size(18.dp))
-                        }
-                    }
-                }
-            }
-
-            // Bottom panel
-            BottomPanel(
-                instruccion = instruccionActual,
-                progreso = progreso,
-                tiempo = tiempos[instruccionIndex.coerceAtMost(4)],
-                distancia = distancias[instruccionIndex.coerceAtMost(4)]
-            )
-        }
-
-        //----Detalle del negocio seleccionado----
-        negocioSeleccionado?.let { negocio ->
-            Box(modifier = Modifier.fillMaxSize()) {
-                NegocioDetailCard(
-                    negocio = negocio,
-                    desde = posicionBus,
-                    onCerrar = { negocioSeleccionado = null },
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                )
-            }
-        }
-    }
-}
-
-// Ícono por categoría y vigencia de cupón: viven compartidas en
-// ui/components/IconosCategorias.kt y FormatoCupones.kt (están importadas).
-
-//----Burbuja de negocio (NegocioBubbleMarker)----
-@Composable
-private fun NegocioBubbleMarker(negocio: Negocio, seleccionado: Boolean) {
-    val color = negocio.categoria.color
-    val escala by animateFloatAsState(
-        targetValue = if (seleccionado) 1.12f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        label = "burbujaEscala"
-    )
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.graphicsLayer { scaleX = escala; scaleY = escala }
-    ) {
-        // Etiqueta con el nombre (solo si está seleccionado)
-        if (seleccionado) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.White)
-                    .padding(horizontal = 8.dp, vertical = 3.dp)
-            ) {
-                Text(negocio.nombre, style = LabelCapsSm, color = Color.Black, maxLines = 1)
-            }
-            Spacer(Modifier.height(4.dp))
-        }
-
-        Box {
-            // Cuadrado 44dp con gradiente del color de la categoría y borde blanco
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(
-                        Brush.linearGradient(listOf(color, color.copy(alpha = 0.75f)))
-                    )
-                    .border(3.dp, Color.White, RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(iconoParaCategoria(negocio.categoria), null, tint = Color.White, modifier = Modifier.size(22.dp))
-            }
-            // Insignia de ticket si tiene cupón vigente
-            val cupon = negocio.cupon
-            if (cupon != null && cuponVigente(cupon.vence)) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .offset(x = 4.dp, y = 4.dp)
-                        .size(16.dp)
-                        .clip(CircleShape)
-                        .background(Color.White),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Filled.ConfirmationNumber, null, tint = color, modifier = Modifier.size(11.dp))
-                }
-            }
-        }
-
-        // Cola (triángulo) del globo, del color de la categoría.
-        Canvas(modifier = Modifier.size(width = 14.dp, height = 7.dp)) {
-            val path = androidx.compose.ui.graphics.Path().apply {
-                moveTo(0f, 0f)
-                lineTo(size.width, 0f)
-                lineTo(size.width / 2f, size.height)
-                close()
-            }
-            drawPath(path, color)
-        }
-    }
-}
-
-//----Tarjeta de detalle de negocio (NegocioDetailCard)----
-@Composable
-private fun NegocioDetailCard(
-    negocio: Negocio,
-    desde: LatLng,
-    onCerrar: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val scope = rememberCoroutineScope()
-    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
-
-    // Cupones guardados (reactivo: "Guardar cupón" → "Guardado" sin reiniciar).
-    val idsGuardados by CuponesStore.observarIds().collectAsState(initial = emptySet())
-    val guardado = negocio.id in idsGuardados
-
-    val cupon = negocio.cupon
-    val vigente = cuponVigente(cupon?.vence)
-
-    val metros = GTFSRepository.distanciaMetros(desde, LatLng(negocio.latitud, negocio.longitud))
-    val textoDistancia = if (metros >= 1000) "%.1f km".format(metros / 1000) else "${metros.toInt()} m"
-
-    // Confirmación de copiado (~1.6 s, como la referencia).
-    var copiado by remember { mutableStateOf(false) }
-    LaunchedEffect(copiado) {
-        if (copiado) { delay(1600); copiado = false }
-    }
-
-    Card(
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest),
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            //----Encabezado: ícono, nombre, rating, cerrar----
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(negocio.categoria.color),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(iconoParaCategoria(negocio.categoria), null, tint = Color.White, modifier = Modifier.size(22.dp))
-                }
-                Spacer(Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(negocio.nombre, style = HeadlineSm, color = OnSurface, maxLines = 1)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(negocio.categoria.label, style = BodySm, color = OnSurfaceVariant)
-                        negocio.calificacion?.let { cal ->
-                            Text("  ·  ", style = BodySm, color = OnSurfaceVariant)
-                            Icon(Icons.Filled.Star, null, tint = Color(0xFFF9A825), modifier = Modifier.size(14.dp))
-                            Text("%.1f".format(cal), style = BodySm, color = OnSurfaceVariant)
-                        }
-                    }
-                }
-                IconButton(onClick = onCerrar) {
-                    Icon(Icons.Filled.Close, "Cerrar", tint = OnSurfaceVariant, modifier = Modifier.size(20.dp))
-                }
-            }
-            Spacer(Modifier.height(12.dp))
-
-            //----Dirección + distancia + horario----
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.Place, null, tint = OnSurfaceVariant, modifier = Modifier.size(14.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("${negocio.direccion} · $textoDistancia", style = BodySm, color = OnSurfaceVariant)
-            }
-            Spacer(Modifier.height(4.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.Schedule, null, tint = OnSurfaceVariant, modifier = Modifier.size(14.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(negocio.horario.texto(), style = BodySm, color = OnSurfaceVariant)
-            }
-            Spacer(Modifier.height(12.dp))
-
-            //----Promo----
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(PrimaryContainer.copy(alpha = 0.14f))
-                    .padding(12.dp)
-            ) {
-                Text(negocio.promoDetalle.texto(), style = BodySm, color = OnSurface)
-            }
-
-            //----Cupón----
-            if (cupon != null) {
-                Spacer(Modifier.height(12.dp))
-                Divider()
-                Spacer(Modifier.height(12.dp))
-
-                Text(cupon.detalle.texto(), style = BodyMdMedium, color = OnSurface)
-                Spacer(Modifier.height(4.dp))
-                Text(cupon.condiciones.texto(), style = BodySm, color = OnSurfaceVariant)
-                if (!cupon.vence.isNullOrBlank()) {
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        L.t("Vence: ", "Expires: ") + formatoVenceCupon(cupon.vence),
-                        style = BodySm,
-                        color = OnSurfaceVariant
-                    )
-                }
-                Spacer(Modifier.height(10.dp))
-
-                // Código + copiar (deshabilitado si venció)
-                Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(SurfaceContainerHigh)
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                            .size(if (esInicio || esFin) 20.dp else 10.dp)
+                            .clip(CircleShape)
+                            .background(
+                                when {
+                                    esFin -> RojoPeligro
+                                    esInicio -> VerdeExito
+                                    else -> Color(0xFF37474F)
+                                }
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            cupon.codigo,
-                            style = BodyMdMedium.copy(fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace),
-                            color = if (vigente) OnSurface else OnSurfaceVariant
-                        )
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    TextButton(
-                        onClick = {
-                            clipboard.setText(androidx.compose.ui.text.AnnotatedString(cupon.codigo))
-                            copiado = true
-                        },
-                        enabled = vigente
-                    ) {
-                        Icon(
-                            if (copiado) Icons.Filled.Check else Icons.Filled.ContentCopy,
-                            null,
-                            tint = if (copiado) Tertiary else AppPrimary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(if (copiado) L.t("Copiado", "Copied") else L.t("Copiar", "Copy"), style = BodySm, color = if (copiado) Tertiary else AppPrimary)
-                    }
-                }
-
-                //----Guardar cupón (persistente)----
-                if (vigente) {
-                    Spacer(Modifier.height(10.dp))
-                    Button(
-                        onClick = { scope.launch { CuponesStore.alternarCupon(negocio) } },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = if (guardado)
-                            ButtonDefaults.buttonColors(containerColor = SecondaryContainer)
-                        else
-                            ButtonDefaults.buttonColors(containerColor = AppPrimary)
-                    ) {
-                        Icon(
-                            if (guardado) Icons.Filled.CheckCircle else Icons.Filled.ConfirmationNumber,
-                            null,
-                            tint = if (guardado) OnSecondaryContainer else Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            if (guardado) L.t("Guardado", "Saved") else L.t("Guardar cupón", "Save coupon"),
-                            style = BodyMdMedium,
-                            color = if (guardado) OnSecondaryContainer else Color.White
-                        )
+                        if (esInicio) Icon(Icons.Filled.PlayArrow, null, tint = Color.White, modifier = Modifier.size(12.dp))
+                        if (esFin) Icon(Icons.Filled.Flag, null, tint = Color.White, modifier = Modifier.size(12.dp))
                     }
                 }
             }
-        }
-    }
-}
 
-//----Top Bar----
-@Composable
-private fun TopBar(rutaNombre: String, onFinish: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(AppPrimary)
-            .statusBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    L.t("NAVEGANDO", "NAVIGATING"),
-                    style = LabelCapsSm,
-                    color = Color.White.copy(alpha = 0.7f)
-                )
-            Text(
-                rutaNombre,
-                style = HeadlineSm,
-                color = Color.White
-            )
-        }
-        Box(
-            modifier = Modifier
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.15f))
-                .padding(horizontal = 12.dp, vertical = 8.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(Icons.Filled.Close, null, tint = Color.White, modifier = Modifier.size(12.dp))
-                TextButton(onClick = onFinish, contentPadding = PaddingValues(0.dp)) {
-                    Text(L.t("Finalizar", "Finish"), style = LabelCapsMd, color = Color.White)
-                }
-            }
-        }
-    }
-}
-
-//----Bottom Panel----
-@Composable
-private fun BottomPanel(
-    instruccion: NavInstruccion,
-    progreso: Float,
-    tiempo: String,
-    distancia: String,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(Color(0xFF1a1a1a))
-            .navigationBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        // Instrucción actual
-        AnimatedContent(
-            targetState = instruccion,
-            transitionSpec = {
-                slideInVertically { it } + fadeIn() togetherWith
-                        slideOutVertically { -it } + fadeOut()
-            },
-            label = "instruccion"
-        ) { inst ->
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(AppPrimary.copy(alpha = 0.20f)),
-                    contentAlignment = Alignment.Center
+            // Posicion del usuario (real o demo).
+            vm.posicion?.let { pos ->
+                MarkerComposable(
+                    state = MarkerState(pos),
+                    title = if (vm.demoActivo) L.t("Tu posición · demo", "Your position · demo") else L.t("Tu posición", "Your position")
                 ) {
-                    Icon(inst.icono, null, tint = AppPrimary, modifier = Modifier.size(24.dp))
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(inst.texto, style = HeadlineSm, color = Color.White, maxLines = 2)
-                    if (inst.distancia.isNotEmpty()) {
-                        Text(inst.distancia, style = BodySm, color = Color.White.copy(alpha = 0.6f))
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        if (vm.demoActivo) {
+                            Text(
+                                L.t("DEMO", "DEMO"),
+                                style = androidx.compose.ui.text.TextStyle(fontSize = 8.sp, color = Color.White),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(Color(0xFF1E88E5))
+                                    .padding(horizontal = 4.dp, vertical = 1.dp)
+                            )
+                            Spacer(Modifier.height(2.dp))
+                        }
+                        PulsingUserMarker()
                     }
                 }
             }
         }
 
-        // Progress bar
-        LinearProgressIndicator(
-            progress = { progreso },
+        //----Barra superior----
+        // El fondo oscuro va ANTES del statusBarsPadding: cubre tambien la
+        // zona de la status bar (hora, senal), ahi no debe verse el mapa.
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(6.dp)
-                .clip(RoundedCornerShape(3.dp)),
-            color = AppPrimary,
-            trackColor = Color.White.copy(alpha = 0.15f)
-        )
-
-        // Tiempo y distancia
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Column {
-                Text(L.t("TIEMPO", "TIME"), style = LabelCapsSm, color = Color.White.copy(alpha = 0.5f))
-                Text(tiempo, style = HeadlineSm, color = Color.White)
+                .background(PanelOscuro)
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 10.dp)
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    if (vm.demoActivo) L.t("SIMULACIÓN", "SIMULATION") else L.t("TU VIAJE", "YOUR TRIP"),
+                    style = LabelCapsMd, color = PanelOscuroTextoVariante
+                )
+                Text(
+                    "${ruta.linea} · ${ruta.empresa}",
+                    style = HeadlineSm, color = PanelOscuroTexto, maxLines = 1
+                )
             }
-            Spacer(Modifier.weight(1f))
-            Column(horizontalAlignment = Alignment.End) {
-                Text(L.t("DISTANCIA", "DISTANCE"), style = LabelCapsSm, color = Color.White.copy(alpha = 0.5f))
-                Text(distancia, style = HeadlineSm, color = Color.White)
+            // Chip Demo (verde cuando activo).
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(if (vm.demoActivo) VerdeExito else Color(0xFF26292C))
+                    .clickable { if (vm.demoActivo) vm.detenerDemo() else vm.iniciarDemo() }
+                    .padding(horizontal = 14.dp, vertical = 6.dp)
+            ) {
+                Text(L.t("Demo", "Demo"), style = LabelCapsMd, color = Color.White)
+            }
+            Spacer(Modifier.width(10.dp))
+            // Finalizar (rojo).
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(RojoPeligro)
+                    .clickable { onFinish() }
+                    .padding(horizontal = 14.dp, vertical = 6.dp)
+            ) {
+                Text(L.t("Finalizar", "End"), style = LabelCapsMd, color = Color.White)
+            }
+        }
+
+        //----Panel inferior----
+        // El fondo va ANTES del navigationBarsPadding: se extiende detras de
+        // los botones del sistema (atras/inicio/recientes) y el contenido
+        // queda por encima de ellos, sin taparse.
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(PanelOscuro)
+                .navigationBarsPadding()
+                .padding(16.dp)
+        ) {
+            // Instruccion principal por estado.
+            val (icono, tintColor, instruccion, subtitulo) = when (vm.estado) {
+                EstadoNav.SIN_PERMISO -> Quad(Icons.Filled.LocationOff, RojoPeligro,
+                    L.t("Se necesita permiso de ubicación", "Location permission needed"), "")
+                EstadoNav.ESPERANDO_GPS -> Quad(Icons.Filled.Schedule, PanelOscuroTextoVariante,
+                    L.t("Esperando GPS…", "Waiting for GPS…"),
+                    L.t("Muévete al aire libre para mejorar la señal.", "Move outdoors for a better signal."))
+                EstadoNav.EN_RUTA -> Quad(Icons.Filled.NearMe, VerdeExito,
+                    L.t("Estás en la ruta", "You're on the route"), subtituloProximo(vm))
+                EstadoNav.FUERA_RUTA -> Quad(Icons.Filled.LocationOff, Color(0xFFFB8C00),
+                    L.t("Fuera de la ruta", "Off the route"),
+                    L.t("Estás a ${vm.metrosFuera.toInt()} m del recorrido. Acércate para continuar.", "You're ${vm.metrosFuera.toInt()} m from the route. Get closer to continue."))
+                EstadoNav.CERCA_DESTINO -> Quad(Icons.Filled.DepartureBoard, VerdeExito,
+                    L.t("Estás cerca de tu destino", "You're close to your destination"), subtituloProximo(vm))
+                EstadoNav.FINALIZADO -> Quad(Icons.Filled.CheckCircle, VerdeExito,
+                    L.t("Fin del recorrido", "End of the route"), "")
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(icono, null, tint = tintColor, modifier = Modifier.size(22.dp))
+                Spacer(Modifier.width(10.dp))
+                Text(instruccion, style = HeadlineSm, color = PanelOscuroTexto)
+            }
+            if (subtitulo.isNotBlank()) {
+                Spacer(Modifier.height(4.dp))
+                Text(subtitulo, style = BodySm, color = PanelOscuroTextoVariante)
+            }
+
+            // Sin permiso: abrir ajustes del sistema.
+            if (vm.estado == EstadoNav.SIN_PERMISO) {
+                Spacer(Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = { permisoUbicacion.launchPermissionRequest() }) {
+                        Text(L.t("Dar permiso", "Grant permission"), color = PanelOscuroTexto)
+                    }
+                    TextButton(onClick = {
+                        context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)))
+                    }) {
+                        Text(L.t("Abrir Ajustes", "Open Settings"), color = PanelOscuroTexto)
+                    }
+                }
+            }
+
+            // Hasta <parada fin> + tarifa.
+            Spacer(Modifier.height(12.dp))
+            Row {
+                Text(
+                    L.t("Hasta", "To") + " ${ruta.paraderos.lastOrNull()?.nombre ?: ruta.recorrido}",
+                    style = BodySm, color = PanelOscuroTexto, modifier = Modifier.weight(1f)
+                )
+                Text(ruta.precioTexto, style = BodySm, color = PanelOscuroTextoVariante)
+            }
+
+            // Barra de progreso con %.
+            Spacer(Modifier.height(10.dp))
+            val fraccion = animateFloatAsState(
+                targetValue = (vm.progreso * 100).toFloat(),
+                animationSpec = tween(300), label = "progreso"
+            )
+            Column {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(Color(0xFF26292C))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(fraccion.value / 100f)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(ruta.color)
+                    )
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "${fraccion.value.toInt()}%",
+                    style = LabelCapsSm, color = PanelOscuroTextoVariante
+                )
+            }
+
+            // Stats: restante / por recorrer / paraderos.
+            Spacer(Modifier.height(8.dp))
+            Row {
+                Text(
+                    L.t("Restante: ", "Remaining: ") + "~${vm.minutosRestantes} min",
+                    style = BodySm, color = PanelOscuroTexto, modifier = Modifier.weight(1f)
+                )
+                Text(
+                    L.t("Por recorrer: ", "To go: ") + formatoDistancia(vm.restanteM),
+                    style = BodySm, color = PanelOscuroTexto, modifier = Modifier.weight(1f)
+                )
+                Text(
+                    L.t("Paraderos: ", "Stops: ") + "${vm.paraderosRestantes}",
+                    style = BodySm, color = PanelOscuroTexto
+                )
+            }
+
+            // Toggle: seguir toda la ruta <-> seguir al usuario.
+            Spacer(Modifier.height(10.dp))
+            val scopeCamara = rememberCoroutineScope()
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFF26292C))
+                    .clickable {
+                        if (seguirUsuario) {
+                            // "Ver toda la ruta": encuadra el recorrido completo.
+                            seguirUsuario = false
+                            scopeCamara.launch {
+                                val builder = LatLngBounds.builder()
+                                ruta.shape.forEach(builder::include)
+                                animandoCamara = true
+                                camera.animate(CameraUpdateFactory.newLatLngBounds(builder.build(), 140))
+                                animandoCamara = false
+                            }
+                        } else {
+                            seguirUsuario = true   // el LaunchedEffect vuelve a seguir
+                        }
+                    }
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        if (seguirUsuario) Icons.Filled.LocationOn else Icons.Filled.MyLocation,
+                        null, tint = PanelOscuroTextoVariante, modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        if (seguirUsuario) L.t("Ver toda la ruta", "View full route")
+                        else L.t("Seguir mi ubicación", "Follow my location"),
+                        style = BodyMdMedium, color = PanelOscuroTexto
+                    )
+                }
+            }
+        }
+
+        //----Alerta de llegada----
+        if (vm.estado == EstadoNav.FINALIZADO) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xCC000000)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color(0xFF1D2022))
+                        .padding(28.dp)
+                ) {
+                    Icon(Icons.Filled.CheckCircle, null, tint = VerdeExito, modifier = Modifier.size(56.dp))
+                    Spacer(Modifier.height(14.dp))
+                    Text(
+                        L.t("Fin del recorrido", "End of the route"),
+                        style = HeadlineMd, color = PanelOscuroTexto, textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        L.t("Llegaste a", "You arrived at") + " ${ruta.paraderos.lastOrNull()?.nombre ?: ruta.recorrido}",
+                        style = BodySm, color = PanelOscuroTextoVariante, textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.height(18.dp))
+                    Button(
+                        onClick = onFinish,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = VerdeExito)
+                    ) {
+                        Text(L.t("Terminar", "Finish"), style = HeadlineSm, color = Color.White)
+                    }
+                }
             }
         }
     }
 }
+
+private data class Quad(
+    val icono: androidx.compose.ui.graphics.vector.ImageVector,
+    val color: Color,
+    val titulo: String,
+    val subtitulo: String
+)
+
+private fun subtituloProximo(vm: NavegacionVM): String {
+    val proximo = vm.proximoParadero ?: return L.t("Próxima parada: destino", "Next stop: destination")
+    val metros = ((proximo.fraccion - vm.progreso) * vm.totalM).toInt().coerceAtLeast(0)
+    return L.t("Próxima parada: ", "Next stop: ") + proximo.paradero.nombre + " · ${formatoDistancia(metros.toDouble())}"
+}
+
+private fun formatoDistancia(metros: Double): String =
+    if (metros >= 1000) "%.1f km".format(metros / 1000) else "${metros.toInt()} m"

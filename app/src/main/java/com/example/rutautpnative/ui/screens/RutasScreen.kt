@@ -113,7 +113,7 @@ fun RutasScreen(router: AppRouter, viewModel: RutasViewModel = viewModel()) {
 
         if (mostrarNavegacion && rutaNavegando != null) {
             NavegacionScreen(
-                rutaNombre = "Línea ${rutaNavegando!!.linea} - ${rutaNavegando!!.empresa}",
+                ruta = rutaNavegando!!,
                 onFinish = { mostrarNavegacion = false; rutaNavegando = null }
             )
         }
