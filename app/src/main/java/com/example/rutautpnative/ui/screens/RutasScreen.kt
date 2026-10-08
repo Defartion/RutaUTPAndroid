@@ -333,7 +333,7 @@ private fun RutaOpcionCard(ruta: RutaGTFS, distanciaLugar: Int? = null, onClick:
                 modifier = Modifier.size(44.dp).clip(CircleShape).background(ruta.color.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(ruta.linea, color = ruta.color, fontSize = 16.sp, style = HeadlineSm)
+                Text(ruta.linea, color = ruta.color, fontSize = 16.sp, style = HeadlineSm, maxLines = 1)
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {

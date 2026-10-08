@@ -198,7 +198,7 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
     }
 
     if (mostrarParaderos) {
-        ParaderosIluminadosScreen(rutas = rutas, onCerrar = { mostrarParaderos = false })
+        ParaderosIluminadosScreen(rutas = rutas, router = router, onCerrar = { mostrarParaderos = false })
     }
 }
 

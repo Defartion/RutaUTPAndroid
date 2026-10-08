@@ -58,6 +58,8 @@ fun PerfilScreen(router: AppRouter) {
     var showCarneDigital by remember { mutableStateOf(false) }
     // Foto del carné: estado de sesión (no persiste), compartido con el avatar.
     var fotoPerfil by remember { mutableStateOf<Bitmap?>(null) }
+    // Negocio cuyo detalle se ve desde un cupón ("Ver promoción").
+    var negocioDetalle by remember { mutableStateOf<Negocio?>(null) }
     // Sheets del monedero (Fase 11) y de tarjetas.
     var showRecargar by remember { mutableStateOf(false) }
     var showQRPasaje by remember { mutableStateOf(false) }
@@ -200,6 +202,7 @@ fun PerfilScreen(router: AppRouter) {
                 cupones = cuponesGuardados,
                 onExplorar = { router.navigate(AppScreen.MapaPrincipal) },
                 onQuitar = { negocio -> scope.launch { CuponesStore.alternarCupon(negocio) } },
+                onVerPromocion = { negocio -> negocioDetalle = negocio },
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
             Spacer(Modifier.height(16.dp))
@@ -310,6 +313,17 @@ fun PerfilScreen(router: AppRouter) {
         MetodosPagoSheet(onDismiss = { showMetodosPago = false })
     }
 
+    // Detalle de negocio desde un cupón ("Ver promoción").
+    negocioDetalle?.let { negocio ->
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            NegocioDetailCard(
+                negocio = negocio,
+                desde = com.google.android.gms.maps.model.LatLng(negocio.latitud, negocio.longitud),
+                onCerrar = { negocioDetalle = null }
+            )
+        }
+    }
+
     // Carnet scanner: al "escanear", abre el carné digital.
     if (showCarnetScanner) {
         CarnetScannerScreen(
@@ -391,7 +405,7 @@ private fun iniciales(name: String): String =
 
 //----Tarjeta de cupón guardado (PerfilCuponCard)----
 @Composable
-private fun PerfilCuponCard(negocio: Negocio, onQuitar: () -> Unit) {
+private fun PerfilCuponCard(negocio: Negocio, onQuitar: () -> Unit, onVerPromocion: () -> Unit) {
     val cupon = negocio.cupon ?: return
     val vigente = cuponVigente(cupon.vence)
     val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
@@ -485,11 +499,15 @@ private fun PerfilCuponCard(negocio: Negocio, onQuitar: () -> Unit) {
             }
             Spacer(Modifier.height(4.dp))
 
-            //----Fila inferior: ver promoción (pendiente) + quitar----
+            //----Fila inferior: ver promoción + quitar----
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // TODO(negocios-detalle): abrir NegocioDetailCard del negocio.
-                // Pendiente del sub-paso de burbujas en NavegacionScreen; por ahora sin acción.
-                Text(L.t("Ver promoción", "View promotion"), style = BodySm, color = AppPrimary)
+                // "Ver promoción": abre el detalle del negocio (NegocioDetailCard
+                // de NegociosDemoComponents) en un sheet.
+                Text(
+                    L.t("Ver promoción", "View promotion"),
+                    style = BodySm, color = AppPrimary,
+                    modifier = Modifier.clickable { onVerPromocion() }
+                )
                 Spacer(Modifier.weight(1f))
                 IconButton(onClick = onQuitar) {
                     Icon(Icons.Filled.BookmarkRemove, "Quitar cupón", tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
@@ -506,6 +524,7 @@ private fun MisCuponesSection(
     cupones: List<Negocio>,
     onExplorar: () -> Unit,
     onQuitar: (Negocio) -> Unit,
+    onVerPromocion: (Negocio) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -562,7 +581,7 @@ private fun MisCuponesSection(
             //----Scroll horizontal de tarjetas (Paso 2)----
             androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(cupones.size) { i ->
-                    PerfilCuponCard(cupones[i], onQuitar = { onQuitar(cupones[i]) })
+                    PerfilCuponCard(cupones[i], onQuitar = { onQuitar(cupones[i]) }, onVerPromocion = { onVerPromocion(cupones[i]) })
                 }
             }
         }

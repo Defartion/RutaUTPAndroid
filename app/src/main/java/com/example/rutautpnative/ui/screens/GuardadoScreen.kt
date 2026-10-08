@@ -238,7 +238,7 @@ private fun LineaRow(ruta: RutaGTFS, onClick: () -> Unit) {
     ) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(ruta.color.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
-                Text(ruta.linea, style = HeadlineSm, color = ruta.color)
+                Text(ruta.linea, style = HeadlineSm, color = ruta.color, maxLines = 1)
             }
             Spacer(Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -337,7 +337,7 @@ private fun LineaDetailSheet(ruta: RutaGTFS, onQuitar: () -> Unit, onVerRutaComp
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(modifier = Modifier.size(64.dp).clip(CircleShape).background(ruta.color.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
-                    Text(ruta.linea, style = DisplayNumberMd, color = ruta.color)
+                    Text(ruta.linea, style = DisplayNumberMd, color = ruta.color, maxLines = 1)
                 }
                 Spacer(Modifier.width(16.dp))
                 Column {

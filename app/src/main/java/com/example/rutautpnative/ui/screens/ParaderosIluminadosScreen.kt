@@ -59,7 +59,7 @@ private val ColorCaminata = Color(0xFF1669A8)
 // Mapa + búsqueda/filtro de radio + "cerca de mí" + carrusel + distancia real a pie.
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
-fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
+fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautpnative.navigation.AppRouter? = null, onCerrar: () -> Unit) {
     val context = LocalContext.current
     val paraderos = remember(rutas) { ParaderosIluminados.seleccionar(rutas) }
 
@@ -455,6 +455,16 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, onCerrar: () -> Unit) {
                                     esGuardado = guardados.any { g -> g.nombre == paradero.nombre && g.lat != null && g.lon != null && GTFSRepository.distanciaMetros(LatLng(g.lat!!, g.lon!!), paradero.coordinate) < 5.0 },
                                     onClick = { selectedId = paradero.id },
                                     onGuardar = { alternarGuardado(paradero) },
+                                    onVerLineas = if (router != null) {
+                                        {
+                                            router.lugarCercanoPendiente = com.example.rutautpnative.navigation.DestinoPendiente(
+                                                paradero.nombre,
+                                                paradero.lat,
+                                                paradero.lon
+                                            )
+                                            router.navigate(com.example.rutautpnative.navigation.AppScreen.Rutas)
+                                        }
+                                    } else null,
                                     modifier = Modifier.padding(horizontal = 20.dp)
                                 )
                             }
@@ -485,6 +495,7 @@ private fun ParaderoCard(
     esGuardado: Boolean,
     onClick: () -> Unit,
     onGuardar: () -> Unit,
+    onVerLineas: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -516,12 +527,21 @@ private fun ParaderoCard(
                 }
             }
             Spacer(Modifier.width(8.dp))
-            IconButton(onClick = { onGuardar() }) {
-                Icon(
-                    if (esGuardado) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
-                    null,
-                    tint = if (esGuardado) Tertiary else OnSurfaceVariant
-                )
+            Column {
+                IconButton(onClick = { onGuardar() }) {
+                    Icon(
+                        if (esGuardado) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
+                        null,
+                        tint = if (esGuardado) Tertiary else OnSurfaceVariant
+                    )
+                }
+                // "Ver líneas": abre Rutas filtrando por cercania a este paradero
+                // (lugarCercanoPendiente del router, como el iOS).
+                if (onVerLineas != null) {
+                    TextButton(onClick = onVerLineas, modifier = Modifier.padding(0.dp)) {
+                        Text(L.t("Ver líneas", "See lines"), style = LabelCapsSm, color = AppPrimary)
+                    }
+                }
             }
         }
     }

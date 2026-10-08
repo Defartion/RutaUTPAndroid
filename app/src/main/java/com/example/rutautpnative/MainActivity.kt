@@ -17,6 +17,7 @@ import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.data.senias.SeniasService
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.monedero.MonederoStore
+import com.example.rutautpnative.data.Persistencia
 import com.example.rutautpnative.data.tarjetas.TarjetasStore
 import com.example.rutautpnative.data.tracking.PassiveTrackingCoordinator
 import com.example.rutautpnative.data.ubicacion.LocationService
@@ -43,6 +44,7 @@ class MainActivity : ComponentActivity() {
         TemaStore.init(this)
         LocationService.init(this)
         PassiveTrackingCoordinator.init(this)
+        Persistencia.migrarSiHaceFalta(this)
         L.init(this)
         // Si el usuario ya habia consentido, la baliza se reanuda al arrancar
         // (startIfConsented del iOS); sin consentimiento no hace nada.
