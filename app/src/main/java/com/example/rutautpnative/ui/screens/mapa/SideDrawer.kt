@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.example.rutautpnative.data.TemaStore
 import com.example.rutautpnative.data.tracking.PassiveTrackingCoordinator
 import com.example.rutautpnative.navigation.AppRouter
+import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -89,6 +90,10 @@ fun SideDrawer(router: AppRouter, onClose: () -> Unit) {
                     DrawerRow(Icons.Filled.Settings, OnSurfaceVariant, L.t("Ajustes", "Settings")) { activeSheet = DrawerSheet.AJUSTES }
                     DrawerRow(Icons.Filled.Headphones, OnSurfaceVariant, L.t("Soporte", "Support")) { activeSheet = DrawerSheet.SOPORTE }
                     DrawerRow(Icons.Filled.Info, OnSurfaceVariant, L.t("Sobre Nosotros", "About Us")) { activeSheet = DrawerSheet.SOBRE_NOSOTROS }
+                    // Tracking Demo (item TEMPORAL del drawer, como el iOS).
+                    DrawerRow(Icons.Filled.Route, Color(0xFF1E88E5), L.t("Tracking Demo", "Tracking Demo")) {
+                        router.navigate(AppScreen.TrackingDemo); onClose()
+                    }
                 }
 
                 // Logout

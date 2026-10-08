@@ -13,6 +13,7 @@ sealed class AppScreen {
     object Guardado      : AppScreen()
     object Seguridad     : AppScreen()
     object Perfil        : AppScreen()
+    object TrackingDemo  : AppScreen()   // Pantalla demo (no entra por BottomNavBar)
 }
 
 //----Destino pendiente de seleccionar en el Mapa----

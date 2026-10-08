@@ -30,6 +30,7 @@ fun RootView(router: AppRouter = viewModel()) {
                 is AppScreen.Guardado      -> GuardadoScreen(router)
                 is AppScreen.Seguridad     -> SeguridadScreen(router)
                 is AppScreen.Perfil        -> PerfilScreen(router)
+                is AppScreen.TrackingDemo  -> TrackingDemoScreen(router)
             }
         }
 
