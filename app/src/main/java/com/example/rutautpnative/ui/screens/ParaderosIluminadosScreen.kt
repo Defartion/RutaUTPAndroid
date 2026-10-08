@@ -501,7 +501,11 @@ private fun ParaderoCard(
     Card(
         modifier = modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = if (seleccionado) PrimaryContainer else SurfaceContainerLowest),
+        // Al seleccionar, un tinte sutil de fondo (no el rojo PrimaryContainer
+        // que hacia ilegible el "Ver lineas" y los chips).
+        colors = CardDefaults.cardColors(
+            containerColor = if (seleccionado) SecondaryContainer else SurfaceContainerLowest
+        ),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(
@@ -516,12 +520,12 @@ private fun ParaderoCard(
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     lineas.take(3).forEach { linea ->
                         Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(PrimaryContainer).padding(horizontal = 8.dp, vertical = 4.dp)) {
-                            Text(linea, style = LabelCapsSm, color = OnPrimaryContainer)
+                            Text(linea, style = LabelCapsSm, color = OnPrimaryContainer, maxLines = 1)
                         }
                     }
                     if (lineas.size > 3) {
                         Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(SurfaceContainerHigh).padding(horizontal = 8.dp, vertical = 4.dp)) {
-                            Text("+${lineas.size - 3}", style = LabelCapsSm, color = OnSurfaceVariant)
+                            Text("+${lineas.size - 3}", style = LabelCapsSm, color = OnSurfaceVariant, maxLines = 1)
                         }
                     }
                 }
@@ -535,11 +539,12 @@ private fun ParaderoCard(
                         tint = if (esGuardado) Tertiary else OnSurfaceVariant
                     )
                 }
-                // "Ver líneas": abre Rutas filtrando por cercania a este paradero
-                // (lugarCercanoPendiente del router, como el iOS).
+                // "Ver lineas": abre Rutas filtrando por cercania a este paradero.
+                // Color secundario (azul) para que se distinga del bookmark y
+                // sea legible sobre el tinte de seleccion.
                 if (onVerLineas != null) {
                     TextButton(onClick = onVerLineas, modifier = Modifier.padding(0.dp)) {
-                        Text(L.t("Ver líneas", "See lines"), style = LabelCapsSm, color = AppPrimary)
+                        Text(L.t("Ver líneas", "See lines"), style = LabelCapsSm, color = Secondary)
                     }
                 }
             }
