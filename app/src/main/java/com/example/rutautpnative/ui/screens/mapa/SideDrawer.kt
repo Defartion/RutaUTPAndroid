@@ -21,9 +21,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.example.rutautpnative.data.TemaStore
+import com.example.rutautpnative.data.tracking.PassiveTrackingCoordinator
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import kotlinx.coroutines.launch
 
 // Lo del lado
@@ -246,6 +249,26 @@ private fun AjustesSheet(onDismiss: () -> Unit) {
     // reflejar el cambio al instante (sin depender del timing DataStore→Flow).
     val isDark = TemaStore.oscuroActual
 
+    //----Contribución (baliza del pasajero, puerto del AjustesSheet iOS)----
+    val canalConfigurado by PassiveTrackingCoordinator.publicadorConfigurado.collectAsState()
+    val contribuyendo by PassiveTrackingCoordinator.consentimiento.collectAsState()
+    val mensajeContribucion by PassiveTrackingCoordinator.mensajeEstado.collectAsState()
+    var mostrarDialogoConsentimiento by remember { mutableStateOf(false) }
+
+    // Permisos juntos (ubicación + actividad física): la baliza necesita la
+    // ubicación; la actividad degrada a "unknown" si se niega, no bloquea.
+    val lanzadorPermisos = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permisos ->
+        val ubicacion = permisos[android.Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            permisos[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (ubicacion) {
+            PassiveTrackingCoordinator.setContribucionActivada(true)
+        } else {
+            PassiveTrackingCoordinator.setContribucionActivada(false)
+        }
+    }
+
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(modifier = Modifier.padding(20.dp)) {
             SheetHeader(Icons.Filled.Settings, OnSurfaceVariant, L.t("Ajustes", "Settings"))
@@ -273,7 +296,130 @@ private fun AjustesSheet(onDismiss: () -> Unit) {
                 }
             }
             Spacer(Modifier.height(24.dp))
+
+            //----Contribución: "Ayudar con ubicaciones"----
+            Text(L.t("CONTRIBUCIÓN", "CONTRIBUTION"), style = LabelCapsMd, color = OnSurfaceVariant)
+            Spacer(Modifier.height(8.dp))
+            if (!canalConfigurado) {
+                // Sin broker configurado: el toggle queda deshabilitado con su
+                // explicación (igual que el iOS con el Scheme sin variables).
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = SurfaceContainerLow),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.CloudOff, null, tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(L.t("Ayudar con ubicaciones", "Help with locations"), style = BodyMdMedium, color = OnSurfaceVariant)
+                            Spacer(Modifier.weight(1f))
+                            Switch(checked = false, onCheckedChange = null, enabled = false)
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            L.t(
+                                "Canal MQTT no configurado. Añade MQTT_HOST, MQTT_USERNAME y MQTT_PASSWORD en local.properties y vuelve a compilar.",
+                                "MQTT channel not configured. Add MQTT_HOST, MQTT_USERNAME and MQTT_PASSWORD to local.properties and rebuild."
+                            ),
+                            style = BodyXs, color = OnSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(L.t("Ayudar con ubicaciones", "Help with locations"), style = BodyMdMedium, color = OnSurface)
+                        Text(
+                            if (contribuyendo) mensajeContribucion
+                            else L.t("Comparte observaciones anónimas de tus viajes en micro.", "Share anonymous observations of your bus rides."),
+                            style = BodyXs, color = OnSurfaceVariant
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Switch(
+                        checked = contribuyendo,
+                        onCheckedChange = { activar ->
+                            if (activar) {
+                                // Consentimiento explícito ANTES de encender
+                                // GPS/detección (igual que el confirmationDialog iOS).
+                                mostrarDialogoConsentimiento = true
+                            } else {
+                                PassiveTrackingCoordinator.setContribucionActivada(false)
+                            }
+                        }
+                    )
+                }
+
+                //----Viaje de prueba (demo del circuito completo)----
+                // En iOS forzar un abordaje era una variable de DEBUG; aqui
+                // es un boton: recorre una linea real con GPS sintetico y
+                // publica observaciones REALES por MQTT.
+                Spacer(Modifier.height(10.dp))
+                val demoActivo by PassiveTrackingCoordinator.demoActivo.collectAsState()
+                OutlinedButton(
+                    onClick = {
+                        if (demoActivo) PassiveTrackingCoordinator.detenerViajeDemo()
+                        else PassiveTrackingCoordinator.iniciarViajeDemo()
+                    },
+                    enabled = contribuyendo,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        if (demoActivo) Icons.Filled.StopCircle else Icons.Filled.PlayCircle,
+                        null, tint = AppPrimary, modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        if (demoActivo) L.t("Detener viaje de prueba", "Stop test ride")
+                        else L.t("Simular un viaje de prueba", "Simulate a test ride"),
+                        style = BodyMdMedium, color = AppPrimary
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    L.t(
+                        "Recorre una línea real con GPS sintético: la app detecta el abordaje, publica observaciones reales y — con el agregador o el backend corriendo — el bus aparece en vivo en el mapa. Termina solo con el descenso simulado (~2 min).",
+                        "Rides a real line with synthetic GPS: the app detects boarding, publishes real observations and — with the aggregator or backend running — the bus shows up live on the map. Ends on its own with the simulated alighting (~2 min)."
+                    ),
+                    style = BodyXs, color = OnSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(24.dp))
         }
+    }
+
+    if (mostrarDialogoConsentimiento) {
+        AlertDialog(
+            onDismissRequest = { mostrarDialogoConsentimiento = false },
+            title = { Text(L.t("Ayudar con ubicaciones", "Help with locations")) },
+            text = {
+                Text(
+                    L.t(
+                        "La app analizará tu ubicación y tu actividad física para detectar cuándo viajas en una línea de transporte, y compartirá observaciones anónimas con el servidor de prueba: ni tu nombre, ni datos personales, ni identificadores permanentes se envían. Solo se publica tras confirmar un viaje, y la publicación se pausa al pasar a segundo plano.",
+                        "The app will analyze your location and physical activity to detect when you ride a transit line, and will share anonymous observations with the test server: neither your name, personal data, nor permanent identifiers are sent. Publishing only starts after a ride is confirmed, and it pauses in the background."
+                    ),
+                    style = BodySm
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    mostrarDialogoConsentimiento = false
+                    lanzadorPermisos.launch(arrayOf(
+                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        android.Manifest.permission.ACTIVITY_RECOGNITION
+                    ))
+                }) {
+                    Text(L.t("Activar", "Enable"))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { mostrarDialogoConsentimiento = false }) {
+                    Text(L.t("Cancelar", "Cancel"))
+                }
+            }
+        )
     }
 }
 

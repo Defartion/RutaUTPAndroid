@@ -1,8 +1,21 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
+
+// MQTT: las credenciales viven en local.properties (gitignored) o -P por
+// línea de comandos, NUNCA en el repo. Sin MQTT_HOST el canal queda
+// "no configurado" y la baliza del pasajero se desactiva sola (igual que iOS,
+// que las lee del Scheme de Xcode).
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+fun mqttProp(nombre: String): String =
+    (localProps.getProperty(nombre) ?: project.findProperty(nombre) as? String ?: "").trim()
 
 android {
     namespace = "com.example.rutautpnative"
@@ -16,6 +29,13 @@ android {
         versionName = "1.0"
         manifestPlaceholders["MAPS_API_KEY"] = project.findProperty("MAPS_API_KEY") ?: ""
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "MQTT_HOST", "\"${mqttProp("MQTT_HOST")}\"")
+        buildConfigField("String", "MQTT_PORT", "\"${mqttProp("MQTT_PORT")}\"")
+        buildConfigField("String", "MQTT_USERNAME", "\"${mqttProp("MQTT_USERNAME")}\"")
+        buildConfigField("String", "MQTT_PASSWORD", "\"${mqttProp("MQTT_PASSWORD")}\"")
+        buildConfigField("String", "MQTT_TLS", "\"${mqttProp("MQTT_TLS")}\"")
+        buildConfigField("String", "MQTT_CA_ASSET", "\"${mqttProp("MQTT_CA_ASSET")}\"")
     }
 
     buildTypes {
@@ -31,6 +51,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 dependencies {
@@ -61,6 +82,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.sh.reorderable)
     implementation(libs.zxing.core)
+    implementation(libs.paho.mqtt)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
 

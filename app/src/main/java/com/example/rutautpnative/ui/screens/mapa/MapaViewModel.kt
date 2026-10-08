@@ -15,8 +15,13 @@ import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.RutaGTFS
 import com.example.rutautpnative.data.places.PlacesService
 import com.example.rutautpnative.data.routing.TransitPlanner
+import com.example.rutautpnative.data.tracking.MQTTTrackingProvider
+import com.example.rutautpnative.data.tracking.TrackingProviderFactory
+import com.example.rutautpnative.data.tracking.VehicleETAEstimator
+import com.example.rutautpnative.data.tracking.VehiclePosition
 import com.example.rutautpnative.data.ubicacion.LocationService
 import com.example.rutautpnative.ui.idioma.L
+import com.example.rutautpnative.ui.theme.AppPrimary
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -31,6 +36,9 @@ import kotlin.math.roundToInt
 import kotlin.random.Random
 
 // Modelos
+
+//----Fuente de la flota (VehicleTrackingSource del iOS)----
+enum class FuenteFlota { SIMULADA, REAL }
 
 //----Bus animado sobre ruta real (puerto de `BusAnimado`, iOS rama 3D-BUS)----
 // La posicion es SIMULADA (el feed estatico no trae GPS) pero la geometria es
@@ -55,15 +63,21 @@ data class BusAnimado(
     val distanciaM: Double,               // avance sobre el shape (0...longitudTotalM)
     val velocidadMS: Double,              // crucero propia del vehiculo
     val isMovingForward: Boolean,
-    val tramoActual: Int                  // cache del segmento [i, i+1]
+    val tramoActual: Int,                 // cache del segmento [i, i+1]
+    val fuente: FuenteFlota = FuenteFlota.SIMULADA
 ) {
     // La variante del feed no se confunde con una matricula ni se traduce.
     val ramalTexto: String
         get() = if (variante.isEmpty()) L.t("S/D", "N/A") else L.t("Ramal $variante", "Branch $variante")
 
-    // Flota simulada: "N MIN" (sin ~; el ~ queda para las posiciones reales).
+    // Simulado: "N MIN". Real: "~N MIN" (aproximado) o "SIN ETA" si el
+    // estimador no puede (no se inventa).
     val etiquetaLlegada: String
-        get() = if (minutosLlegada != null) "$minutosLlegada MIN" else L.t("SIN ETA", "NO ETA")
+        get() = when {
+            minutosLlegada == null -> L.t("SIN ETA", "NO ETA")
+            fuente == FuenteFlota.REAL -> "~$minutosLlegada MIN"
+            else -> "$minutosLlegada MIN"
+        }
 }
 
 data class DestinoChip(
@@ -99,6 +113,17 @@ class MapaViewModel : ViewModel() {
     // para no redibujar el mapa 20 veces por segundo (igual que iOS).
     var busesAnimados by mutableStateOf<List<BusAnimado>>(emptyList())
         private set
+
+    //----Flota REAL MQTT (Fase 6)----
+    // Con broker configurado, la flota real toma el control y la simulacion
+    // propia NO arranca (mutuamente excluyentes, como el iOS). El badge
+    // "EN VIVO" del panel inferior refleja esta fuente.
+    var fuenteFlota by mutableStateOf(FuenteFlota.SIMULADA)
+        private set
+
+    private var providerReal: MQTTTrackingProvider? = null
+    private var flotaRealJob: Job? = null
+    private var catalogoPorId: Map<String, RutaGTFS> = emptyMap()
 
     // Popup del bus tocado (marker 3D o BusCard del panel).
     var busSeleccionado by mutableStateOf<BusAnimado?>(null)
@@ -238,8 +263,73 @@ class MapaViewModel : ViewModel() {
     // Al abrir el mapa (sin destino), muestra las líneas cercanas al campus UTP.
     init {
         viewModelScope.launch {
+            // La decision de fuente va ANTES de recargar lineas (mismo orden
+            // que el iOS): si la real toma el control, el resultado simulado
+            // no debe pisarla.
+            iniciarFlotaRealSiConfigurada()
             actualizarRutasCercanas(GTFSRepository.coordenadaUTP)
         }
+    }
+
+    //----Flota real (puerto de iniciarFlotaReal/aplicarFlotaReal del iOS)----
+
+    /// Con canal MQTT configurado: carga el catalogo completo (route_id es
+    /// unico; `linea` no) para resolver empresa/color/varieta, arranca el
+    /// consumidor y cada mensaje reconstruye la flota viva. Los buses REALES
+    /// traen geometria VACIA a proposito: la posicion la fija cada mensaje
+    /// del broker, la animacion local no los toca.
+    private fun iniciarFlotaRealSiConfigurada() {
+        val provider = TrackingProviderFactory.crearReal() ?: return
+        providerReal = provider
+        viewModelScope.launch {
+            // El catalogo se carga antes de arrancar el consumo para poder
+            // resolver desde el primer mensaje.
+            catalogoPorId = GTFSRepository.rutas().associateBy { it.id }
+            fuenteFlota = FuenteFlota.REAL
+            provider.start()
+            flotaRealJob = viewModelScope.launch {
+                provider.posiciones.collect { nuevas ->
+                    aplicarFlotaReal(nuevas)
+                }
+            }
+        }
+    }
+
+    private fun aplicarFlotaReal(posiciones: List<VehiclePosition>) {
+        // El ancla de las lineas/ETA: destino seleccionado o campus UTP.
+        val ancla = destinoSeleccionado?.let { LatLng(it.lat, it.lon) }
+            ?: GTFSRepository.coordenadaUTP
+
+        flotaBuses = posiciones.map { p ->
+            val ruta = catalogoPorId[p.routeId]
+            // "No inventa": sin ruta cercana o sin datos fiables, SIN ETA.
+            val eta = ruta?.let { VehicleETAEstimator.minutos(p, it, ancla) }
+            BusAnimado(
+                id = "real-${p.id}",
+                linea = p.linea.ifEmpty { ruta?.linea ?: "" },
+                rutaId = p.routeId.ifEmpty { p.linea },
+                empresa = ruta?.empresa ?: "Transporte Trujillo",
+                tipo = "Bus",
+                variante = ruta?.variante ?: "",
+                minutosLlegada = eta,
+                color = ruta?.color ?: AppPrimary,
+                lat = p.lat,
+                lon = p.lon,
+                heading = p.heading,
+                // Geometria VACIA: la posicion la fija cada mensaje del broker
+                // (el tick de animacion ignora los buses sin shape).
+                rutaCoordenadas = emptyList(),
+                acumulados = doubleArrayOf(0.0),
+                rumbosSegmento = doubleArrayOf(0.0),
+                longitudTotalM = 0.0,
+                distanciaM = 0.0,
+                velocidadMS = p.speed.coerceAtLeast(0.0),
+                isMovingForward = true,
+                tramoActual = 0,
+                fuente = FuenteFlota.REAL
+            )
+        }
+        busesAnimados = flotaBuses
     }
 
     // Seleccion
@@ -385,8 +475,11 @@ class MapaViewModel : ViewModel() {
             rutas = GTFSRepository.rutasCercaDe(punto, 800.0)
         }
         rutasCercanas = rutas
-        // La flota nace de estas lineas: un bus por linea cerca del ancla.
-        reconstruirFlota(rutas, punto)
+        // La flota SIMULADA nace de estas lineas; si la REAL (MQTT) tiene el
+        // control, el resultado simulado no debe pisarla (regla del iOS).
+        if (providerReal == null) {
+            reconstruirFlota(rutas, punto)
+        }
     }
 
     // TODO(fase-mejoras-futuras): en iOS el mapa principal no dibuja el shape de una
@@ -523,9 +616,12 @@ class MapaViewModel : ViewModel() {
 
     /// Avanza la flota `dt` segundos y REBOTA en los extremos del recorrido
     /// (ida y vuelta por el mismo corredor, sin saltos ni congelamiento).
+    /// Los buses REALES traen geometria vacia: el tick los ignora (la
+    /// posicion la fija cada mensaje del broker).
     private fun actualizarPosicionBuses(dt: Double) {
         if (flotaBuses.isEmpty()) return
         flotaBuses = flotaBuses.map { bus ->
+            if (bus.rutaCoordenadas.size < 2) return@map bus   // bus real
             var haciaAdelante = bus.isMovingForward
             var distancia = bus.distanciaM + bus.velocidadMS * dt * (if (haciaAdelante) 1.0 else -1.0)
             if (distancia >= bus.longitudTotalM) {
@@ -597,5 +693,8 @@ class MapaViewModel : ViewModel() {
         super.onCleared()
         detenerAnimacion()
         detenerGPS()
+        // La suscripcion a la flota real se corta con la pantalla (bateria/red).
+        flotaRealJob?.cancel()
+        providerReal?.stop()
     }
 }

@@ -31,6 +31,10 @@ import com.example.rutautpnative.data.geo.Geocodificacion
 import com.example.rutautpnative.data.routing.TransitPlanner
 import com.example.rutautpnative.data.senias.SeniasOverlay
 import com.example.rutautpnative.data.senias.SeniasPrefs
+import com.example.rutautpnative.data.tracking.MQTTObservationPublisher
+import com.example.rutautpnative.data.tracking.MQTTConfiguration
+import com.example.rutautpnative.data.tracking.OccupancyService
+import com.example.rutautpnative.data.tracking.PassiveTrackingCoordinator
 import com.example.rutautpnative.data.ubicacion.LocationService
 import com.example.rutautpnative.model.LugarGuardado
 import com.example.rutautpnative.model.TipoReporte
@@ -38,10 +42,12 @@ import com.example.rutautpnative.ui.components.BottomNavBar
 import com.example.rutautpnative.ui.components.iconoParaCategoria
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.screens.MapaUbicacionPicker
+import com.example.rutautpnative.ui.screens.RouteChangesSheet
 import com.example.rutautpnative.ui.theme.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import com.google.android.gms.maps.model.Dash
@@ -66,6 +72,7 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
     val focusManager = LocalFocusManager.current
     var mostrarDrawer by remember { mutableStateOf(false) }
     var showReportarSheet by remember { mutableStateOf(false) }
+    var mostrarCambiosRuta by remember { mutableStateOf(false) }
 
     // Permiso de ubicacion (pedir solo cuando el usuario toca el boton, como
     // en iOS: no se pide al abrir la pantalla).
@@ -234,6 +241,13 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             // Header
             MapaHeader(onMenuClick = { mostrarDrawer = true })
 
+            // Cápsula de estado de la contribución (baliza del pasajero):
+            // visible solo si el usuario la activó en Ajustes (Fase 5).
+            val contribucionActiva by PassiveTrackingCoordinator.consentimiento.collectAsState()
+            if (contribucionActiva) {
+                EstadoContribucion(modifier = Modifier.padding(horizontal = 16.dp))
+            }
+
             // Search panel
             SearchPanel(
                 vm = vm,
@@ -290,6 +304,7 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             BottomPanel(
                 rutas = vm.rutasCercanas,
                 buses = vm.busesAnimados,
+                fuenteReal = vm.fuenteFlota == FuenteFlota.REAL,
                 onReportar = { showReportarSheet = true },
                 onSeleccionarBus = { vm.seleccionarBus(it) }
             )
@@ -339,7 +354,16 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
     }
 
     if (showReportarSheet) {
-        MapaReportarSheet(onDismiss = { showReportarSheet = false })
+        MapaReportarSheet(
+            onDismiss = { showReportarSheet = false },
+            onAbrirCambios = { showReportarSheet = false; mostrarCambiosRuta = true }
+        )
+    }
+
+    // Cambios de ruta (Fase 8): obras/cierre/desvio confirmados por la
+    // comunidad via MQTT (dos cuentas, 15 min de vigencia).
+    if (mostrarCambiosRuta) {
+        RouteChangesSheet(onDismiss = { mostrarCambiosRuta = false })
     }
 
     //----"Elegir en el mapa" (Fase 4): picker a pantalla completa +----
@@ -385,10 +409,49 @@ private fun chipsDesde(lugares: List<LugarGuardado>): List<DestinoChip> {
     return (fijos + deLugares).take(6)
 }
 
+//----Cápsula de estado de la contribución (estadoContribucion del iOS)----
+@Composable
+private fun EstadoContribucion(modifier: Modifier = Modifier) {
+    val estadoPublicador by PassiveTrackingCoordinator.estadoPublicador.collectAsState()
+    val mensaje by PassiveTrackingCoordinator.mensajeEstado.collectAsState()
+
+    val (color, etiqueta) = when (estadoPublicador) {
+        MQTTObservationPublisher.EstadoPublicador.CONECTADO ->
+            Color(0xFF43A047) to L.t("Conectado", "Connected")
+        MQTTObservationPublisher.EstadoPublicador.CONECTANDO ->
+            Color(0xFFFB8C00) to L.t("Conectando…", "Connecting…")
+        MQTTObservationPublisher.EstadoPublicador.FALLO ->
+            AppError to L.t("Sin conexión", "Offline")
+        MQTTObservationPublisher.EstadoPublicador.INACTIVO ->
+            OnSurfaceVariant.copy(alpha = 0.6f) to L.t("Inactivo", "Inactive")
+    }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(AppSurface.copy(alpha = 0.92f))
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .clip(CircleShape)
+                .background(color)
+        )
+        Text(
+            if (mensaje.isNotBlank()) mensaje else etiqueta,
+            style = BodyXs, color = OnSurfaceVariant, maxLines = 1
+        )
+    }
+}
+
 // Header
 @Composable
-private fun MapaHeader(onMenuClick: () -> Unit) {
-    Column(
+private fun MapaHeader(onMenuClick: () -> Unit) {    Column(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
@@ -591,6 +654,7 @@ private fun DestinoChipItem(destino: DestinoChip, isActive: Boolean, onClick: ()
 private fun BottomPanel(
     rutas: List<RutaGTFS>,
     buses: List<BusAnimado>,
+    fuenteReal: Boolean,
     onReportar: () -> Unit,
     onSeleccionarBus: (BusAnimado) -> Unit
 ) {
@@ -619,15 +683,19 @@ private fun BottomPanel(
                 modifier = Modifier.weight(1f)
             )
             Spacer(Modifier.width(6.dp))
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(PrimaryFixed)
-                    .padding(horizontal = 8.dp, vertical = 3.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Box(modifier = Modifier.size(7.dp).clip(CircleShape).background(AppPrimary))
-                    Text(L.t("En vivo", "Live"), style = LabelCapsSm, color = AppPrimary)
+            // Badge "En vivo": SOLO con flota real del broker (igual que iOS,
+            // que lo enciende con fuenteFlota == .real).
+            if (fuenteReal) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(PrimaryFixed)
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Box(modifier = Modifier.size(7.dp).clip(CircleShape).background(AppPrimary))
+                        Text(L.t("En vivo", "Live"), style = LabelCapsSm, color = AppPrimary)
+                    }
                 }
             }
         }
@@ -814,11 +882,46 @@ private fun BusDetailPopup(
                     "${bus.empresa} • ${bus.tipo} (${bus.ramalTexto})",
                     style = BodySm, color = OnSurfaceVariant, maxLines = 1
                 )
+                // Solo para vehiculos REALES: aclarar que la llegada es una
+                // estimacion (o por que no hay) — texto del BusDetailPopup iOS.
+                if (bus.fuente == FuenteFlota.REAL) {
+                    Text(
+                        if (bus.minutosLlegada == null)
+                            L.t(
+                                "Llegada no disponible: faltan datos suficientes del vehículo.",
+                                "Arrival unavailable: not enough vehicle data."
+                            )
+                        else
+                            L.t(
+                                "Llegada aproximada al punto consultado de la ruta. Puede variar por tráfico y paradas.",
+                                "Estimated arrival to the point on the route. May vary with traffic and stops."
+                            ),
+                        style = BodyXs, color = OnSurfaceVariant, maxLines = 2
+                    )
+                }
             }
             IconButton(onClick = onClose, modifier = Modifier.size(32.dp)) {
                 Icon(Icons.Filled.Close, null, tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
             }
         }
+
+        // Panel de ocupacion (Fase 7): SOLO vehiculos reales; los de demo
+        // no reciben reportes (la identidad es el vehicleID del backend,
+        // nunca el numero de linea).
+        if (bus.fuente == FuenteFlota.REAL) {
+            Spacer(Modifier.height(12.dp))
+            BusOccupancyPanel(vehicleId = bus.id.removePrefix("real-"))
+        } else {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                L.t(
+                    "La ocupación estará disponible en los buses en vivo. Los buses de demostración no reciben reportes.",
+                    "Occupancy will be available on live buses. Demo buses don't receive reports."
+                ),
+                style = BodyXs, color = OnSurfaceVariant
+            )
+        }
+
         Spacer(Modifier.height(14.dp))
         // CTA con el color del bus: abre el detalle de ESA línea en Rutas.
         Box(
@@ -833,6 +936,135 @@ private fun BusDetailPopup(
             Text(L.t("Ver Ruta Completa", "View Full Route"), style = HeadlineXs, color = Color.White)
         }
     }
+}
+
+//----Panel de ocupacion del bus (puerto del BusOccupancyPanel.swift)----
+@Composable
+private fun BusOccupancyPanel(vehicleId: String) {
+    // El servicio vive y muere con el panel (onAppear/onDisappear del iOS):
+    // una conexion MQTT propia, apagada al cerrar el popup.
+    val config = remember { MQTTConfiguration.desdeBuildConfig() }
+    val servicio = remember(config) { config?.let { OccupancyService(it) } }
+
+    DisposableEffect(servicio) {
+        servicio?.start()
+        onDispose { servicio?.stop() }
+    }
+
+    val listo by (servicio?.listo ?: remember { MutableStateFlow(false) }).collectAsState()
+    val lecturas by (servicio?.lecturas ?: remember { MutableStateFlow(emptyMap<String, OccupancyService.LecturaOcupacion>()) }).collectAsState()
+    val enviando by (servicio?.enviando ?: remember { MutableStateFlow(false) }).collectAsState()
+    val resultado by (servicio?.resultado ?: remember { MutableStateFlow<String?>(null) }).collectAsState()
+
+    val lectura = lecturas[vehicleId]
+    var estadoPendiente by remember { mutableStateOf<OccupancyService.EstadoOcupacion?>(null) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(SurfaceContainerLow)
+            .padding(12.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.Groups, null, tint = OnSurface, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(L.t("Ocupación", "Occupancy"), style = BodyMdMedium, color = OnSurface, modifier = Modifier.weight(1f))
+            Text(
+                when {
+                    lectura?.estado != null -> lectura.estado.etiqueta()
+                    !listo -> L.t("No disponible", "Unavailable")
+                    else -> L.t("Sin confirmar", "Unconfirmed")
+                },
+                style = BodyXs,
+                color = if (lectura?.estado == OccupancyService.EstadoOcupacion.LLENO) Color(0xFFFB8C00)
+                else OnSurfaceVariant
+            )
+        }
+        lectura?.let {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                L.t("${it.confirmaciones} cuentas coinciden", "${it.confirmaciones} accounts agree") +
+                    " · " + L.t("vence", "expires") + " ${it.venceTexto}",
+                style = BodyXs, color = OnSurfaceVariant
+            )
+        }
+
+        Spacer(Modifier.height(10.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(
+                onClick = { estadoPendiente = OccupancyService.EstadoOcupacion.VACIO },
+                enabled = listo && !enviando,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Icon(Icons.Filled.Person, null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(L.t("Vacío", "Empty"), style = BodySm)
+            }
+            OutlinedButton(
+                onClick = { estadoPendiente = OccupancyService.EstadoOcupacion.LLENO },
+                enabled = listo && !enviando,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Icon(Icons.Filled.Groups, null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(L.t("Lleno", "Full"), style = BodySm)
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+        Text(
+            when {
+                enviando -> L.t("Esperando confirmación…", "Waiting for confirmation…")
+                resultado != null -> resultado!!
+                listo -> L.t(
+                    "Reporta solo si estás a bordo: se necesitan dos cuentas que coincidan; los reportes duran 3 minutos.",
+                    "Report only if you're onboard: two matching accounts are needed; reports last 3 minutes."
+                )
+                else -> L.t(
+                    "No hay conexión con la ocupación en este momento.",
+                    "No connection with occupancy right now."
+                )
+            },
+            style = BodyXs, color = OnSurfaceVariant
+        )
+    }
+
+    // Confirmación antes de reportar (evita toques accidentales, como el iOS).
+    estadoPendiente?.let { estado ->
+        AlertDialog(
+            onDismissRequest = { estadoPendiente = null },
+            title = { Text(L.t("Confirmar ocupación", "Confirm occupancy")) },
+            text = {
+                Text(
+                    L.t(
+                        "¿Estás en este bus y confirmas que está ${estado.etiqueta().lowercase()}?",
+                        "Are you on this bus and do you confirm it's ${estado.etiqueta().lowercase()}?"
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    servicio?.reportar(vehicleId, estado)
+                    estadoPendiente = null
+                }) {
+                    Text(L.t("Sí, reportar", "Yes, report"))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { estadoPendiente = null }) {
+                    Text(L.t("Cancelar", "Cancel"))
+                }
+            }
+        )
+    }
+}
+
+private fun OccupancyService.EstadoOcupacion.etiqueta(): String = when (this) {
+    OccupancyService.EstadoOcupacion.VACIO -> L.t("Vacío", "Empty")
+    OccupancyService.EstadoOcupacion.LLENO -> L.t("Lleno", "Full")
 }
 
 // Card de línea del panel inferior (puerto del BusCard de iOS): línea,
@@ -881,7 +1113,7 @@ private fun tipoLabelMapa(tipo: TipoReporte): String = when (tipo) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MapaReportarSheet(onDismiss: () -> Unit) {
+private fun MapaReportarSheet(onDismiss: () -> Unit, onAbrirCambios: () -> Unit) {
     var tipo by remember { mutableStateOf(TipoReporte.ALERTA) }
     var descripcion by remember { mutableStateOf("") }
     var showSuccess by remember { mutableStateOf(false) }
@@ -889,7 +1121,29 @@ private fun MapaReportarSheet(onDismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(L.t("Reportar incidente", "Report incident"), style = HeadlineMd, color = OnSurface)
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(16.dp))
+
+            // Boton destacado a cambios de ruta (Fase 8), como el ReportarSheet iOS.
+            Card(
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = PrimaryContainer.copy(alpha = 0.35f)),
+                modifier = Modifier.fillMaxWidth().clickable { onAbrirCambios() }
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(14.dp)
+                ) {
+                    Icon(Icons.Filled.AltRoute, null, tint = AppPrimary, modifier = Modifier.size(22.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(L.t("Obras, cierres o cambios de ruta", "Roadworks, closures or route changes"), style = BodyMdMedium, color = OnSurface)
+                        Text(L.t("Confirmados por la comunidad, vigentes 15 min", "Community-confirmed, valid for 15 min"), style = BodyXs, color = OnSurfaceVariant)
+                    }
+                    Icon(Icons.Filled.ChevronRight, null, tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+
             Text(L.t("TIPO DE REPORTE", "REPORT TYPE"), style = LabelCapsMd, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

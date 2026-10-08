@@ -68,6 +68,7 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
     val context = LocalContext.current
     val borderColor = OutlineVariant.copy(alpha = 0.25f)
     var showReportarSheet by remember { mutableStateOf(false) }
+    var mostrarCambiosRuta by remember { mutableStateOf(false) }
     var showLlamarDialog by remember { mutableStateOf(false) }
     var mostrarParaderos by remember { mutableStateOf(false) }
     var showPublicarComunidad by remember { mutableStateOf(false) }
@@ -182,7 +183,14 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
     }
 
     if (showReportarSheet) {
-        ReportarSheet(onDismiss = { showReportarSheet = false })
+        ReportarSheet(
+            onDismiss = { showReportarSheet = false },
+            onAbrirCambios = { showReportarSheet = false; mostrarCambiosRuta = true }
+        )
+    }
+
+    if (mostrarCambiosRuta) {
+        RouteChangesSheet(onDismiss = { mostrarCambiosRuta = false })
     }
 
     if (showPublicarComunidad) {
@@ -762,7 +770,7 @@ private fun VotoChip(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ReportarSheet(onDismiss: () -> Unit) {
+private fun ReportarSheet(onDismiss: () -> Unit, onAbrirCambios: () -> Unit = {}) {
     var tipo by remember { mutableStateOf(TipoReporte.ALERTA) }
     var descripcion by remember { mutableStateOf("") }
     var showSuccess by remember { mutableStateOf(false) }
@@ -770,7 +778,29 @@ private fun ReportarSheet(onDismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(L.t("Reportar incidente", "Report incident"), style = HeadlineMd, color = OnSurface)
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(16.dp))
+
+            // Boton destacado a cambios de ruta (Fase 8), como el ReportarSheet iOS.
+            Card(
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = PrimaryContainer.copy(alpha = 0.35f)),
+                modifier = Modifier.fillMaxWidth().clickable { onAbrirCambios() }
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(14.dp)
+                ) {
+                    Icon(Icons.Filled.AltRoute, null, tint = AppPrimary, modifier = Modifier.size(22.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(L.t("Obras, cierres o cambios de ruta", "Roadworks, closures or route changes"), style = BodyMdMedium, color = OnSurface)
+                        Text(L.t("Confirmados por la comunidad, vigentes 15 min", "Community-confirmed, valid for 15 min"), style = BodyXs, color = OnSurfaceVariant)
+                    }
+                    Icon(Icons.Filled.ChevronRight, null, tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+
             Text(L.t("TIPO DE REPORTE", "REPORT TYPE"), style = LabelCapsMd, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

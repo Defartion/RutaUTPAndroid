@@ -16,6 +16,7 @@ import com.example.rutautpnative.data.places.PlacesService
 import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.data.senias.SeniasService
 import com.example.rutautpnative.data.gtfs.GTFSRepository
+import com.example.rutautpnative.data.tracking.PassiveTrackingCoordinator
 import com.example.rutautpnative.data.ubicacion.LocationService
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.navigation.AppRouter
@@ -37,7 +38,11 @@ class MainActivity : ComponentActivity() {
         SeniasPrefs.init(this)
         TemaStore.init(this)
         LocationService.init(this)
+        PassiveTrackingCoordinator.init(this)
         L.init(this)
+        // Si el usuario ya habia consentido, la baliza se reanuda al arrancar
+        // (startIfConsented del iOS); sin consentimiento no hace nada.
+        PassiveTrackingCoordinator.reanudarSiConsentido()
         setContent {
             // Tema oscuro manual (persistido): la raíz lee el espejo reactivo
             // del TemaStore — cambia al instante sin depender del timing del flow.
@@ -53,5 +58,15 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         // El permiso puede haber cambiado en Ajustes con la app en segundo plano.
         LocationService.refrescarEstadoAutorizacion()
+        // Vuelve del segundo plano: reanuda la publicacion del viaje vigente
+        // con el MISMO sessionId (resumeObservationSessionIfNeeded del iOS).
+        PassiveTrackingCoordinator.reanudarSesionSiPosible()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // iOS suspende el proceso poco despues de esto: el socket y el GPS
+        // mueren sin despedida. Se cierra la publicacion de forma limpia.
+        PassiveTrackingCoordinator.pausarParaSegundoPlano()
     }
 }
