@@ -20,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.rutautpnative.data.LugaresStore
@@ -517,15 +518,34 @@ private fun ParaderoCard(
                 Spacer(Modifier.height(2.dp))
                 Text("${distancia.roundToInt()} m", style = BodySm, color = OnSurfaceVariant)
                 Spacer(Modifier.height(8.dp))
+                // Chips de lineas: estilo plano SIN monospace ni letterSpacing
+                // (LabelCapsSm con 2.4sp de spacing + JetBrainsMono desbordaba
+                // los chips y apilaba los digitos / cortaba el "+N").
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     lineas.take(3).forEach { linea ->
                         Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(PrimaryContainer).padding(horizontal = 8.dp, vertical = 4.dp)) {
-                            Text(linea, style = LabelCapsSm, color = OnPrimaryContainer, maxLines = 1)
+                            Text(
+                                linea,
+                                style = androidx.compose.ui.text.TextStyle(
+                                    fontSize = 11.sp,
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                                ),
+                                color = OnPrimaryContainer,
+                                maxLines = 1
+                            )
                         }
                     }
                     if (lineas.size > 3) {
                         Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(SurfaceContainerHigh).padding(horizontal = 8.dp, vertical = 4.dp)) {
-                            Text("+${lineas.size - 3}", style = LabelCapsSm, color = OnSurfaceVariant, maxLines = 1)
+                            Text(
+                                "+${lineas.size - 3}",
+                                style = androidx.compose.ui.text.TextStyle(
+                                    fontSize = 11.sp,
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                                ),
+                                color = OnSurfaceVariant,
+                                maxLines = 1
+                            )
                         }
                     }
                 }
