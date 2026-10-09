@@ -1,4 +1,4 @@
-package com.example.rutautpnative.ui.screens
+﻿package com.example.rutautpnative.ui.screens
 
 import android.Manifest
 import android.content.Intent
@@ -26,8 +26,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -285,7 +287,7 @@ fun NavegacionScreen(ruta: RutaGTFS, onFinish: () -> Unit) {
                 val esFin = pp == visibles.last()
                 MarkerComposable(
                     state = MarkerState(pp.paradero.coordinate),
-                    anchor = androidx.compose.ui.geometry.Offset(0.5f, 0.5f),
+                    anchor = Offset(0.5f, 0.5f),
                     title = pp.paradero.nombre
                 ) {
                     Box(
@@ -317,10 +319,10 @@ fun NavegacionScreen(ruta: RutaGTFS, onFinish: () -> Unit) {
                         if (vm.demoActivo) {
                             Text(
                                 L.t("DEMO", "DEMO"),
-                                style = androidx.compose.ui.text.TextStyle(fontSize = 8.sp, color = Color.White),
+                                style = TextStyle(fontSize = 8.sp, color = Color.White),
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(4.dp))
-                                    .background(Color(0xFF1E88E5))
+                                    .background(AzulDemo)
                                     .padding(horizontal = 4.dp, vertical = 1.dp)
                             )
                             Spacer(Modifier.height(2.dp))
@@ -344,7 +346,7 @@ fun NavegacionScreen(ruta: RutaGTFS, onFinish: () -> Unit) {
         ) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    if (vm.demoActivo) L.t("SIMULACIÓN", "SIMULATION") else L.t("TU VIAJE", "YOUR TRIP"),
+                    if (vm.demoActivo) L.t("SIMULACIÃ“N", "SIMULATION") else L.t("TU VIAJE", "YOUR TRIP"),
                     style = LabelCapsMd, color = PanelOscuroTextoVariante
                 )
                 Text(
@@ -356,7 +358,7 @@ fun NavegacionScreen(ruta: RutaGTFS, onFinish: () -> Unit) {
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(20.dp))
-                    .background(if (vm.demoActivo) VerdeExito else Color(0xFF26292C))
+                    .background(if (vm.demoActivo) VerdeExito else PanelOscuroItem)
                     .clickable { if (vm.demoActivo) vm.detenerDemo() else vm.iniciarDemo() }
                     .padding(horizontal = 14.dp, vertical = 6.dp)
             ) {
@@ -392,15 +394,15 @@ fun NavegacionScreen(ruta: RutaGTFS, onFinish: () -> Unit) {
                 EstadoNav.SIN_PERMISO -> Quad(Icons.Filled.LocationOff, RojoPeligro,
                     L.t("Se necesita permiso de ubicación", "Location permission needed"), "")
                 EstadoNav.ESPERANDO_GPS -> Quad(Icons.Filled.Schedule, PanelOscuroTextoVariante,
-                    L.t("Esperando GPS…", "Waiting for GPS…"),
+                    L.t("Esperando GPSâ€¦", "Waiting for GPSâ€¦"),
                     L.t("Muévete al aire libre para mejorar la señal.", "Move outdoors for a better signal."))
                 EstadoNav.EN_RUTA -> Quad(Icons.Filled.NearMe, VerdeExito,
-                    L.t("Estás en la ruta", "You're on the route"), subtituloProximo(vm))
-                EstadoNav.FUERA_RUTA -> Quad(Icons.Filled.LocationOff, Color(0xFFFB8C00),
+                    L.t("EstÃ¡s en la ruta", "You're on the route"), subtituloProximo(vm))
+                EstadoNav.FUERA_RUTA -> Quad(Icons.Filled.LocationOff, NaranjaAdvertencia,
                     L.t("Fuera de la ruta", "Off the route"),
-                    L.t("Estás a ${vm.metrosFuera.toInt()} m del recorrido. Acércate para continuar.", "You're ${vm.metrosFuera.toInt()} m from the route. Get closer to continue."))
+                    L.t("EstÃ¡s a ${vm.metrosFuera.toInt()} m del recorrido. Acércate para continuar.", "You're ${vm.metrosFuera.toInt()} m from the route. Get closer to continue."))
                 EstadoNav.CERCA_DESTINO -> Quad(Icons.Filled.DepartureBoard, VerdeExito,
-                    L.t("Estás cerca de tu destino", "You're close to your destination"), subtituloProximo(vm))
+                    L.t("EstÃ¡s cerca de tu destino", "You're close to your destination"), subtituloProximo(vm))
                 EstadoNav.FINALIZADO -> Quad(Icons.Filled.CheckCircle, VerdeExito,
                     L.t("Fin del recorrido", "End of the route"), "")
             }
@@ -452,7 +454,7 @@ fun NavegacionScreen(ruta: RutaGTFS, onFinish: () -> Unit) {
                         .fillMaxWidth()
                         .height(8.dp)
                         .clip(RoundedCornerShape(4.dp))
-                        .background(Color(0xFF26292C))
+                        .background(PanelOscuroItem)
                 ) {
                     Box(
                         modifier = Modifier
@@ -492,7 +494,7 @@ fun NavegacionScreen(ruta: RutaGTFS, onFinish: () -> Unit) {
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFF26292C))
+                    .background(PanelOscuroItem)
                     .clickable {
                         if (seguirUsuario) {
                             // "Ver toda la ruta": encuadra el recorrido completo.
@@ -540,7 +542,7 @@ fun NavegacionScreen(ruta: RutaGTFS, onFinish: () -> Unit) {
                     modifier = Modifier
                         .padding(24.dp)
                         .clip(RoundedCornerShape(20.dp))
-                        .background(Color(0xFF1D2022))
+                        .background(PanelOscuroDialogo)
                         .padding(28.dp)
                 ) {
                     Icon(Icons.Filled.CheckCircle, null, tint = VerdeExito, modifier = Modifier.size(56.dp))
@@ -581,3 +583,6 @@ private fun subtituloProximo(vm: NavegacionVM): String {
     val metros = ((proximo.fraccion - vm.progreso) * vm.totalM).toInt().coerceAtLeast(0)
     return L.t("Próxima parada: ", "Next stop: ") + proximo.paradero.nombre + " · ${formatoDistancia(metros.toDouble())}"
 }
+
+
+

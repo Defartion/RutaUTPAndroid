@@ -101,7 +101,7 @@ fun CarneDigitalScreen(
                                 if (foto != null) {
                                     Image(
                                         bitmap = foto.asImageBitmap(),
-                                        contentDescription = "Foto del carné",
+                                        contentDescription = L.t("Foto del carné", "ID card photo"),
                                         contentScale = ContentScale.Crop,
                                         modifier = Modifier.fillMaxSize()
                                     )
@@ -168,7 +168,7 @@ fun CarneDigitalScreen(
                             barcode?.let { bmp ->
                                 Image(
                                     bitmap = bmp.asImageBitmap(),
-                                    contentDescription = "Código de barras del código UTP",
+                                    contentDescription = L.t("Código de barras del código UTP", "UTP code barcode"),
                                     modifier = Modifier
                                         .width(anchoDp)
                                         .height(altoDp)

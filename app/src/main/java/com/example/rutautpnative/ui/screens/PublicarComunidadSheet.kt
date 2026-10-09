@@ -244,7 +244,7 @@ fun PublicarComunidadSheet(onDismiss: () -> Unit) {
                 Box(modifier = Modifier.fillMaxWidth().height(180.dp)) {
                     Image(
                         bitmap = bitmap.asImageBitmap(),
-                        contentDescription = "Foto adjunta",
+                        contentDescription = L.t("Foto adjunta", "Attached photo"),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxSize()

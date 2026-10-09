@@ -1,4 +1,4 @@
-package com.example.rutautpnative.ui.screens
+﻿package com.example.rutautpnative.ui.screens
 
 import android.Manifest
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -163,7 +164,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
         }
     }
 
-    // Al seleccionar un paradero: mueve carrusel+ cámara y calcula la caminata.
+    // Al seleccionar un paradero: mueve carrusel+ cÃ¡mara y calcula la caminata.
     LaunchedEffect(selectedId) {
         val id = selectedId ?: return@LaunchedEffect
         val paradero = paraderosVisibles.firstOrNull { p -> p.id == id } ?: return@LaunchedEffect
@@ -212,7 +213,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
 
     LaunchedEffect(pagerState, paraderosVisibles) {
         snapshotFlow { pagerState.settledPage }
-            .drop(1) // ignora la página inicial para no auto-seleccionar al abrir
+            .drop(1) // ignora la pÃ¡gina inicial para no auto-seleccionar al abrir
             .collect { page ->
                 paraderosVisibles.getOrNull(page)?.let { p ->
                     if (p.id != selectedId) selectedId = p.id
@@ -305,7 +306,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
                 Spacer(Modifier.width(10.dp))
                 Column {
                     Text(L.t("Explora paraderos", "Explore bus stops"), style = HeadlineBody, color = OnSurface)
-                    Text(L.t("Tu próxima parada, más cerca", "Your next stop, closer"), style = BodySm, color = OnSurfaceVariant)
+                    Text(L.t("Tu próxima parada, mÃ¡s cerca", "Your next stop, closer"), style = BodySm, color = OnSurfaceVariant)
                 }
                 Spacer(Modifier.weight(1f))
                 Box(
@@ -414,18 +415,18 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
                             }
                         }
                     }
-                    if (locationMessage != null) {
+                    locationMessage?.let { mensaje ->
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            locationMessage!!,
+                            mensaje,
                             style = BodyXs, color = MaterialTheme.colorScheme.error,
                             modifier = Modifier.padding(horizontal = 20.dp)
                         )
                     }
-                    if (walkingMessage != null) {
+                    walkingMessage?.let { mensaje ->
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            walkingMessage!!,
+                            mensaje,
                             style = BodyXs, color = MaterialTheme.colorScheme.error,
                             modifier = Modifier.padding(horizontal = 20.dp)
                         )
@@ -447,7 +448,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
                             paraderosVisibles.getOrNull(page)?.let { paradero ->
                                 ParaderoCard(
                                     paradero = paradero,
-                                    distancia = if (paradero.id == selectedId && walkingDistance != null) walkingDistance!!.toDouble() else distancias[paradero.id] ?: 0.0,
+                                    distancia = if (paradero.id == selectedId && walkingDistance != null) walkingDistance?.toDouble() ?: 0.0 else distancias[paradero.id] ?: 0.0,
                                     lineas = lineasPorParadero[paradero.id] ?: emptyList(),
                                     seleccionado = paradero.id == selectedId,
                                     esGuardado = guardados.any { g -> g.coincideCon(paradero.nombre, paradero.lat, paradero.lon) },
@@ -523,7 +524,7 @@ private fun ParaderoCard(
                         Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(PrimaryContainer).padding(horizontal = 8.dp, vertical = 4.dp)) {
                             Text(
                                 linea,
-                                style = androidx.compose.ui.text.TextStyle(
+                                style = TextStyle(
                                     fontSize = 11.sp,
                                     fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
                                 ),
@@ -536,7 +537,7 @@ private fun ParaderoCard(
                         Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(SurfaceContainerHigh).padding(horizontal = 8.dp, vertical = 4.dp)) {
                             Text(
                                 "+${lineas.size - 3}",
-                                style = androidx.compose.ui.text.TextStyle(
+                                style = TextStyle(
                                     fontSize = 11.sp,
                                     fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
                                 ),

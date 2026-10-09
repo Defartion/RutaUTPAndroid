@@ -112,9 +112,10 @@ fun RutasScreen(router: AppRouter, viewModel: RutasViewModel = viewModel()) {
             }
         }
 
-        if (mostrarNavegacion && rutaNavegando != null) {
+        val navegando = rutaNavegando
+        if (mostrarNavegacion && navegando != null) {
             NavegacionScreen(
-                ruta = rutaNavegando!!,
+                ruta = navegando,
                 onFinish = { mostrarNavegacion = false; rutaNavegando = null }
             )
         }

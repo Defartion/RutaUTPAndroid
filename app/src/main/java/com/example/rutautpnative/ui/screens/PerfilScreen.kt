@@ -109,14 +109,14 @@ fun PerfilScreen(router: AppRouter) {
                             modifier = Modifier.size(72.dp).clip(CircleShape).background(InversePrimary),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (fotoPerfil != null) {
+                            fotoPerfil?.let { foto ->
                                 Image(
-                                    bitmap = fotoPerfil!!.asImageBitmap(),
-                                    contentDescription = "Foto de perfil",
+                                    bitmap = foto.asImageBitmap(),
+                                    contentDescription = L.t("Foto de perfil", "Profile photo"),
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier.fillMaxSize()
                                 )
-                            } else {
+                            } ?: run {
                                 Text(iniciales(nombre), style = HeadlineMd, color = Color.White)
                             }
                         }
