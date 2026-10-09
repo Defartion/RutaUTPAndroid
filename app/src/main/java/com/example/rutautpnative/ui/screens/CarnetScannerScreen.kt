@@ -191,14 +191,16 @@ private fun CameraPreview(modifier: Modifier = Modifier) {
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }
                 try {
-                    cameraProvider.unbindAll()
+                    // Sin unbindAll(): bindToLifecycle ya desplaza cualquier
+                    // uso previo de ESTA lifecycle; un unbindAll() GLOBAL
+                    // mataria camaras de otras pantallas si las hubiera.
                     cameraProvider.bindToLifecycle(
                         lifecycleOwner,
                         CameraSelector.DEFAULT_BACK_CAMERA,
                         preview
                     )
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    android.util.Log.w("CarnetScanner", "bind de camara fallo", e)
                 }
             }, ContextCompat.getMainExecutor(ctx))
             previewView

@@ -217,7 +217,10 @@ object GTFSRepository {
             val d = distanciaMetros(p, destino)
             if (d < minima) minima = d
         }
-        return if (minima.isInfinite()) 0.0 else minima
+        // Sin shape: INFINITO, no 0.0 (una ruta sin geometria no esta "a 0 m
+        // de todo"; antes el 0.0 la ponia PRIMERO en rutas() y colaba por
+        // cualquier filtro de cercania).
+        return if (minima.isInfinite()) Double.POSITIVE_INFINITY else minima
     }
 
     private fun longitudTotalKm(puntos: List<LatLng>): Double {

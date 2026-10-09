@@ -2,6 +2,7 @@ package com.example.rutautpnative
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -12,12 +13,15 @@ import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.ui.screens.*
 import com.example.rutautpnative.ui.screens.mapa.MapaScreen
+import com.example.rutautpnative.ui.theme.AppBackground
 
 @Composable
 fun RootView(router: AppRouter = viewModel()) {
     // La raíz envuelve todo: el mini-reproductor de señas va como último
     // elemento para quedar por encima de cualquier pantalla, diálogo o sheet.
-    Box(modifier = Modifier.fillMaxSize()) {
+    // El fondo del Box raíz pinta TAMBIÉN la zona tras la status bar
+    // (edge-to-edge): en modo oscuro se ve oscuro, en claro claro.
+    Box(modifier = Modifier.fillMaxSize().background(AppBackground)) {
         Crossfade(
             targetState = router.currentScreen,
             animationSpec = tween(durationMillis = 250),

@@ -1,5 +1,6 @@
 package com.example.rutautpnative.ui.theme
 
+import android.app.Activity
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
@@ -7,6 +8,9 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 //----Esquema claro (marca igual en ambos modos; adaptativos versión clara)----
 private val AppColorScheme = lightColorScheme(
@@ -85,6 +89,21 @@ fun RutaUTPNativeTheme(
     content: @Composable () -> Unit
 ) {
     LaunchedEffect(modoOscuro) { aplicarTemaOscuro(modoOscuro) }
+
+    // STATUS BAR + NAV BAR: iconos claros en oscuro, oscuros en claro.
+    // Equivalente del overrideUserInterfaceStyle del iOS: con edge-to-edge,
+    // el contenido se extiende detras de las barras, pero los ICONOS de la
+    // status bar (hora, camara, senal) deben cambiar de color segun el tema
+    // — sin esto quedan oscuros sobre fondo oscuro (o claros sobre claro).
+    val view = LocalView.current
+    LaunchedEffect(modoOscuro) {
+        val ventana = (view.context as? Activity)?.window ?: return@LaunchedEffect
+        WindowCompat.getInsetsController(ventana, view).apply {
+            isAppearanceLightStatusBars = !modoOscuro
+            isAppearanceLightNavigationBars = !modoOscuro
+        }
+    }
+
     MaterialTheme(
         colorScheme = if (modoOscuro) AppColorSchemeDark else AppColorScheme,
         typography  = AppTypography,

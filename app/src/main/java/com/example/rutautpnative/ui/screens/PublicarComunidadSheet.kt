@@ -71,14 +71,6 @@ private fun chipsPara(tipo: TipoReporte): List<String> = when (tipo) {
     TipoReporte.OTRO       -> emptyList()
 }
 
-// Etiqueta del tipo según idioma (el enum guarda etiquetas en español).
-private fun tipoParaLabel(tipo: TipoReporte) = when (tipo) {
-    TipoReporte.ALERTA     -> L.t("ALERTA", "ALERT")
-    TipoReporte.TRAFICO    -> L.t("TRÁFICO", "TRAFFIC")
-    TipoReporte.SUGERENCIA -> L.t("SUGERENCIA", "SUGGESTION")
-    TipoReporte.OTRO       -> L.t("OTRO", "OTHER")
-}
-
 private fun iconoPara(tipo: TipoReporte): ImageVector = when (tipo) {
     TipoReporte.ALERTA     -> Icons.Filled.Warning
     TipoReporte.TRAFICO    -> Icons.Filled.DirectionsCar
@@ -116,7 +108,7 @@ private fun TipoCard(tipo: TipoReporte, seleccionado: Boolean, onClick: () -> Un
     ) {
         Icon(iconoPara(tipo), null, tint = contenido, modifier = Modifier.size(20.dp))
         Spacer(Modifier.height(6.dp))
-        Text(tipoParaLabel(tipo), style = LabelCapsSm, color = contenido, maxLines = 1)
+        Text(tipo.etiqueta, style = LabelCapsSm, color = contenido, maxLines = 1)
     }
 }
 

@@ -63,8 +63,6 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.padding
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -472,7 +470,7 @@ private fun MapaHeader(onMenuClick: () -> Unit) {    Column(
                     .clickable { onMenuClick() },
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Filled.Menu, null, tint = OnSurface, modifier = Modifier.size(22.dp))
+                Icon(Icons.Filled.Menu, L.t("Abrir menú", "Open menu"), tint = OnSurface, modifier = Modifier.size(22.dp))
             }
             Spacer(Modifier.width(12.dp))
             Text(L.t("Mapa", "Map"), style = HeadlineLg, color = AppPrimary)
@@ -1103,13 +1101,7 @@ private fun BusCard(bus: BusAnimado, onClick: () -> Unit) {
 }
 
 // Panel de reporte
-// Etiqueta del tipo de reporte según idioma (el enum guarda etiquetas en español).
-private fun tipoLabelMapa(tipo: TipoReporte): String = when (tipo) {
-    TipoReporte.ALERTA     -> L.t("ALERTA", "ALERT")
-    TipoReporte.TRAFICO    -> L.t("TRÁFICO", "TRAFFIC")
-    TipoReporte.SUGERENCIA -> L.t("SUGERENCIA", "SUGGESTION")
-    TipoReporte.OTRO       -> L.t("OTRO", "OTHER")
-}
+// Etiqueta del tipo de reporte: unificada en TipoReporte.etiqueta (Models.kt).
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1148,7 +1140,7 @@ private fun MapaReportarSheet(onDismiss: () -> Unit, onAbrirCambios: () -> Unit)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(TipoReporte.ALERTA, TipoReporte.TRAFICO, TipoReporte.SUGERENCIA).forEach { t ->
-                    FilterChip(selected = tipo == t, onClick = { tipo = t }, label = { Text(tipoLabelMapa(t), style = BodySm) })
+                    FilterChip(selected = tipo == t, onClick = { tipo = t }, label = { Text(t.etiqueta, style = BodySm) })
                 }
             }
             Spacer(Modifier.height(16.dp))

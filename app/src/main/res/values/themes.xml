@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.RutaUTPNative" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Tema base neutro: el fondo real lo pinta Compose (Color.kt adaptativo).
+         Sin NoActionBar la status bar se pinta del color del tema XML (blanco),
+         que es la franja que se ve en modo oscuro. -->
+    <style name="Theme.RutaUTPNative" parent="android:Theme.Material.NoActionBar">
+        <!-- Fondo transparente: Compose pinta TODO (incluida la zona tras la status bar). -->
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
 </resources>

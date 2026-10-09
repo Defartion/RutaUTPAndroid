@@ -41,8 +41,9 @@ import com.google.maps.android.compose.*
 import androidx.compose.ui.text.style.TextAlign
 import kotlin.math.roundToInt
 
-// Estimación genérica de referencia (5 km/h) para estimar tiempos a pie,
-// mientras no haya un motor de rutas peatonales real integrado.
+// Estimación de referencia (5 km/h) para el detalle de Rutas: este mini-mapa
+// no usa GPS ni Directions (el origen es mock). El Mapa y el TrackingDemo
+// sí usan caminatas reales vía TransitPlanner + DirectionsService.
 private const val VELOCIDAD_CAMINATA_KMH = 5.0
 
 //----Main Screen----

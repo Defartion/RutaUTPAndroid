@@ -60,9 +60,13 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    // navigation-compose NO se usa directamente (la navegacion es manual via
+    // AppRouter), PERO arrastra transitivamente lifecycle-viewmodel-compose,
+    // que es de donde sale viewModel() usado en RootView y MainActivity.
+    // TODO(l3-cleanup): sustituir por implementation("androidx.lifecycle:lifecycle-viewmodel-compose")
+    // cuando se verifique que no hay mas dependencias transitivas criticas.
     implementation(libs.androidx.navigation.compose)
 
     implementation(libs.play.services.maps)

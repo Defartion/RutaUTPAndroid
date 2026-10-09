@@ -228,12 +228,12 @@ private fun LlegandoCard() {
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(
-                    text = "LLEGANDO EN",
+                    text = L.t("LLEGANDO EN", "ARRIVING IN"),
                     style = LabelCapsSm,
                     color = OnSurfaceVariant
                 )
                 Text(
-                    text = "3 min",
+                    text = L.t("3 min", "3 min"),
                     style = DisplayNumberLg,
                     color = AppPrimary
                 )

@@ -48,6 +48,23 @@ enum class TipoReporte(val label: String) {
     SUGERENCIA("SUGERENCIA"),
     OTRO("OTRO");
 
+    /// Etiqueta traducida (antes duplicada ×3: tipoLabelMapa, tipoReporteLabel,
+    /// tipoParaLabel en MapaScreen, SeguridadScreen y PublicarComunidadSheet).
+    val etiqueta: String get() = com.example.rutautpnative.ui.idioma.L.t(
+        when (this) {
+            ALERTA     -> "ALERTA"
+            TRAFICO    -> "TRÁFICO"
+            SUGERENCIA -> "SUGERENCIA"
+            OTRO       -> "OTRO"
+        },
+        when (this) {
+            ALERTA     -> "ALERT"
+            TRAFICO    -> "TRAFFIC"
+            SUGERENCIA -> "SUGGESTION"
+            OTRO       -> "OTHER"
+        }
+    )
+
     val background: Color get() = when (this) {
         ALERTA     -> ErrorContainer
         TRAFICO    -> SecondaryContainer

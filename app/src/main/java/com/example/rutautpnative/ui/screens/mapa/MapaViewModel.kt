@@ -370,7 +370,7 @@ class MapaViewModel : ViewModel() {
             itinerario = null
             try {
                 val rutas = GTFSRepository.rutas()
-                val plan = TransitPlanner.plan(origen, destino, rutas) { a, b -> caminataReal(a, b) }
+                val plan = TransitPlanner.plan(origen, destino, rutas) { a, b -> TransitPlanner.caminataReal(a, b) }
                 itinerario = plan
                 if (plan == null) {
                     mensajeRuta = L.t(
@@ -383,19 +383,6 @@ class MapaViewModel : ViewModel() {
             } finally {
                 calculandoItinerario = false
             }
-        }
-    }
-
-    // Caminata real via Google Directions; si falla el planificador cae a
-    // linea recta (aproximada). Distancia 0 = campo ausente -> recta.
-    private suspend fun caminataReal(a: LatLng, b: LatLng): TransitPlanner.Caminata? {
-        return when (val r = DirectionsService.rutaPeatonal(a, b)) {
-            is DirectionsService.Resultado.Exito -> {
-                val metros = if (r.distanciaMetros > 0) r.distanciaMetros.toDouble()
-                else GTFSRepository.distanciaMetros(a, b)
-                TransitPlanner.Caminata(r.puntos, metros, aproximada = false)
-            }
-            else -> null
         }
     }
 

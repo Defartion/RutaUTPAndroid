@@ -52,9 +52,9 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-// Color fijo de la ruta a pie (claro). No existe tema oscuro en este proyecto
-// todavía, así que se usa directamente el valor claro fijo: #1669A8.
-private val ColorCaminata = Color(0xFF1669A8)
+// Color de la ruta a pie: usa el adaptativo Secondary (oscuro/claro segun el
+// tema activo de la app).
+private val ColorCaminata = Secondary
 
 //----Paraderos iluminados (pantalla)----
 // Mapa + búsqueda/filtro de radio + "cerca de mí" + carrusel + distancia real a pie.

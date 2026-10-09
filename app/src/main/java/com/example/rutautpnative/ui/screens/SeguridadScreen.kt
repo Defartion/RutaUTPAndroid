@@ -682,15 +682,6 @@ private fun ComunidadSection(viewModel: SeguridadViewModel, onAnadir: () -> Unit
     }
 }
 
-//----Etiqueta del tipo de reporte según idioma----
-// (el enum guarda etiquetas en español; la UI traduce en el punto de uso).
-private fun tipoReporteLabel(tipo: TipoReporte): String = when (tipo) {
-    TipoReporte.ALERTA     -> L.t("ALERTA", "ALERT")
-    TipoReporte.TRAFICO    -> L.t("TRÁFICO", "TRAFFIC")
-    TipoReporte.SUGERENCIA -> L.t("SUGERENCIA", "SUGGESTION")
-    TipoReporte.OTRO       -> L.t("OTRO", "OTHER")
-}
-
 //----Tarjeta de una publicación de la comunidad----
 @Composable
 private fun ReporteCard(
@@ -716,7 +707,7 @@ private fun ReporteCard(
                     Text(reporte.hace, style = LabelCapsSm, color = OnSurfaceVariant)
                 }
                 Box(modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(reporte.tipo.background).padding(horizontal = 8.dp, vertical = 4.dp)) {
-                    Text(tipoReporteLabel(reporte.tipo), style = LabelCapsSm, color = reporte.tipo.foreground)
+                    Text(reporte.tipo.etiqueta, style = LabelCapsSm, color = reporte.tipo.foreground)
                 }
             }
             Spacer(Modifier.height(12.dp))
@@ -805,7 +796,7 @@ private fun ReportarSheet(onDismiss: () -> Unit, onAbrirCambios: () -> Unit = {}
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(TipoReporte.ALERTA, TipoReporte.TRAFICO, TipoReporte.SUGERENCIA).forEach { t ->
-                    FilterChip(selected = tipo == t, onClick = { tipo = t }, label = { Text(tipoReporteLabel(t), style = BodySm) })
+                    FilterChip(selected = tipo == t, onClick = { tipo = t }, label = { Text(t.etiqueta, style = BodySm) })
                 }
             }
             Spacer(Modifier.height(16.dp))

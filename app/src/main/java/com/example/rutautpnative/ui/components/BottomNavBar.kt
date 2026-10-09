@@ -86,7 +86,7 @@ fun BottomNavBar(
                     color = if (isActive) AppPrimary else OnSurfaceVariant.copy(alpha = 0.65f),
                     maxLines = 1,
                     softWrap = false,
-                    fontSize = 9.sp
+                    fontSize = 10.sp   // minimo accesible (antes 9sp, bajo el limite recomendado)
                 )
             }
         }

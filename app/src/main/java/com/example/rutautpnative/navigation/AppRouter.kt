@@ -46,8 +46,4 @@ class AppRouter : ViewModel() {
     fun navigate(to: AppScreen) {
         currentScreen = to
     }
-
-    fun reset() {
-        currentScreen = AppScreen.MapaPrincipal
-    }
 }

@@ -491,7 +491,7 @@ private fun SobreNosotrosSheet(onDismiss: () -> Unit) {
             Spacer(Modifier.height(12.dp))
             Text("Ruta UTP Trujillo", style = HeadlineMd, color = OnSurface)
             Box(modifier = Modifier.clip(CircleShape).background(SurfaceContainerLow).padding(horizontal = 10.dp, vertical = 4.dp)) {
-                Text("v1.0.0", style = LabelCapsMd, color = OnSurfaceVariant)
+                Text("v1.0", style = LabelCapsMd, color = OnSurfaceVariant)
             }
             Spacer(Modifier.height(20.dp))
 

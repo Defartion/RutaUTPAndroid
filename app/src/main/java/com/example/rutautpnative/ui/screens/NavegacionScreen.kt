@@ -36,10 +36,10 @@ import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.ParaderoGTFS
 import com.example.rutautpnative.data.gtfs.RutaGTFS
 import com.example.rutautpnative.data.ubicacion.LocationService
+import com.example.rutautpnative.ui.components.formatoDistancia
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.screens.mapa.PulsingUserMarker
-import com.example.rutautpnative.ui.theme.*
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.example.rutautpnative.ui.theme.*import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -56,6 +56,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -78,12 +79,9 @@ import kotlin.math.ceil
 
 private enum class EstadoNav { ESPERANDO_GPS, SIN_PERMISO, EN_RUTA, FUERA_RUTA, CERCA_DESTINO, FINALIZADO }
 
-// Paleta oscura propia de la pantalla (no se toca el tema global).
-private val PanelOscuro = Color(0xFF141414)
-private val PanelOscuroTexto = Color(0xFFE4E8EA)
-private val PanelOscuroTextoVariante = Color(0xFF9AA0A3)
-private val VerdeExito = Color(0xFF43A047)
-private val RojoPeligro = Color(0xFFE53935)
+// Paleta oscura: importada de PaletaOscura.kt (compartida, antes duplicada).
+private val PanelOscuroTexto = TextoOscuro
+private val PanelOscuroTextoVariante = TextoOscuroVariante
 
 private class NavegacionVM(val ruta: RutaGTFS) {
 
@@ -212,6 +210,9 @@ private class NavegacionVM(val ruta: RutaGTFS) {
         gpsJob?.cancel()
         gpsJob = null
         detenerDemo()
+        // Cancela el scope entero: sin esto, el CoroutineScope sobrevive a
+        // la pantalla y retiene el SupervisorJob (fuga de hilo Main).
+        scope.cancel()
     }
 
     companion object {
@@ -595,6 +596,3 @@ private fun subtituloProximo(vm: NavegacionVM): String {
     val metros = ((proximo.fraccion - vm.progreso) * vm.totalM).toInt().coerceAtLeast(0)
     return L.t("Próxima parada: ", "Next stop: ") + proximo.paradero.nombre + " · ${formatoDistancia(metros.toDouble())}"
 }
-
-private fun formatoDistancia(metros: Double): String =
-    if (metros >= 1000) "%.1f km".format(metros / 1000) else "${metros.toInt()} m"
