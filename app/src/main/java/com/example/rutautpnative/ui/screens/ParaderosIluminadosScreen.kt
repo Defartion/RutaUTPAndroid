@@ -137,9 +137,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
         // tras persistir, asi que el bookmark refleja el estado real.
         val actuales = guardados
         val existente = actuales.firstOrNull { g ->
-            g.nombre == paradero.nombre &&
-                g.lat != null && g.lon != null &&
-                GTFSRepository.distanciaMetros(LatLng(g.lat!!, g.lon!!), paradero.coordinate) < 5.0
+            g.coincideCon(paradero.nombre, paradero.lat, paradero.lon)
         }
         val nueva = when {
             existente == null -> actuales + LugarGuardado(
@@ -247,9 +245,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
                 paraderosVisibles.forEach { paradero ->
                     val seleccionado = paradero.id == selectedId
                     val esGuardado = guardados.any { g ->
-                        g.nombre == paradero.nombre &&
-                            g.lat != null && g.lon != null &&
-                            GTFSRepository.distanciaMetros(LatLng(g.lat!!, g.lon!!), paradero.coordinate) < 5.0
+                        g.coincideCon(paradero.nombre, paradero.lat, paradero.lon)
                     }
                     MarkerComposable(
                         state = MarkerState(position = paradero.coordinate),
@@ -407,8 +403,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
                             ) {
                                 val guardadoSel = paraderos.firstOrNull { it.id == selectedId }
                                 val yaGuardado = guardadoSel != null && guardados.any { g ->
-                                    g.nombre == guardadoSel.nombre && g.lat != null && g.lon != null &&
-                                        GTFSRepository.distanciaMetros(LatLng(g.lat!!, g.lon!!), guardadoSel.coordinate) < 5.0
+                                    g.coincideCon(guardadoSel.nombre, guardadoSel.lat, guardadoSel.lon)
                                 }
                                 Icon(
                                     if (yaGuardado) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
@@ -455,7 +450,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
                                     distancia = if (paradero.id == selectedId && walkingDistance != null) walkingDistance!!.toDouble() else distancias[paradero.id] ?: 0.0,
                                     lineas = lineasPorParadero[paradero.id] ?: emptyList(),
                                     seleccionado = paradero.id == selectedId,
-                                    esGuardado = guardados.any { g -> g.nombre == paradero.nombre && g.lat != null && g.lon != null && GTFSRepository.distanciaMetros(LatLng(g.lat!!, g.lon!!), paradero.coordinate) < 5.0 },
+                                    esGuardado = guardados.any { g -> g.coincideCon(paradero.nombre, paradero.lat, paradero.lon) },
                                     onClick = { selectedId = paradero.id },
                                     onGuardar = { alternarGuardado(paradero) },
                                     onVerLineas = if (router != null) {

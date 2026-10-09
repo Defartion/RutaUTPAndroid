@@ -30,6 +30,20 @@ data class LugarGuardado(
 ) {
     // Lugares fijos (UTP) no se pueden eliminar desde la UI.
     val esFijo: Boolean get() = nombre.equals("UTP", ignoreCase = true)
+
+    /// ¿Este lugar guardado ES el paradero dado? (mismo nombre y a <5 m).
+    /// Antes duplicado 4 veces en ParaderosIluminadosScreen con `!!`.
+    fun coincideCon(
+        nombreParadero: String,
+        latParadero: Double,
+        lonParadero: Double
+    ): Boolean {
+        if (nombre != nombreParadero || lat == null || lon == null) return false
+        return com.example.rutautpnative.data.gtfs.GTFSRepository.distanciaMetros(
+            com.google.android.gms.maps.model.LatLng(lat, lon),
+            com.google.android.gms.maps.model.LatLng(latParadero, lonParadero)
+        ) < 5.0
+    }
 }
 
 //----Referencia a línea guardada----

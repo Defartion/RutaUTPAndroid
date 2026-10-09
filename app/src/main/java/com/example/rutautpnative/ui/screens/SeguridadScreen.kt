@@ -183,7 +183,7 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
     }
 
     if (showReportarSheet) {
-        ReportarSheet(
+        com.example.rutautpnative.ui.components.ReportarIncidenteSheet(
             onDismiss = { showReportarSheet = false },
             onAbrirCambios = { showReportarSheet = false; mostrarCambiosRuta = true }
         )
@@ -759,77 +759,4 @@ private fun VotoChip(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ReportarSheet(onDismiss: () -> Unit, onAbrirCambios: () -> Unit = {}) {
-    var tipo by remember { mutableStateOf(TipoReporte.ALERTA) }
-    var descripcion by remember { mutableStateOf("") }
-    var showSuccess by remember { mutableStateOf(false) }
-
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Text(L.t("Reportar incidente", "Report incident"), style = HeadlineMd, color = OnSurface)
-            Spacer(Modifier.height(16.dp))
-
-            // Boton destacado a cambios de ruta (Fase 8), como el ReportarSheet iOS.
-            Card(
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = PrimaryContainer.copy(alpha = 0.35f)),
-                modifier = Modifier.fillMaxWidth().clickable { onAbrirCambios() }
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(14.dp)
-                ) {
-                    Icon(Icons.Filled.AltRoute, null, tint = AppPrimary, modifier = Modifier.size(22.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(L.t("Obras, cierres o cambios de ruta", "Roadworks, closures or route changes"), style = BodyMdMedium, color = OnSurface)
-                        Text(L.t("Confirmados por la comunidad, vigentes 15 min", "Community-confirmed, valid for 15 min"), style = BodyXs, color = OnSurfaceVariant)
-                    }
-                    Icon(Icons.Filled.ChevronRight, null, tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-
-            Text(L.t("TIPO DE REPORTE", "REPORT TYPE"), style = LabelCapsMd, color = OnSurfaceVariant)
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(TipoReporte.ALERTA, TipoReporte.TRAFICO, TipoReporte.SUGERENCIA).forEach { t ->
-                    FilterChip(selected = tipo == t, onClick = { tipo = t }, label = { Text(t.etiqueta, style = BodySm) })
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-            Text(L.t("DESCRIPCIÓN", "DESCRIPTION"), style = LabelCapsMd, color = OnSurfaceVariant)
-            Spacer(Modifier.height(8.dp))
-            OutlinedTextField(
-                value = descripcion,
-                onValueChange = { descripcion = it },
-                placeholder = { Text(L.t("¿Qué sucede?", "What happened?")) },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3,
-                shape = RoundedCornerShape(12.dp)
-            )
-            Spacer(Modifier.height(20.dp))
-            Button(
-                onClick = { showSuccess = true },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AppPrimary),
-                enabled = descripcion.isNotBlank()
-            ) {
-                Text(L.t("Enviar reporte", "Send report"), style = HeadlineSm, color = Color.White)
-            }
-            Spacer(Modifier.height(24.dp))
-        }
-    }
-
-    if (showSuccess) {
-        AlertDialog(
-            onDismissRequest = { onDismiss() },
-            title = { Text(L.t("Reporte enviado", "Report sent")) },
-            text = { Text(L.t("Gracias por colaborar con la comunidad.", "Thanks for contributing to the community.")) },
-            confirmButton = { TextButton(onClick = { onDismiss() }) { Text("OK") } }
-        )
-    }
-}
+// ReportarSheet: unificado en ui/components/ReportarIncidenteSheet.kt (L10).

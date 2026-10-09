@@ -180,24 +180,9 @@ private class NavegacionVM(val ruta: RutaGTFS) {
         demoActivo = false
     }
 
-    /// Interpolacion de la coordenada a una fraccion del shape (busqueda
-    /// binaria sobre las distancias acumuladas).
-    fun puntoEnFraccion(fraccion: Double): LatLng {
-        val objetivo = fraccion.coerceIn(0.0, 1.0) * totalM
-        var lo = 0
-        var hi = acumulados.size - 1
-        while (lo < hi - 1) {
-            val mid = (lo + hi) / 2
-            if (acumulados[mid] <= objetivo) lo = mid else hi = mid
-        }
-        val a = acumulados[lo]
-        val b = acumulados[lo + 1]
-        val f = if (b > a) ((objetivo - a) / (b - a)).coerceIn(0.0, 1.0) else 0.0
-        return LatLng(
-            shape[lo].latitude + (shape[lo + 1].latitude - shape[lo].latitude) * f,
-            shape[lo].longitude + (shape[lo + 1].longitude - shape[lo].longitude) * f
-        )
-    }
+    /// Interpolacion de la coordenada: delegada en PolylineMatching (L10).
+    fun puntoEnFraccion(fraccion: Double): LatLng =
+        PolylineMatching.puntoEnFraccion(shape, acumulados, fraccion, totalM)
 
     //----Derivados para la UI----
     val restanteM: Double get() = (1.0 - progreso) * totalM
