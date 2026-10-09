@@ -15,15 +15,21 @@ object CodigoBarras {
      * múltiplo entero mayor) para que las barras se vean nítidas, sin blur
      * de reescalado. Devuelve null si los datos no se pueden codificar.
      */
+    /**
+     * Genera un Code 128 para [datos] con tamaño [ancho]x[alto] en píxeles.
+     * Usa IntArray + setPixels (UNA llamada JNI) en vez de setPixel por
+     * píxel (272k llamadas JNI para un carnet de 1080×252).
+     */
     fun code128(datos: String, ancho: Int, alto: Int): Bitmap? = try {
         val bits = MultiFormatWriter().encode(datos, BarcodeFormat.CODE_128, ancho, alto)
-        val bmp = Bitmap.createBitmap(ancho, alto, Bitmap.Config.ARGB_8888)
-        for (y in 0 until alto) {
-            for (x in 0 until ancho) {
-                bmp.setPixel(x, y, if (bits[x, y]) 0xFF000000.toInt() else 0xFFFFFFFF.toInt())
-            }
+        val negro = 0xFF000000.toInt()
+        val blanco = 0xFFFFFFFF.toInt()
+        val pixels = IntArray(ancho * alto) { i ->
+            val x = i % ancho
+            val y = i / ancho
+            if (bits[x, y]) negro else blanco
         }
-        bmp
+        Bitmap.createBitmap(pixels, ancho, alto, Bitmap.Config.ARGB_8888)
     } catch (e: Exception) {
         null
     }
