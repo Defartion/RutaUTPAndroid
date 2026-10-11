@@ -373,9 +373,13 @@ class MapaViewModel : ViewModel() {
                 val plan = TransitPlanner.plan(origen, destino, rutas) { a, b -> TransitPlanner.caminataReal(a, b) }
                 itinerario = plan
                 if (plan == null) {
+                    // Radio de busqueda del mapa: hasta 1600 m a pie en cada
+                    // extremo (radioBusquedaRuta del iOS).
                     mensajeRuta = L.t(
-                        "No encontramos una línea directa con paraderos a menos de 800 m de ambos extremos.",
-                        "No direct line found with stops within 800 m of both ends."
+                        "No encontramos una ruta directa ni con un transbordo con paraderos a menos de " +
+                            "${TransitPlanner.RADIO_PIE_METROS.toInt()} m de ambos extremos. Prueba otro destino.",
+                        "No direct or one-transfer route has stops within " +
+                            "${TransitPlanner.RADIO_PIE_METROS.toInt()} m of both ends. Try another destination."
                     )
                 } else {
                     enfocarItinerario(plan)
@@ -390,9 +394,7 @@ class MapaViewModel : ViewModel() {
     // itinerarioFocusTick de iOS, que ajusta el boundingRect del itinerario).
     private fun enfocarItinerario(plan: TransitPlanner.Plan) {
         val builder = LatLngBounds.builder()
-        plan.walkToBoard.forEach(builder::include)
-        plan.busDibujo.forEach(builder::include)
-        plan.walkToDestination.forEach(builder::include)
+        TransitPlanner.puntosCombinados(plan).forEach(builder::include)
         viewModelScope.launch {
             cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(builder.build(), 120))
         }

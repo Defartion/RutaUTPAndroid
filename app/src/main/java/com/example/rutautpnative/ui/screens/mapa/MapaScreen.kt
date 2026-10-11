@@ -63,6 +63,13 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlin.math.max
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -89,6 +96,114 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     var mostrarElegirDestino by remember { mutableStateOf(false) }
+
+    //----Flujo "¿Ya subiste? Confirma tu línea" (Fase 9)----
+    // Puerto del bloque de recordatorio del MapaView.swift iOS: pregunta
+    // automatica UNICA a los 30 s de fijar el itinerario, reintentada cada
+    // 2 s mientras haya hojas abiertas/drawer/marcador, y reprogramable a
+    // 120 s ("Recordarme en 2 minutos").
+    var mostrarConfirmacionAbordo by remember { mutableStateOf(false) }
+    var mostrarDetallesViaje by remember { mutableStateOf(false) }
+    var campoEnfocado by remember { mutableStateOf(false) }
+    var tareaPregunta by remember { mutableStateOf<Job?>(null) }
+    var fechaRecordatorio by remember { mutableStateOf<Long?>(null) }   // epoch ms
+    var planDelRecordatorio by remember { mutableStateOf<TransitPlanner.Plan?>(null) }
+
+    val rutaViaje by PassiveTrackingCoordinator.rutaViajeSeleccionada.collectAsState()
+    val viajeIniciadoEn by PassiveTrackingCoordinator.viajeIniciadoEn.collectAsState()
+    val viajeActivo = rutaViaje != null
+    var avisoViajeVisible by remember { mutableStateOf(false) }
+
+    fun cancelarPreguntaViaje() {
+        tareaPregunta?.cancel()
+        tareaPregunta = null
+        fechaRecordatorio = null
+        planDelRecordatorio = null
+        mostrarConfirmacionAbordo = false
+    }
+
+    fun iniciarEsperaPregunta(retardoMinimoS: Long = 0) {
+        tareaPregunta?.cancel()
+        val fecha = fechaRecordatorio ?: return
+        val plan = planDelRecordatorio
+        val esperaMs = max(retardoMinimoS * 1000, fecha - System.currentTimeMillis())
+        tareaPregunta = scope.launch {
+            delay(esperaMs)
+            while (isActive) {
+                // El recordatorio pertenece a ESA ruta: cambiarla o quitarla,
+                // recalcular o iniciar un viaje lo cancela (iOS idem).
+                if (plan !== vm.itinerario || vm.itinerario == null || vm.calculandoItinerario ||
+                    PassiveTrackingCoordinator.rutaViajeSeleccionada.value != null
+                ) {
+                    cancelarPreguntaViaje()
+                    return@launch
+                }
+                // Mantener el recordatorio pendiente sin interrumpir otras hojas.
+                val despejado = !showReportarSheet && !mostrarCambiosRuta && !mostrarElegirDestino &&
+                    !mostrarDrawer && vm.busSeleccionado == null && !campoEnfocado
+                if (despejado) {
+                    fechaRecordatorio = null
+                    mostrarConfirmacionAbordo = true
+                    return@launch
+                }
+                delay(2_000)
+            }
+        }
+    }
+
+    fun programarPreguntaViaje(enSegundos: Long) {
+        tareaPregunta?.cancel()
+        val plan = vm.itinerario
+        if (plan == null || PassiveTrackingCoordinator.rutaViajeSeleccionada.value != null) {
+            fechaRecordatorio = null
+            return
+        }
+        planDelRecordatorio = plan
+        fechaRecordatorio = System.currentTimeMillis() + enSegundos * 1000
+        iniciarEsperaPregunta()
+    }
+
+    // Pregunta automatica a los 30 s de fijar cada itinerario (iOS la ata al
+    // itinerarioFocusTick); recalcular o limpiar la ruta la cancela.
+    LaunchedEffect(vm.itinerario) {
+        if (vm.itinerario != null) programarPreguntaViaje(30) else cancelarPreguntaViaje()
+    }
+    LaunchedEffect(vm.calculandoItinerario) {
+        if (vm.calculandoItinerario) {
+            tareaPregunta?.cancel()
+            tareaPregunta = null
+        }
+    }
+    LaunchedEffect(rutaViaje) {
+        if (rutaViaje != null) {
+            cancelarPreguntaViaje()
+            vm.seleccionarBus(null)
+            // No repetir el aviso al volver al mapa durante un viaje existente.
+            avisoViajeVisible = System.currentTimeMillis() / 1000.0 - (viajeIniciadoEn ?: 0.0) < 6.0
+        } else {
+            avisoViajeVisible = false
+        }
+    }
+
+    // Segundo plano: el recordatorio se pausa; al volver, si vencio mientras
+    // la app no estaba activa, se da un momento (3 s) antes de preguntar.
+    val cicloVida = LocalLifecycleOwner.current
+    DisposableEffect(cicloVida) {
+        val observador = LifecycleEventObserver { _, evento ->
+            when (evento) {
+                Lifecycle.Event.ON_STOP -> {
+                    tareaPregunta?.cancel()
+                    tareaPregunta = null
+                }
+                Lifecycle.Event.ON_START -> {
+                    if (fechaRecordatorio != null) iniciarEsperaPregunta(3)
+                }
+                else -> {}
+            }
+        }
+        cicloVida.lifecycle.addObserver(observador)
+        onDispose { cicloVida.lifecycle.removeObserver(observador) }
+    }
 
     // Enciende el GPS en cuanto haya permiso (al concederlo o al entrar con
     // permiso ya dado). El conteo de consumidores apaga el hardware al salir.
@@ -154,9 +269,10 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             }
 
             // Buses animados sobre shapes GTFS REALES. Tope de 8 marcadores
-            // en el mapa por rendimiento; las cards del panel muestran TODAS
-            // las líneas (igual que iOS). Tocar uno abre su popup de detalle.
-            vm.busesAnimados.take(8).forEach { bus ->
+            // en el mapa por rendimiento; con viaje activo la flota se retira
+            // y manda el recorrido DECLARADO (TransitMapCanvas iOS idem).
+            val topeBuses = if (viajeActivo) 0 else 8
+            vm.busesAnimados.take(topeBuses).forEach { bus ->
                 val seleccionado = vm.busSeleccionado?.id == bus.id
                 MarkerComposable(
                     // IMPORTANTE (maps-compose): el contenido de un
@@ -186,8 +302,9 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                 }
             }
 
-            // Itinerario a pie + bus (Fase 3): caminatas punteadas y tramo en
-            // bus a DOBLE trazo (blanco grueso + color de la linea), como iOS.
+            // Itinerario a pie + bus (+ transbordo): caminatas punteadas y
+            // tramos en bus a DOBLE trazo (blanco grueso + color de la linea),
+            // como el TransitMapCanvas de iOS.
             val it = vm.itinerario
             if (it != null) {
                 val dens = LocalDensity.current
@@ -200,8 +317,16 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                 Polyline(points = it.walkToDestination, color = Secondary, width = anchoPie, pattern = patron)
                 Polyline(points = it.busDibujo, color = AppSurface, width = with(dens) { 8.dp.toPx() }, zIndex = 1f)
                 Polyline(points = it.busDibujo, color = it.ruta.color, width = with(dens) { 5.dp.toPx() }, zIndex = 2f)
+                it.transbordo?.let { t ->
+                    // Caminata de conexion + segundo micro con SU color.
+                    Polyline(points = t.caminata, color = Secondary, width = anchoPie, pattern = patron)
+                    Polyline(points = t.busDibujo, color = AppSurface, width = with(dens) { 8.dp.toPx() }, zIndex = 1f)
+                    Polyline(points = t.busDibujo, color = t.ruta.color, width = with(dens) { 5.dp.toPx() }, zIndex = 2f)
+                }
 
-                // Paradas del plan: 1 SUBE (azul) y 2 BAJA (fucsia), ancla abajo.
+                // Paradas del plan: 1 SUBE (azul); con transbordo ademas
+                // 2 BAJA (primer micro, naranja), 3 CAMBIA (color de la
+                // segunda linea) y 4 BAJA final (fucsia).
                 MarkerComposable(
                     state = MarkerState(it.board.coordinate),
                     anchor = Offset(0.5f, 1f),
@@ -209,12 +334,32 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                 ) {
                     MarcadorParada("1", L.t("SUBE", "BOARD"), Secondary)
                 }
+                it.transbordo?.let { t ->
+                    MarkerComposable(
+                        state = MarkerState(it.firstAlight.coordinate),
+                        anchor = Offset(0.5f, 1f),
+                        title = it.firstAlight.nombre
+                    ) {
+                        MarcadorParada("2", L.t("BAJA", "EXIT"), NaranjaAdvertencia)
+                    }
+                    MarkerComposable(
+                        state = MarkerState(t.board.coordinate),
+                        anchor = Offset(0.5f, 1f),
+                        title = t.board.nombre
+                    ) {
+                        MarcadorParada("3", L.t("CAMBIA", "CHANGE"), t.ruta.color)
+                    }
+                }
                 MarkerComposable(
                     state = MarkerState(it.alight.coordinate),
                     anchor = Offset(0.5f, 1f),
                     title = it.alight.nombre
                 ) {
-                    MarcadorParada("2", L.t("BAJA", "EXIT"), AppPrimary)
+                    MarcadorParada(
+                        if (it.transbordo == null) "2" else "4",
+                        L.t("BAJA", "EXIT"),
+                        AppPrimary
+                    )
                 }
             }
 
@@ -232,40 +377,94 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             }
 
             // Recorrido de ruta: pospuesto a propósito (ver TODO en MapaViewModel.kt).
+
+            // Viaje activo: el mapa dibuja el recorrido DECLARADO con doble
+            // trazo (blanco grueso + primario), como el TransitMapCanvas iOS.
+            rutaViaje?.let { rv ->
+                Polyline(points = rv.shape, color = AppSurface, width = 10f, zIndex = 3f)
+                Polyline(points = rv.shape, color = AppPrimary, width = 7f, zIndex = 4f)
+            }
         }
 
         // Ui Flotante
         Column(modifier = Modifier.fillMaxSize()) {
-            // Header
-            MapaHeader(onMenuClick = { mostrarDrawer = true })
+            if (!viajeActivo) {
+                // Header
+                MapaHeader(onMenuClick = { mostrarDrawer = true })
 
-            // CÃ¡psula de estado de la contribución (baliza del pasajero):
-            // visible solo si el usuario la activó en Ajustes (Fase 5).
-            val contribucionActiva by PassiveTrackingCoordinator.consentimiento.collectAsState()
-            if (contribucionActiva) {
-                EstadoContribucion(modifier = Modifier.padding(horizontal = 16.dp))
-            }
+                // CÃ¡psula de estado de la contribución (baliza del pasajero):
+                // visible solo si el usuario la activó en Ajustes (Fase 5).
+                val contribucionActiva by PassiveTrackingCoordinator.consentimiento.collectAsState()
+                if (contribucionActiva) {
+                    EstadoContribucion(modifier = Modifier.padding(horizontal = 16.dp))
+                }
 
-            // Search panel
-            SearchPanel(
-                vm = vm,
-                onSearch = { focusManager.clearFocus() },
-                onElegirEnMapa = { mostrarElegirDestino = true },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-            )
-
-            // Resumen del itinerario a pie + bus (Fase 3): pasos, precio y ETA.
-            vm.destinoSeleccionado?.let { destino ->
-                ResumenItinerario(
-                    destino = destino.label,
-                    calculando = vm.calculandoItinerario,
-                    itinerario = vm.itinerario,
-                    mensaje = vm.mensajeRuta,
-                    onQuitar = { vm.limpiar() },
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 8.dp)
+                // Search panel
+                SearchPanel(
+                    vm = vm,
+                    campoEnfocado = campoEnfocado,
+                    onEnfoqueCambio = { campoEnfocado = it },
+                    onSearch = { focusManager.clearFocus() },
+                    onElegirEnMapa = { mostrarElegirDestino = true },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                 )
+
+                // Resumen del itinerario a pie + bus (Fase 3): pasos, precio y
+                // ETA, con la invitacion "¿Ya subiste?" al pie (Fase 9).
+                vm.destinoSeleccionado?.let { destino ->
+                    ResumenItinerario(
+                        destino = destino.label,
+                        calculando = vm.calculandoItinerario,
+                        itinerario = vm.itinerario,
+                        mensaje = vm.mensajeRuta,
+                        onQuitar = { vm.limpiar() },
+                        onConfirmarAbordo = {
+                            cancelarPreguntaViaje()
+                            mostrarConfirmacionAbordo = true
+                        },
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 8.dp)
+                    )
+                }
+            } else {
+                //----Modo viaje (MapaViajeOverlay iOS): boton de menu propio
+                // y aviso "Viaje iniciado" o la tarjeta del viaje; deja libre
+                // el centro del mapa y esconde buscador y paneles.----
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .shadow(4.dp, CircleShape)
+                            .clip(CircleShape)
+                            .background(AppSurface)
+                            .clickable { mostrarDrawer = true },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Filled.Menu, L.t("Abrir menú", "Open menu"), tint = OnSurface, modifier = Modifier.size(20.dp))
+                    }
+                    val inicio = viajeIniciadoEn
+                    if (avisoViajeVisible && inicio != null) {
+                        AvisoViajeIniciado(
+                            destino = vm.destinoSeleccionado?.label,
+                            viajeIniciadoEn = inicio,
+                            onCerrar = { avisoViajeVisible = false },
+                            modifier = Modifier.weight(1f)
+                        )
+                    } else {
+                        TarjetaContribucionViaje(
+                            onAbrirDetalles = { mostrarDetallesViaje = true },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -275,7 +474,26 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             // - Sin permiso: gris, lo pide al tocar.
             // - Con permiso sin fix: primario, recentra al tocar (relanza GPS).
             // - Con posicion: primario, recentra la camara sobre el usuario.
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            // Con viaje activo comparte fila con REPORTAR (overlay del iOS).
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = if (viajeActivo) Arrangement.SpaceBetween else Arrangement.End
+            ) {
+                if (viajeActivo) {
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 20.dp)
+                            .clip(CircleShape)
+                            .background(AppPrimary)
+                            .clickable { showReportarSheet = true }
+                            .padding(horizontal = 16.dp, vertical = 9.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Icon(Icons.Filled.Warning, null, tint = Color.White, modifier = Modifier.size(14.dp))
+                            Text(L.t("REPORTAR", "REPORT"), style = LabelCapsMd, color = Color.White)
+                        }
+                    }
+                }
                 Box(
                     modifier = Modifier
                         .padding(end = 20.dp, bottom = 8.dp)
@@ -299,20 +517,24 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             }
 
             // Bottom panel
-            BottomPanel(
-                rutas = vm.rutasCercanas,
-                buses = vm.busesAnimados,
-                fuenteReal = vm.fuenteFlota == FuenteFlota.REAL,
-                onReportar = { showReportarSheet = true },
-                onSeleccionarBus = { vm.seleccionarBus(it) }
-            )
-            Spacer(modifier = Modifier.height(100.dp)) // espacio para BottomNavBar
+            if (!viajeActivo) {
+                BottomPanel(
+                    rutas = vm.rutasCercanas,
+                    buses = vm.busesAnimados,
+                    fuenteReal = vm.fuenteFlota == FuenteFlota.REAL,
+                    onReportar = { showReportarSheet = true },
+                    onSeleccionarBus = { vm.seleccionarBus(it) }
+                )
+                Spacer(modifier = Modifier.height(100.dp)) // espacio para BottomNavBar
+            } else {
+                Spacer(modifier = Modifier.height(28.dp))
+            }
         }
 
         // POPUP DETALLE DE BUS (encima del panel inferior, como el
-        // BusDetailPopup de iOS). Tocar el mapa o la X lo cierra.
+        // BusDetailPopup de iOS). Con viaje activo no aparece (iOS idem).
         AnimatedVisibility(
-            visible = vm.busSeleccionado != null,
+            visible = vm.busSeleccionado != null && !viajeActivo,
             enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
             exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
             modifier = Modifier
@@ -333,9 +555,12 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             }
         }
 
-        // Nav boton
-        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-            BottomNavBar(router)
+        // Nav boton: con viaje activo se retira (el mapa queda a pantalla
+        // completa con los controles del viaje, igual que el iOS).
+        if (!viajeActivo) {
+            Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+                BottomNavBar(router)
+            }
         }
 
         // del lado
@@ -380,6 +605,20 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             },
             onCerrar = { mostrarElegirDestino = false }
         )
+    }
+
+    //----"¿Ya subiste? Confirma tu línea" (Fase 9)----
+    if (mostrarConfirmacionAbordo) {
+        HojaConfirmacionAbordaje(
+            rutaSugeridaID = vm.itinerario?.ruta?.id,
+            onRecordarMasTarde = { programarPreguntaViaje(120) },
+            onCerrar = { mostrarConfirmacionAbordo = false }
+        )
+    }
+
+    //----Detalles del viaje activo: ocupacion, estado, cambio de linea----
+    if (mostrarDetallesViaje) {
+        HojaDetallesViaje(onCerrar = { mostrarDetallesViaje = false })
     }
 }
 
@@ -484,6 +723,8 @@ private fun MapaHeader(onMenuClick: () -> Unit) {    Column(
 @Composable
 private fun SearchPanel(
     vm: MapaViewModel,
+    campoEnfocado: Boolean,
+    onEnfoqueCambio: (Boolean) -> Unit,
     onSearch: () -> Unit,
     onElegirEnMapa: () -> Unit,
     modifier: Modifier = Modifier
@@ -491,7 +732,6 @@ private fun SearchPanel(
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     val modoSenias by SeniasPrefs.observarActivo().collectAsState(initial = false)
-    var campoEnfocado by remember { mutableStateOf(false) }
 
     Card(
         shape = RoundedCornerShape(14.dp),
@@ -530,7 +770,7 @@ private fun SearchPanel(
                     modifier = Modifier
                         .weight(1f)
                         .padding(0.dp)
-                        .onFocusChanged { campoEnfocado = it.isFocused },
+                        .onFocusChanged { onEnfoqueCambio(it.isFocused) },
                     textStyle = BodyMd.copy(color = OnSurface)
                 )
                 if (vm.textoBusqueda.isNotEmpty()) {
@@ -724,6 +964,7 @@ private fun ResumenItinerario(
     itinerario: TransitPlanner.Plan?,
     mensaje: String?,
     onQuitar: () -> Unit,
+    onConfirmarAbordo: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -780,6 +1021,36 @@ private fun ResumenItinerario(
                             "Take line ${plan.ruta.linea} · ${plan.ruta.precioTexto}"
                         )
                     )
+                    plan.transbordo?.let { t ->
+                        Spacer(Modifier.height(4.dp))
+                        Text(L.t("1 transbordo", "1 transfer"), style = BodySmMedium, color = OnSurface)
+                        PasoItinerario(
+                            icon = Icons.Filled.Flag,
+                            texto = L.t("Baja en ${plan.firstAlight.nombre}", "Get off at ${plan.firstAlight.nombre}")
+                        )
+                        PasoItinerario(
+                            icon = Icons.Filled.DirectionsWalk,
+                            texto = L.t(
+                                "Camina ${t.caminataMetros.roundToInt()} m · ${t.board.nombre}",
+                                "Walk ${t.caminataMetros.roundToInt()} m · ${t.board.nombre}"
+                            )
+                        )
+                        PasoItinerario(
+                            icon = Icons.Filled.SwapHoriz,
+                            color = t.ruta.color,
+                            texto = L.t(
+                                "Luego toma la línea ${t.ruta.linea} · ${t.ruta.precioTexto}",
+                                "Then take line ${t.ruta.linea} · ${t.ruta.precioTexto}"
+                            )
+                        )
+                        Text(
+                            L.t(
+                                "El tiempo incluye una espera estimada para el segundo micro.",
+                                "Time includes an estimated wait for the second bus."
+                            ),
+                            style = BodyXs, color = OnSurfaceVariant
+                        )
+                    }
                     PasoItinerario(
                         icon = Icons.Filled.Flag,
                         texto = L.t("Baja en ${plan.alight.nombre}", "Get off at ${plan.alight.nombre}")
@@ -814,6 +1085,14 @@ private fun ResumenItinerario(
                                 style = BodyXs, color = OnSurfaceVariant
                             )
                         }
+                    }
+
+                    // Invitacion permanente "¿Ya subiste?" (iOS: visible
+                    // mientras no haya viaje activo; abre la hoja y cancela
+                    // el recordatorio automatico).
+                    onConfirmarAbordo?.let { confirmar ->
+                        Spacer(Modifier.height(8.dp))
+                        TarjetaInvitacionAbordaje(onConfirmarAbordo = confirmar)
                     }
                 }
 
@@ -1064,6 +1343,7 @@ private fun BusOccupancyPanel(vehicleId: String) {
 
 private fun OccupancyService.EstadoOcupacion.etiqueta(): String = when (this) {
     OccupancyService.EstadoOcupacion.VACIO -> L.t("Vacío", "Empty")
+    OccupancyService.EstadoOcupacion.CON_ESPACIO -> L.t("Con espacio", "Room available")
     OccupancyService.EstadoOcupacion.LLENO -> L.t("Lleno", "Full")
 }
 

@@ -31,4 +31,11 @@ data class RutaGTFS(
 
     val frecuenciaTexto: String
         get() = if (headwayMin > 0) "cada $headwayMin min" else "—"
+
+    // Letra del transporte (la variante entre comillas del short name GTFS).
+    val letraTransporte: String get() = variante
+
+    /// "C-01 \"B\"" cuando hay variante; la línea sola si no (iOS idem).
+    val lineaConLetra: String
+        get() = if (variante.isEmpty()) linea else "$linea \"$variante\""
 }
