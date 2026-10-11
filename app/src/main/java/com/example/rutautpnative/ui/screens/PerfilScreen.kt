@@ -25,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.rutautpnative.data.gtfs.TransporteApp
 import com.example.rutautpnative.data.negocios.CuponesStore
 import com.example.rutautpnative.data.negocios.NegociosService
 import com.example.rutautpnative.data.senias.SeniasPrefs
@@ -38,6 +39,8 @@ import com.example.rutautpnative.ui.components.cuponVigente
 import com.example.rutautpnative.ui.components.formatoVenceCupon
 import com.example.rutautpnative.ui.components.iconoParaCategoria
 import com.example.rutautpnative.ui.theme.*
+import com.example.rutautpnative.ui.theme.TematicaEmpresa
+import com.example.rutautpnative.ui.theme.TematicaEmpresaStore
 import kotlinx.coroutines.launch
 
 @Composable
@@ -82,6 +85,20 @@ fun PerfilScreen(router: AppRouter) {
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
+            // Rol y degradado según la temática activa (PerfilView iOS):
+            // "ESTUDIANTE UTP" o "COLABORADOR · [EMPRESA]".
+            val empresa = TematicaEmpresaStore.seleccion
+            val rol = if (empresa == TematicaEmpresa.UTP)
+                L.t("ESTUDIANTE UTP", "UTP STUDENT")
+            else
+                L.t("COLABORADOR · ", "EMPLOYEE · ") + empresa.nombre.uppercase()
+            // Inkafarma: su gradiente termina en crema; se cierra en verde de
+            // marca para que la tinta blanca siga siendo legible (adaptación:
+            // el iOS resuelve la tinta por temática).
+            val gradienteHero = when (empresa) {
+                TematicaEmpresa.INKAFARMA -> Brush.linearGradient(listOf(AppPrimary, Color(0xFF0E5D2C)))
+                else -> Brush.linearGradient(listOf(AppPrimary, PrimaryContainer, PrimaryGradientEnd))
+            }
             // Hero gradient header: envuelve SOLO avatar + nombre + billetera
             // (wrapContentHeight, sin alto fijo). Como en iOS: termina ahí y todo
             // lo demás (Mis cupones, stats, preferencias) va afuera, sobre fondo normal.
@@ -89,9 +106,7 @@ fun PerfilScreen(router: AppRouter) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()
-                    .background(
-                        Brush.linearGradient(listOf(AppPrimary, PrimaryContainer, Tertiary))
-                    )
+                    .background(gradienteHero)
             ) {
                 // Decorative circles
                 Box(modifier = Modifier.size(220.dp).offset(x = 200.dp, y = (-70).dp).clip(CircleShape).background(Color.White.copy(alpha = 0.10f)))
@@ -124,9 +139,9 @@ fun PerfilScreen(router: AppRouter) {
                         Column {
                             Text(nombre, style = HeadlineLg, color = Color.White)
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Box(modifier = Modifier.clip(CircleShape).background(Color.White.copy(alpha = 0.20f)).padding(horizontal = 8.dp, vertical = 3.dp)) {
-                                    Text(L.t("ESTUDIANTE UTP", "UTP STUDENT"), style = LabelCapsSm, color = Color.White.copy(alpha = 0.95f))
-                                }
+                            Box(modifier = Modifier.clip(CircleShape).background(Color.White.copy(alpha = 0.20f)).padding(horizontal = 8.dp, vertical = 3.dp)) {
+                                Text(rol, style = LabelCapsSm, color = Color.White.copy(alpha = 0.95f))
+                            }
                                 if (carnetVerificado) {
                                     Box(modifier = Modifier.clip(CircleShape).background(Tertiary).padding(horizontal = 8.dp, vertical = 3.dp)) {
                                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -152,7 +167,12 @@ fun PerfilScreen(router: AppRouter) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         WalletCard(
                             icon = Icons.Filled.Badge,
-                            title = L.t("Carnet Universitario", "University ID"),
+                            // Título del carné según la empresa activa (iOS:
+                            // CarnetPerfil.foto.titulo(para:)).
+                            title = if (empresa == TematicaEmpresa.UTP)
+                                L.t("Carnet Universitario", "University ID")
+                            else
+                                L.t("Carnet de ${empresa.nombre}", "${empresa.nombre} ID"),
                             subtitle = if (carnetVerificado) L.t("Verificado", "Verified") else L.t("Escanear ahora", "Scan now"),
                             modifier = Modifier.weight(1f),
                             // Ya verificado: abre el carné directo; si no, primero el scanner.
@@ -223,6 +243,56 @@ fun PerfilScreen(router: AppRouter) {
                 }
             }
             Spacer(Modifier.height(16.dp))
+
+            //----Modo Buses UTP (ModoBusesUTPSection del iOS)----
+            // Solo si la temática y la referencia pertenecen a UTP.
+            if (TransporteApp.busesUTPDisponibles) {
+                Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    Text(L.t("TRANSPORTE", "TRANSPORT"), style = LabelCapsLg, color = OnSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp))
+                    val busesUTPActivos = TransporteApp.busesUTPActivos
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().padding(16.dp)
+                        ) {
+                            Icon(Icons.Filled.DirectionsBus, null, tint = Color(0xFFCC0000), modifier = Modifier.size(23.dp))
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(L.t("Buses de la UTP", "UTP buses"), style = BodyMdMedium, color = OnSurface)
+                                Text(
+                                    if (busesUTPActivos) L.t("Modo UTP activado", "UTP mode on")
+                                    else L.t("Usar transporte universitario", "Use university transport"),
+                                    style = BodySm, color = OnSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = busesUTPActivos,
+                                onCheckedChange = { activado ->
+                                    // Los viajes en curso terminan al cambiar de modo.
+                                    TransporteApp.establecerBusesUTP(activado)
+                                }
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        if (TransporteApp.rutasUTPPendientes) TransporteApp.mensajePendiente
+                        else L.t(
+                            "Al activarlo, el mapa y las rutas usarán los buses de la UTP. Al desactivarlo, volverás al transporte urbano.",
+                            "When enabled, the map and routes use UTP buses. When disabled, you return to city transport."
+                        ),
+                        style = BodySm, color = OnSurfaceVariant
+                    )
+                    Text(
+                        L.t("Los viajes en curso terminan al cambiar de modo.", "Current trips end when you switch modes."),
+                        style = BodySm, color = OnSurfaceVariant
+                    )
+                }
+                Spacer(Modifier.height(16.dp))
+            }
 
             // Settings
             Column(modifier = Modifier.padding(horizontal = 20.dp)) {

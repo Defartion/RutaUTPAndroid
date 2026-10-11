@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.RutaGTFS
+import com.example.rutautpnative.data.gtfs.TransporteApp
 import com.example.rutautpnative.navigation.DestinoPendiente
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -90,7 +91,13 @@ class RutasViewModel : ViewModel() {
 
     init {
         viewModelScope.launch {
-            _rutas.value = GTFSRepository.rutas()
+            // Modo Buses UTP: mientras el feed institucional no exista, la
+            // lista queda vacía y la pantalla muestra "rutas próximamente"
+            // (el repositorio del iOS conmuta a un catálogo igualmente vacío).
+            androidx.compose.runtime.snapshotFlow { TransporteApp.busesUTPActivos }
+                .collect {
+                    _rutas.value = if (TransporteApp.busesUTPActivos) emptyList() else GTFSRepository.rutas()
+                }
         }
     }
 }

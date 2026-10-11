@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.RutaGTFS
+import com.example.rutautpnative.data.gtfs.TransporteApp
 import com.example.rutautpnative.data.senias.SeniasOverlay
 import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.navigation.AppRouter
@@ -158,7 +159,10 @@ private fun ListaRutasScreen(
                 ) {
                     Icon(Icons.Filled.DirectionsBus, null, tint = AppPrimary, modifier = Modifier.size(26.dp))
                     Spacer(Modifier.width(10.dp))
-                    Text(L.t("Rutas", "Routes"), style = HeadlineLg, color = AppPrimary, modifier = Modifier.weight(1f))
+                    Text(
+                        if (TransporteApp.busesUTPActivos) L.t("Rutas UTP", "UTP routes") else L.t("Rutas", "Routes"),
+                        style = HeadlineLg, color = AppPrimary, modifier = Modifier.weight(1f)
+                    )
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
@@ -280,16 +284,17 @@ private fun ListaRutasScreen(
                         }
                     }
                 } else if (rutas.isEmpty()) {
-                    // Catálogo vacío total (borde teórico: asset empaquetado).
-                    // Igual que el resto del proyecto: nunca una pantalla en blanco
-                    // sin explicación, aunque el caso sea remoto.
+                    // Buses UTP sin feed institucional: el estado propio del
+                    // modo ("rutas próximamente", RutasView iOS) o el catálogo
+                    // urbano vacío (borde teórico del asset empaquetado).
                     item {
                         Box(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                L.t("No hay rutas disponibles", "No routes available"),
+                                if (TransporteApp.rutasUTPPendientes) TransporteApp.mensajePendiente
+                                else L.t("No hay rutas disponibles", "No routes available"),
                                 style = BodyMd,
                                 color = OnSurfaceVariant,
                                 textAlign = TextAlign.Center

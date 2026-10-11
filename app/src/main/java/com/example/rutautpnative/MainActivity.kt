@@ -7,9 +7,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.rutautpnative.data.LineasGuardadasStore
 import com.example.rutautpnative.data.LugaresStore
+import com.example.rutautpnative.data.SedeTrabajoStore
 import com.example.rutautpnative.data.SeguridadTilesStore
 import com.example.rutautpnative.data.TemaStore
 import com.example.rutautpnative.data.directions.DirectionsService
+import com.example.rutautpnative.data.gtfs.TransporteApp
 import com.example.rutautpnative.data.negocios.CuponesStore
 import com.example.rutautpnative.data.negocios.NegociosService
 import com.example.rutautpnative.data.places.PlacesService
@@ -24,6 +26,7 @@ import com.example.rutautpnative.data.ubicacion.LocationService
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.ui.theme.RutaUTPNativeTheme
+import com.example.rutautpnative.ui.theme.TematicaEmpresaStore
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,6 +38,14 @@ class MainActivity : ComponentActivity() {
         // frame de setContent ya vea el valor correcto (sin flash).
         L.init(this)
         TemaStore.init(this)
+        // Temáticas y sede ANTES de setContent: la paleta de la empresa
+        // guardada debe resolver el primer frame (sin flash de colores UTP),
+        // igual que el espejo sincrono del tema oscuro.
+        TematicaEmpresaStore.init(this)
+        com.example.rutautpnative.model.CatalogoSedesTrabajo.init(this)
+        SedeTrabajoStore.init(this)
+        TransporteApp.init(this)
+        com.example.rutautpnative.ui.theme.aplicarTemaOscuro(TemaStore.oscuroActual)
         Persistencia.migrarSiHaceFalta(this)
         GTFSRepository.init(this)
         LugaresStore.init(this)

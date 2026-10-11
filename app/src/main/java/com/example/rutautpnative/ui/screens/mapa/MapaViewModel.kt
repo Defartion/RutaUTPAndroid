@@ -13,6 +13,7 @@ import com.example.rutautpnative.data.directions.DirectionsService
 import com.example.rutautpnative.data.geo.PolylineMatching
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.RutaGTFS
+import com.example.rutautpnative.data.gtfs.TransporteApp
 import com.example.rutautpnative.data.places.PlacesService
 import com.example.rutautpnative.data.routing.TransitPlanner
 import com.example.rutautpnative.data.tracking.MQTTTrackingProvider
@@ -198,6 +199,36 @@ class MapaViewModel : ViewModel() {
     var rutasCercanas by mutableStateOf<List<RutaGTFS>>(emptyList())
         private set
 
+    //----Sede de trabajo / Buses UTP (puerto del bloque homónimo del iOS)----
+    // Referencia del mapa: campus UTP (con o sin buses UTP) o sede elegida.
+    var utpComoReferencia by mutableStateOf(TransporteApp.utpComoReferencia)
+        private set
+    var sedeTrabajo by mutableStateOf(TransporteApp.sedeVisible)
+        private set
+
+    /// Punto de referencia del mapa (coordenadaInicio del iOS).
+    val coordenadaInicio: LatLng
+        get() = if (utpComoReferencia) GTFSRepository.coordenadaUTP
+        else sedeTrabajo?.let { LatLng(it.lat, it.lon) } ?: userRealCoordinate ?: LatLng(-8.1090, -79.0270)
+
+    /// Refresca el marcador, la cámara y las líneas cercanas tras un cambio
+    /// de sede o de modo de transporte (actualizarSedeTrabajo del iOS).
+    fun actualizarSedeTrabajo() {
+        val nueva = TransporteApp.sedeVisible
+        val campus = TransporteApp.utpComoReferencia
+        if (sedeTrabajo?.id == nueva?.id && utpComoReferencia == campus) return
+        sedeTrabajo = nueva
+        utpComoReferencia = campus
+        viewModelScope.launch {
+            cameraPositionState.animate(
+                CameraUpdateFactory.newLatLngZoom(coordenadaInicio, 14f)
+            )
+        }
+        viewModelScope.launch {
+            actualizarRutasCercanas(coordenadaInicio)
+        }
+    }
+
     //----Itinerario a pie + bus (Fase 3)----
     // Puerto del bloque `itinerario` del MapaViewModel.swift de iOS: plan
     // puerta-a-puerta caminata -> bus GTFS -> caminata.
@@ -260,14 +291,15 @@ class MapaViewModel : ViewModel() {
         }
     }
 
-    // Al abrir el mapa (sin destino), muestra las líneas cercanas al campus UTP.
+    // Al abrir el mapa (sin destino), muestra las líneas cercanas a la
+    // referencia vigente: campus UTP o sede de trabajo.
     init {
         viewModelScope.launch {
             // La decision de fuente va ANTES de recargar lineas (mismo orden
             // que el iOS): si la real toma el control, el resultado simulado
             // no debe pisarla.
             iniciarFlotaRealSiConfigurada()
-            actualizarRutasCercanas(GTFSRepository.coordenadaUTP)
+            actualizarRutasCercanas(coordenadaInicio)
         }
     }
 
@@ -354,6 +386,12 @@ class MapaViewModel : ViewModel() {
 
     //----Calculo del itinerario (puerto de calcularRutaHacia, iOS)----
     fun calcularRutaHacia(destino: LatLng) {
+        // Modo Buses UTP sin feed institucional: mensaje propio, sin calculo.
+        if (TransporteApp.rutasUTPPendientes) {
+            itinerario = null
+            mensajeRuta = TransporteApp.mensajePendiente
+            return
+        }
         val origen = userRealCoordinate
         if (origen == null) {
             itinerario = null
@@ -445,12 +483,13 @@ class MapaViewModel : ViewModel() {
         itinerario = null
         mensajeRuta = null
         calculandoItinerario = false
+        // Sin destino: volver a la referencia vigente (campus o sede).
         viewModelScope.launch {
-            actualizarRutasCercanas(GTFSRepository.coordenadaUTP)
+            actualizarRutasCercanas(coordenadaInicio)
         }
         viewModelScope.launch {
             cameraPositionState.animate(
-                com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(GTFSRepository.coordenadaUTP, 14f)
+                com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(coordenadaInicio, 14f)
             )
         }
     }
@@ -459,6 +498,11 @@ class MapaViewModel : ViewModel() {
     // amplía a 800 m para evitar "sin rutas" cuando el punto quedó algo lejos
     // del recorrido real. La flota se reconstruye sobre esas lineas.
     private suspend fun actualizarRutasCercanas(punto: LatLng) {
+        // Buses UTP sin feed: sin líneas, sin flota ("Rutas próximamente").
+        if (TransporteApp.rutasUTPPendientes) {
+            rutasCercanas = emptyList()
+            return
+        }
         var rutas = GTFSRepository.rutasCercaDe(punto, 400.0)
         if (rutas.isEmpty()) {
             rutas = GTFSRepository.rutasCercaDe(punto, 800.0)

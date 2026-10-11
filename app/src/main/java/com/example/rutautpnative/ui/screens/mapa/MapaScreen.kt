@@ -25,8 +25,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.data.LugaresStore
+import com.example.rutautpnative.data.SedeTrabajoStore
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.RutaGTFS
+import com.example.rutautpnative.data.gtfs.TransporteApp
+import com.example.rutautpnative.model.SedeTrabajo
 import com.example.rutautpnative.data.geo.Geocodificacion
 import com.example.rutautpnative.data.routing.TransitPlanner
 import com.example.rutautpnative.data.senias.SeniasOverlay
@@ -84,12 +87,17 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
     val permisoUbicacion = rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
     val autorizadoGPS = permisoUbicacion.status.isGranted
 
-    // Chips de destino: fijos (UTP/Centro/Huanchaco, con seña) + lugares
-    // guardados del usuario (con coordenada), dedup por nombre y tope 6 —
-    // el refrescarDestinos del iOS. Reaccionan a cambios en Guardado.
+    // Chips de destino: sede (si es la referencia) + fijos + lugares guardados
+    // — el refrescarDestinos del iOS. Reaccionan a Guardado Y a la sede.
     val lugaresGuardados by LugaresStore.observar().collectAsState(initial = emptyList())
-    LaunchedEffect(lugaresGuardados) {
-        vm.destinos = chipsDesde(lugaresGuardados)
+    LaunchedEffect(lugaresGuardados, vm.sedeTrabajo) {
+        vm.destinos = chipsDesde(lugaresGuardados, vm.sedeTrabajo)
+    }
+
+    // Sede de trabajo / Buses UTP: al abrir y ante cualquier cambio de la
+    // sede, la temática o el modo, refresca marcador, cámara y líneas.
+    LaunchedEffect(SedeTrabajoStore.sede?.id, SedeTrabajoStore.utpComoReferencia, TransporteApp.busesUTPActivos) {
+        vm.actualizarSedeTrabajo()
     }
 
     // "Elegir en el mapa": picker a pantalla completa + geocodificación inversa.
@@ -249,12 +257,25 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             properties = MapProperties(isMyLocationEnabled = false),
             uiSettings = MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false)
         ) {
-            // Marcador UTP
-            MarkerComposable(
-                state = MarkerState(position = GTFSRepository.coordenadaUTP),
-                title = "UTP Trujillo"
-            ) {
-                MarcadorUTP()
+            // Marcador de referencia: campus UTP (con punto rojo si el modo
+            // Buses UTP está activo) o la sede de trabajo elegida.
+            if (vm.utpComoReferencia) {
+                MarkerComposable(
+                    state = MarkerState(position = GTFSRepository.coordenadaUTP),
+                    title = L.t("Campus UTP Trujillo", "UTP Trujillo campus")
+                ) {
+                    MarcadorUTP(busesUTP = TransporteApp.busesUTPActivos)
+                }
+            } else {
+                vm.sedeTrabajo?.let { sede ->
+                    MarkerComposable(
+                        state = MarkerState(position = LatLng(sede.lat, sede.lon)),
+                        anchor = Offset(0.5f, 1f),
+                        title = sede.nombre
+                    ) {
+                        MarcadorSedeTrabajo(sede)
+                    }
+                }
             }
 
             // Marcador usuario: GPS REAL (nulo hasta el primer fix; antes era
@@ -389,8 +410,11 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
         // Ui Flotante
         Column(modifier = Modifier.fillMaxSize()) {
             if (!viajeActivo) {
-                // Header
-                MapaHeader(onMenuClick = { mostrarDrawer = true })
+                // Header: "Mapa" o "Buses UTP" según el modo de transporte.
+                MapaHeader(
+                    onMenuClick = { mostrarDrawer = true },
+                    titulo = if (TransporteApp.busesUTPActivos) L.t("Buses UTP", "UTP buses") else null
+                )
 
                 // Cápsula de estado de la contribución (baliza del pasajero):
                 // visible solo si el usuario la activó en Ajustes (Fase 5).
@@ -522,6 +546,7 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                     rutas = vm.rutasCercanas,
                     buses = vm.busesAnimados,
                     fuenteReal = vm.fuenteFlota == FuenteFlota.REAL,
+                    utpPendiente = TransporteApp.rutasUTPPendientes,
                     onReportar = { showReportarSheet = true },
                     onSeleccionarBus = { vm.seleccionarBus(it) }
                 )
@@ -622,15 +647,19 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
     }
 }
 
-/// Chips de destino: fijos (UTP/Centro/Huanchaco, con clave de seña) + lugares
-/// guardados del usuario con coordenada, sin duplicar los fijos por nombre,
-/// tope 6 — el refrescarDestinos del iOS.
-private fun chipsDesde(lugares: List<LugarGuardado>): List<DestinoChip> {
-    val fijos = listOf(
-        DestinoChip(2, "UTP", Icons.Filled.School, GTFSRepository.coordenadaUTP.latitude, GTFSRepository.coordenadaUTP.longitude),
-        DestinoChip(4, L.t("Centro", "Downtown"), Icons.Filled.Business, -8.1090, -79.0270),
-        DestinoChip(5, "Huanchaco", Icons.Filled.BeachAccess, -8.0825, -79.1197)
-    )
+/// Chips de destino: sede de trabajo (si es la referencia) + fijos
+/// (UTP/Centro/Huanchaco, con clave de seña) + lugares guardados del usuario
+/// con coordenada, sin duplicar los fijos por nombre, tope 6 — el
+/// refrescarDestinos del iOS. Con sede activa el chip UTP se retira y la sede
+/// encabeza la fila.
+private fun chipsDesde(lugares: List<LugarGuardado>, sede: SedeTrabajo?): List<DestinoChip> {
+    val fijos = buildList {
+        if (sede == null) {
+            add(DestinoChip(2, "UTP", Icons.Filled.School, GTFSRepository.coordenadaUTP.latitude, GTFSRepository.coordenadaUTP.longitude))
+        }
+        add(DestinoChip(4, L.t("Centro", "Downtown"), Icons.Filled.Business, -8.1090, -79.0270))
+        add(DestinoChip(5, "Huanchaco", Icons.Filled.BeachAccess, -8.0825, -79.1197))
+    }
     val nombresFijos = fijos.map { it.label.lowercase() }.toSet()
     val deLugares = lugares
         .filter { it.nombre.lowercase() !in nombresFijos && it.lat != null && it.lon != null }
@@ -645,7 +674,11 @@ private fun chipsDesde(lugares: List<LugarGuardado>): List<DestinoChip> {
                 lon = lon
             )
         }
-    return (fijos + deLugares).take(6)
+    val chipSede = sede?.let {
+        DestinoChip(900, it.nombre, Icons.Filled.LocationCity, it.lat, it.lon)
+    }
+    val conSede = (if (chipSede != null) listOf(chipSede) else emptyList()) + fijos + deLugares
+    return conSede.take(6)
 }
 
 //----Cápsula de estado de la contribución (estadoContribucion del iOS)----
@@ -690,7 +723,7 @@ private fun EstadoContribucion(modifier: Modifier = Modifier) {
 
 // Header
 @Composable
-private fun MapaHeader(onMenuClick: () -> Unit) {    Column(
+private fun MapaHeader(onMenuClick: () -> Unit, titulo: String? = null) {    Column(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
@@ -714,7 +747,7 @@ private fun MapaHeader(onMenuClick: () -> Unit) {    Column(
                 Icon(Icons.Filled.Menu, L.t("Abrir menú", "Open menu"), tint = OnSurface, modifier = Modifier.size(22.dp))
             }
             Spacer(Modifier.width(12.dp))
-            Text(L.t("Mapa", "Map"), style = HeadlineLg, color = AppPrimary)
+            Text(titulo ?: L.t("Mapa", "Map"), style = HeadlineLg, color = AppPrimary)
         }
     }
 }
@@ -895,6 +928,7 @@ private fun BottomPanel(
     rutas: List<RutaGTFS>,
     buses: List<BusAnimado>,
     fuenteReal: Boolean,
+    utpPendiente: Boolean,
     onReportar: () -> Unit,
     onSeleccionarBus: (BusAnimado) -> Unit
 ) {
@@ -917,7 +951,11 @@ private fun BottomPanel(
             }
             Spacer(Modifier.width(12.dp))
             Text(
-                if (rutas.size == 1) L.t("1 línea operando ahora", "1 route operating now") else L.t("${rutas.size} líneas operando ahora", "${rutas.size} routes operating now"),
+                // Buses UTP sin feed institucional: el estado del modo, no un
+                // "0 líneas" engañoso (NearbyTransportPanel iOS: "Rutas
+                // próximamente").
+                if (utpPendiente) L.t("Rutas próximamente", "Routes coming soon")
+                else if (rutas.size == 1) L.t("1 línea operando ahora", "1 route operating now") else L.t("${rutas.size} líneas operando ahora", "${rutas.size} routes operating now"),
                 style = HeadlineBody,
                 color = OnSurface.copy(alpha = 0.85f),
                 modifier = Modifier.weight(1f)

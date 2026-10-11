@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.material.icons.filled.DirectionsWalk
+import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.School
@@ -254,17 +255,29 @@ fun PulsingUserMarker() {
     }
 }
 
-// Marcador de utp
+// Marcador de la referencia: campus UTP (punto rojo con el modo Buses UTP
+// activo, como el MarcadorCampusUTP del iOS) o sede de trabajo elegida.
 @Composable
-fun MarcadorUTP() {
+fun MarcadorUTP(busesUTP: Boolean = false) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(
-            modifier = Modifier
-                .clip(CircleShape)
-                .background(AppPrimary)
-                .padding(horizontal = 8.dp, vertical = 3.dp)
-        ) {
-            Text("UTP Trujillo", style = LabelCapsSm, color = Color.White)
+        Box {
+            Box(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(AppPrimary)
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
+            ) {
+                Text("UTP Trujillo", style = LabelCapsSm, color = Color.White)
+            }
+            if (busesUTP) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .align(Alignment.TopEnd)
+                        .clip(CircleShape)
+                        .background(Color(0xFFCC0000))
+                )
+            }
         }
         Spacer(Modifier.height(2.dp))
         Box(
@@ -275,6 +288,35 @@ fun MarcadorUTP() {
             contentAlignment = Alignment.Center
         ) {
             Icon(Icons.Filled.School, null, tint = Color.White, modifier = Modifier.size(18.dp))
+        }
+    }
+}
+
+// Marcador de la sede de trabajo (MarcadorSedeTrabajo del iOS): cápsula con
+// el nombre + disco del color de la marca de su empresa.
+@Composable
+fun MarcadorSedeTrabajo(sede: com.example.rutautpnative.model.SedeTrabajo) {
+    val colorMarca = com.example.rutautpnative.ui.theme.PaletasEmpresa.paleta(sede.tematica).colorMarca
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            modifier = Modifier
+                .shadow(2.dp, CircleShape)
+                .clip(CircleShape)
+                .background(colorMarca)
+                .padding(horizontal = 8.dp, vertical = 3.dp)
+        ) {
+            Text(sede.nombre, style = LabelCapsSm, color = Color.White, maxLines = 1)
+        }
+        Spacer(Modifier.height(2.dp))
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .shadow(3.dp, CircleShape)
+                .clip(CircleShape)
+                .background(colorMarca),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Filled.LocationCity, null, tint = Color.White, modifier = Modifier.size(18.dp))
         }
     }
 }

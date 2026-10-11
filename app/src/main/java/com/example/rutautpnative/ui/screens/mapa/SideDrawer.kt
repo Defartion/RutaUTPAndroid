@@ -259,6 +259,8 @@ private fun AjustesSheet(onDismiss: () -> Unit) {
     val contribuyendo by PassiveTrackingCoordinator.consentimiento.collectAsState()
     val mensajeContribucion by PassiveTrackingCoordinator.mensajeEstado.collectAsState()
     var mostrarDialogoConsentimiento by remember { mutableStateOf(false) }
+    //----Temática y sede de trabajo (puerto del AjustesSheet iOS)----
+    var mostrarTematicas by remember { mutableStateOf(false) }
 
     // Permisos juntos (ubicación + actividad física): la baliza necesita la
     // ubicación; la actividad degrada a "unknown" si se niega, no bloquea.
@@ -300,6 +302,11 @@ private fun AjustesSheet(onDismiss: () -> Unit) {
                     }
                 }
             }
+            Spacer(Modifier.height(24.dp))
+
+            //----Temática de empresa y sede de trabajo (SelectorTematicaEmpresa----
+            //----+ SelectorSedeTrabajo del AjustesSheet iOS)                 ----
+            SelectorSedeTrabajo(onAbrir = { mostrarTematicas = true })
             Spacer(Modifier.height(24.dp))
 
             //----Contribución: "Ayudar con ubicaciones"----
@@ -393,6 +400,10 @@ private fun AjustesSheet(onDismiss: () -> Unit) {
             }
             Spacer(Modifier.height(24.dp))
         }
+    }
+
+    if (mostrarTematicas) {
+        SelectorTematicasSheet(onCerrar = { mostrarTematicas = false })
     }
 
     if (mostrarDialogoConsentimiento) {
