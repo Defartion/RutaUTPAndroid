@@ -1,4 +1,4 @@
-﻿package com.example.rutautpnative.ui.screens
+package com.example.rutautpnative.ui.screens
 
 import android.Manifest
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -164,7 +164,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
         }
     }
 
-    // Al seleccionar un paradero: mueve carrusel+ cÃ¡mara y calcula la caminata.
+    // Al seleccionar un paradero: mueve carrusel+ cámara y calcula la caminata.
     LaunchedEffect(selectedId) {
         val id = selectedId ?: return@LaunchedEffect
         val paradero = paraderosVisibles.firstOrNull { p -> p.id == id } ?: return@LaunchedEffect
@@ -213,7 +213,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
 
     LaunchedEffect(pagerState, paraderosVisibles) {
         snapshotFlow { pagerState.settledPage }
-            .drop(1) // ignora la pÃ¡gina inicial para no auto-seleccionar al abrir
+            .drop(1) // ignora la página inicial para no auto-seleccionar al abrir
             .collect { page ->
                 paraderosVisibles.getOrNull(page)?.let { p ->
                     if (p.id != selectedId) selectedId = p.id
@@ -306,7 +306,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
                 Spacer(Modifier.width(10.dp))
                 Column {
                     Text(L.t("Explora paraderos", "Explore bus stops"), style = HeadlineBody, color = OnSurface)
-                    Text(L.t("Tu próxima parada, mÃ¡s cerca", "Your next stop, closer"), style = BodySm, color = OnSurfaceVariant)
+                    Text(L.t("Tu próxima parada, más cerca", "Your next stop, closer"), style = BodySm, color = OnSurfaceVariant)
                 }
                 Spacer(Modifier.weight(1f))
                 Box(

@@ -1,4 +1,4 @@
-﻿package com.example.rutautpnative.ui.screens
+package com.example.rutautpnative.ui.screens
 
 import android.Manifest
 import android.content.Intent
@@ -346,7 +346,7 @@ fun NavegacionScreen(ruta: RutaGTFS, onFinish: () -> Unit) {
         ) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    if (vm.demoActivo) L.t("SIMULACIÃ“N", "SIMULATION") else L.t("TU VIAJE", "YOUR TRIP"),
+                    if (vm.demoActivo) L.t("SIMULACIÓN", "SIMULATION") else L.t("TU VIAJE", "YOUR TRIP"),
                     style = LabelCapsMd, color = PanelOscuroTextoVariante
                 )
                 Text(
@@ -394,15 +394,15 @@ fun NavegacionScreen(ruta: RutaGTFS, onFinish: () -> Unit) {
                 EstadoNav.SIN_PERMISO -> Quad(Icons.Filled.LocationOff, RojoPeligro,
                     L.t("Se necesita permiso de ubicación", "Location permission needed"), "")
                 EstadoNav.ESPERANDO_GPS -> Quad(Icons.Filled.Schedule, PanelOscuroTextoVariante,
-                    L.t("Esperando GPSâ€¦", "Waiting for GPSâ€¦"),
+                    L.t("Esperando GPS…", "Waiting for GPS…"),
                     L.t("Muévete al aire libre para mejorar la señal.", "Move outdoors for a better signal."))
                 EstadoNav.EN_RUTA -> Quad(Icons.Filled.NearMe, VerdeExito,
-                    L.t("EstÃ¡s en la ruta", "You're on the route"), subtituloProximo(vm))
+                    L.t("Estás en la ruta", "You're on the route"), subtituloProximo(vm))
                 EstadoNav.FUERA_RUTA -> Quad(Icons.Filled.LocationOff, NaranjaAdvertencia,
                     L.t("Fuera de la ruta", "Off the route"),
-                    L.t("EstÃ¡s a ${vm.metrosFuera.toInt()} m del recorrido. Acércate para continuar.", "You're ${vm.metrosFuera.toInt()} m from the route. Get closer to continue."))
+                    L.t("Estás a ${vm.metrosFuera.toInt()} m del recorrido. Acércate para continuar.", "You're ${vm.metrosFuera.toInt()} m from the route. Get closer to continue."))
                 EstadoNav.CERCA_DESTINO -> Quad(Icons.Filled.DepartureBoard, VerdeExito,
-                    L.t("EstÃ¡s cerca de tu destino", "You're close to your destination"), subtituloProximo(vm))
+                    L.t("Estás cerca de tu destino", "You're close to your destination"), subtituloProximo(vm))
                 EstadoNav.FINALIZADO -> Quad(Icons.Filled.CheckCircle, VerdeExito,
                     L.t("Fin del recorrido", "End of the route"), "")
             }

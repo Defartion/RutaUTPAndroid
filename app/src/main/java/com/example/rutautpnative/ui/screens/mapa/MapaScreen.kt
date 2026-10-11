@@ -1,4 +1,4 @@
-﻿package com.example.rutautpnative.ui.screens.mapa
+package com.example.rutautpnative.ui.screens.mapa
 
 import com.google.maps.android.compose.MarkerState
 import androidx.compose.animation.*
@@ -85,7 +85,7 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
     val autorizadoGPS = permisoUbicacion.status.isGranted
 
     // Chips de destino: fijos (UTP/Centro/Huanchaco, con seña) + lugares
-    // guardados del usuario (con coordenada), dedup por nombre y tope 6 â€”
+    // guardados del usuario (con coordenada), dedup por nombre y tope 6 —
     // el refrescarDestinos del iOS. Reaccionan a cambios en Guardado.
     val lugaresGuardados by LugaresStore.observar().collectAsState(initial = emptyList())
     LaunchedEffect(lugaresGuardados) {
@@ -392,7 +392,7 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                 // Header
                 MapaHeader(onMenuClick = { mostrarDrawer = true })
 
-                // CÃ¡psula de estado de la contribución (baliza del pasajero):
+                // Cápsula de estado de la contribución (baliza del pasajero):
                 // visible solo si el usuario la activó en Ajustes (Fase 5).
                 val contribucionActiva by PassiveTrackingCoordinator.consentimiento.collectAsState()
                 if (contribucionActiva) {
@@ -624,7 +624,7 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
 
 /// Chips de destino: fijos (UTP/Centro/Huanchaco, con clave de seña) + lugares
 /// guardados del usuario con coordenada, sin duplicar los fijos por nombre,
-/// tope 6 â€” el refrescarDestinos del iOS.
+/// tope 6 — el refrescarDestinos del iOS.
 private fun chipsDesde(lugares: List<LugarGuardado>): List<DestinoChip> {
     val fijos = listOf(
         DestinoChip(2, "UTP", Icons.Filled.School, GTFSRepository.coordenadaUTP.latitude, GTFSRepository.coordenadaUTP.longitude),
@@ -648,7 +648,7 @@ private fun chipsDesde(lugares: List<LugarGuardado>): List<DestinoChip> {
     return (fijos + deLugares).take(6)
 }
 
-//----CÃ¡psula de estado de la contribución (estadoContribucion del iOS)----
+//----Cápsula de estado de la contribución (estadoContribucion del iOS)----
 @Composable
 private fun EstadoContribucion(modifier: Modifier = Modifier) {
     val estadoPublicador by PassiveTrackingCoordinator.estadoPublicador.collectAsState()
@@ -658,7 +658,7 @@ private fun EstadoContribucion(modifier: Modifier = Modifier) {
         MQTTObservationPublisher.EstadoPublicador.CONECTADO ->
             VerdeExito to L.t("Conectado", "Connected")
         MQTTObservationPublisher.EstadoPublicador.CONECTANDO ->
-            NaranjaAdvertencia to L.t("Conectandoâ€¦", "Connectingâ€¦")
+            NaranjaAdvertencia to L.t("Conectando…", "Connecting…")
         MQTTObservationPublisher.EstadoPublicador.FALLO ->
             AppError to L.t("Sin conexión", "Offline")
         MQTTObservationPublisher.EstadoPublicador.INACTIVO ->
@@ -797,7 +797,7 @@ private fun SearchPanel(
                 }
             }
 
-            // Sugerencias de autocompletado (Places, hasta 5 â€” como el
+            // Sugerencias de autocompletado (Places, hasta 5 — como el
             // MKLocalSearchCompleter del iOS). Solo con el campo enfocado.
             if (campoEnfocado && (vm.sugerencias.isNotEmpty() || vm.buscandoSugerencias)) {
                 Spacer(Modifier.height(8.dp))
@@ -808,7 +808,7 @@ private fun SearchPanel(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = AppPrimary)
-                        Text(L.t("Buscando lugaresâ€¦", "Searching placesâ€¦"), style = BodySm, color = OnSurfaceVariant)
+                        Text(L.t("Buscando lugares…", "Searching places…"), style = BodySm, color = OnSurfaceVariant)
                     }
                 }
                 vm.sugerencias.take(5).forEach { s ->
@@ -998,7 +998,7 @@ private fun ResumenItinerario(
                         color = AppPrimary
                     )
                     Text(
-                        L.t("Buscando paradero y transporteâ€¦", "Finding stop and routeâ€¦"),
+                        L.t("Buscando paradero y transporte…", "Finding stop and route…"),
                         style = BodySm, color = OnSurfaceVariant
                     )
                 }
@@ -1070,7 +1070,7 @@ private fun ResumenItinerario(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(L.t("··· A pie", "··· Walking"), style = BodyXs, color = OnSurfaceVariant)
-                        Text(L.t("â”â” En bus", "â”â” By bus"), style = BodyXs, color = plan.ruta.color)
+                        Text(L.t("━━ En bus", "━━ By bus"), style = BodyXs, color = plan.ruta.color)
                         Text("· ~${plan.etaMinutos} min", style = BodyXs, color = OnSurface)
                     }
                     if (plan.caminataAproximada) {
@@ -1132,7 +1132,7 @@ private fun BusDetailPopup(
             .padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Ãcono circular con el color de la línea (fondo tintado al 18%).
+            // Ícono circular con el color de la línea (fondo tintado al 18%).
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -1145,9 +1145,9 @@ private fun BusDetailPopup(
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(L.t("LÃNEA", "ROUTE") + " ${bus.linea}", style = HeadlineXs, color = OnSurface)
+                    Text(L.t("LÍNEA", "ROUTE") + " ${bus.linea}", style = HeadlineXs, color = OnSurface)
                     Spacer(Modifier.width(8.dp))
-                    // CÃ¡psula de llegada con el color de la línea.
+                    // Cápsula de llegada con el color de la línea.
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
@@ -1158,11 +1158,11 @@ private fun BusDetailPopup(
                     }
                 }
                 Text(
-                    "${bus.empresa} â€¢ ${bus.tipo} (${bus.ramalTexto})",
+                    "${bus.empresa} • ${bus.tipo} (${bus.ramalTexto})",
                     style = BodySm, color = OnSurfaceVariant, maxLines = 1
                 )
                 // Solo para vehiculos REALES: aclarar que la llegada es una
-                // estimacion (o por que no hay) â€” texto del BusDetailPopup iOS.
+                // estimacion (o por que no hay) — texto del BusDetailPopup iOS.
                 if (bus.fuente == FuenteFlota.REAL) {
                     Text(
                         if (bus.minutosLlegada == null)
@@ -1172,7 +1172,7 @@ private fun BusDetailPopup(
                             )
                         else
                             L.t(
-                                "Llegada aproximada al punto consultado de la ruta. Puede variar por trÃ¡fico y paradas.",
+                                "Llegada aproximada al punto consultado de la ruta. Puede variar por tráfico y paradas.",
                                 "Estimated arrival to the point on the route. May vary with traffic and stops."
                             ),
                         style = BodyXs, color = OnSurfaceVariant, maxLines = 2
@@ -1194,7 +1194,7 @@ private fun BusDetailPopup(
             Spacer(Modifier.height(8.dp))
             Text(
                 L.t(
-                    "La ocupación estarÃ¡ disponible en los buses en vivo. Los buses de demostración no reciben reportes.",
+                    "La ocupación estará disponible en los buses en vivo. Los buses de demostración no reciben reportes.",
                     "Occupancy will be available on live buses. Demo buses don't receive reports."
                 ),
                 style = BodyXs, color = OnSurfaceVariant
@@ -1296,10 +1296,10 @@ private fun BusOccupancyPanel(vehicleId: String) {
         Spacer(Modifier.height(8.dp))
         Text(
             when {
-                enviando -> L.t("Esperando confirmaciónâ€¦", "Waiting for confirmationâ€¦")
+                enviando -> L.t("Esperando confirmación…", "Waiting for confirmation…")
                 resultado != null -> resultado ?: ""
                 listo -> L.t(
-                    "Reporta solo si estÃ¡s a bordo: se necesitan dos cuentas que coincidan; los reportes duran 3 minutos.",
+                    "Reporta solo si estás a bordo: se necesitan dos cuentas que coincidan; los reportes duran 3 minutos.",
                     "Report only if you're onboard: two matching accounts are needed; reports last 3 minutes."
                 )
                 else -> L.t(
@@ -1319,7 +1319,7 @@ private fun BusOccupancyPanel(vehicleId: String) {
             text = {
                 Text(
                     L.t(
-                        "¿EstÃ¡s en este bus y confirmas que estÃ¡ ${estado.etiqueta().lowercase()}?",
+                        "¿Estás en este bus y confirmas que está ${estado.etiqueta().lowercase()}?",
                         "Are you on this bus and do you confirm it's ${estado.etiqueta().lowercase()}?"
                     )
                 )
@@ -1348,7 +1348,7 @@ private fun OccupancyService.EstadoOcupacion.etiqueta(): String = when (this) {
 }
 
 // Card de línea del panel inferior (puerto del BusCard de iOS): línea,
-// empresa, cÃ¡psula de llegada y "tipo â€¢ ramal". Tap â†’ popup del bus.
+// empresa, cápsula de llegada y "tipo • ramal". Tap â†’ popup del bus.
 @Composable
 private fun BusCard(bus: BusAnimado, onClick: () -> Unit) {
     Card(
@@ -1359,7 +1359,7 @@ private fun BusCard(bus: BusAnimado, onClick: () -> Unit) {
     ) {
         Box {
             Column(modifier = Modifier.padding(14.dp)) {
-                Text(L.t("LÃNEA", "ROUTE") + " ${bus.linea}", style = LabelCapsMd, color = OnSurfaceVariant)
+                Text(L.t("LÍNEA", "ROUTE") + " ${bus.linea}", style = LabelCapsMd, color = OnSurfaceVariant)
                 Text(bus.empresa, style = HeadlineSm, color = OnSurface, maxLines = 1)
                 Spacer(Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1372,7 +1372,7 @@ private fun BusCard(bus: BusAnimado, onClick: () -> Unit) {
                         Text(bus.etiquetaLlegada, style = LabelCapsSm, color = Color.White)
                     }
                     Text(
-                        "${bus.tipo} â€¢ ${bus.ramalTexto}",
+                        "${bus.tipo} • ${bus.ramalTexto}",
                         style = BodySm, color = OnSurfaceVariant, maxLines = 1
                     )
                 }
