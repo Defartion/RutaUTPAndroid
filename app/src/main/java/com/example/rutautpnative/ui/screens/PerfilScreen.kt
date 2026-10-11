@@ -26,8 +26,13 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.rutautpnative.data.gtfs.TransporteApp
+import com.example.rutautpnative.data.imagenes.CarnetImageStore
+import com.example.rutautpnative.data.imagenes.ProfileImageStore
 import com.example.rutautpnative.data.negocios.CuponesStore
 import com.example.rutautpnative.data.negocios.NegociosService
+import com.example.rutautpnative.data.PreferenciasPerfilStore
+import com.example.rutautpnative.data.CarnetPerfil
+import com.example.rutautpnative.data.PreferenciasVisualesPerfilStore
 import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.model.CategoriaNegocio
 import com.example.rutautpnative.model.Negocio
@@ -45,22 +50,37 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun PerfilScreen(router: AppRouter) {
+    val contextoLocal = androidx.compose.ui.platform.LocalContext.current
     var nombre by remember { mutableStateOf("Joaquín Díaz") }
-    var notifOn by remember { mutableStateOf(true) }
-    var ubicacionOn by remember { mutableStateOf(true) }
+    // Notificaciones y compartir ubicación: persistidas (PreferenciasPerfilStore).
+    val notifOn = PreferenciasPerfilStore.notificaciones
+    val ubicacionOn = PreferenciasPerfilStore.compartirUbicacion
+    var popupCompartirUbicacion by remember { mutableStateOf(false) }
     var ecoOff by remember { mutableStateOf(false) }
     // Modo Señas: ESTA preferencia SÍ persiste en disco (DataStore), a diferencia
     // de las demás de arriba, porque la leen todas las pantallas de la app.
     val modoSenias by SeniasPrefs.observarActivo().collectAsState(initial = false)
     // Idioma: la otra preferencia persistida de Perfil (ES por defecto, EN opcional).
     val esIngles = L.esIngles
-    var carnetVerificado by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var newNameInput by remember { mutableStateOf("") }
     var showCarnetScanner by remember { mutableStateOf(false) }
     var showCarneDigital by remember { mutableStateOf(false) }
-    // Foto del carné: estado de sesión (no persiste), compartido con el avatar.
-    var fotoPerfil by remember { mutableStateOf<Bitmap?>(null) }
+    // Hojas nuevas (Fase de perfil completo): datos personales, offline y
+    // ayuda de accesibilidad.
+    var showDatosPersonales by remember { mutableStateOf(false) }
+    var showOffline by remember { mutableStateOf(false) }
+    var showAccesibilidad by remember { mutableStateOf(false) }
+    // Foto de perfil PERSISTIDA (ProfileImageStore): fuente única compartida
+    // con el drawer, Datos Personales y el carné digital.
+    val fotoPerfil by androidx.compose.runtime.produceState<Bitmap?>(initialValue = null, ProfileImageStore.revision) {
+        value = ProfileImageStore.cargar(contextoLocal)
+    }
+    // Carné guardado: hay foto del carné para la EMPRESA activa (CarnetImageStore).
+    val empresa = TematicaEmpresaStore.seleccion
+    val carnetGuardado by androidx.compose.runtime.produceState(initialValue = false, CarnetImageStore.revision, empresa.id) {
+        value = CarnetImageStore.existe(contextoLocal, empresa.id)
+    }
     // Negocio cuyo detalle se ve desde un cupón ("Ver promoción").
     var negocioDetalle by remember { mutableStateOf<Negocio?>(null) }
     // Sheets del monedero (Fase 11) y de tarjetas.
@@ -87,7 +107,6 @@ fun PerfilScreen(router: AppRouter) {
         ) {
             // Rol y degradado según la temática activa (PerfilView iOS):
             // "ESTUDIANTE UTP" o "COLABORADOR · [EMPRESA]".
-            val empresa = TematicaEmpresaStore.seleccion
             val rol = if (empresa == TematicaEmpresa.UTP)
                 L.t("ESTUDIANTE UTP", "UTP STUDENT")
             else
@@ -142,14 +161,16 @@ fun PerfilScreen(router: AppRouter) {
                             Box(modifier = Modifier.clip(CircleShape).background(Color.White.copy(alpha = 0.20f)).padding(horizontal = 8.dp, vertical = 3.dp)) {
                                 Text(rol, style = LabelCapsSm, color = Color.White.copy(alpha = 0.95f))
                             }
-                                if (carnetVerificado) {
-                                    Box(modifier = Modifier.clip(CircleShape).background(Tertiary).padding(horizontal = 8.dp, vertical = 3.dp)) {
-                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                                            Icon(Icons.Filled.Verified, null, tint = Color.White, modifier = Modifier.size(10.dp))
-                                            Text(L.t("VERIFICADO", "VERIFIED"), style = LabelCapsSm, color = Color.White)
-                                        }
+                            // "CARNÉ GUARDADO": hay foto del carné para la
+                            // empresa activa y la tarjeta física es visible.
+                            if (PreferenciasVisualesPerfilStore.visible(CarnetPerfil.FOTO, empresa) && carnetGuardado) {
+                                Box(modifier = Modifier.clip(CircleShape).background(Tertiary).padding(horizontal = 8.dp, vertical = 3.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                                        Icon(Icons.Filled.Verified, null, tint = Color.White, modifier = Modifier.size(10.dp))
+                                        Text(L.t("CARNÉ GUARDADO", "CARD SAVED"), style = LabelCapsSm, color = Color.White)
                                     }
                                 }
+                            }
                             }
                         }
                     }
@@ -164,30 +185,37 @@ fun PerfilScreen(router: AppRouter) {
                         onPagarQR = { showQRPasaje = true }
                     )
                     Spacer(Modifier.height(12.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        WalletCard(
-                            icon = Icons.Filled.Badge,
-                            // Título del carné según la empresa activa (iOS:
-                            // CarnetPerfil.foto.titulo(para:)).
-                            title = if (empresa == TematicaEmpresa.UTP)
-                                L.t("Carnet Universitario", "University ID")
-                            else
-                                L.t("Carnet de ${empresa.nombre}", "${empresa.nombre} ID"),
-                            subtitle = if (carnetVerificado) L.t("Verificado", "Verified") else L.t("Escanear ahora", "Scan now"),
-                            modifier = Modifier.weight(1f),
-                            // Ya verificado: abre el carné directo; si no, primero el scanner.
-                            onClick = {
-                                if (carnetVerificado) showCarneDigital = true
-                                else showCarnetScanner = true
+                    // Tarjetas del carné segun las preferencias visuales de la
+                    // empresa activa (PerfilPreferenciasVisuales iOS): ocultar
+                    // una tarjeta NUNCA borra su foto.
+                    val mostrarCarnetFoto = PreferenciasVisualesPerfilStore.visible(CarnetPerfil.FOTO, empresa)
+                    val mostrarCarnetDigital = PreferenciasVisualesPerfilStore.visible(CarnetPerfil.DIGITAL, empresa)
+                    if (mostrarCarnetFoto || mostrarCarnetDigital) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            if (mostrarCarnetFoto) {
+                                WalletCard(
+                                    icon = Icons.Filled.Badge,
+                                    title = CarnetPerfil.FOTO.titulo(empresa),
+                                    subtitle = if (carnetGuardado) L.t("Ver foto guardada", "View saved photo") else L.t("Añadir foto", "Add photo"),
+                                    modifier = Modifier.weight(1f),
+                                    // Con foto guardada abre el carné directo; si no,
+                                    // primero el scanner.
+                                    onClick = {
+                                        if (carnetGuardado) showCarneDigital = true
+                                        else showCarnetScanner = true
+                                    }
+                                )
                             }
-                        )
-                        WalletCard(
-                            icon = Icons.Filled.School,
-                            title = L.t("Carné Digital", "Digital ID"),
-                            subtitle = L.t("Muestra · sin validez", "Display · not valid"),
-                            modifier = Modifier.weight(1f),
-                            onClick = { showCarneDigital = true }
-                        )
+                            if (mostrarCarnetDigital) {
+                                WalletCard(
+                                    icon = Icons.Filled.School,
+                                    title = CarnetPerfil.DIGITAL.titulo(empresa),
+                                    subtitle = L.t("Muestra · sin validez", "Display · not valid"),
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { showCarneDigital = true }
+                                )
+                            }
+                        }
                     }
                     Spacer(Modifier.height(12.dp))
                     // "Mis tarjetas": referencias locales (badge LOCAL, borde
@@ -241,6 +269,44 @@ fun PerfilScreen(router: AppRouter) {
                     Box(modifier = Modifier.width(1.dp).height(36.dp).background(OutlineVariant.copy(alpha = 0.5f)).align(Alignment.CenterVertically))
                     StatColumn("3", L.t("LOGROS", "TROPHIES"), Modifier.weight(1f))
                 }
+            }
+            Spacer(Modifier.height(16.dp))
+
+            //----Preferencias visuales (PerfilPreferenciasVisuales iOS)----
+            // Qué tarjetas de carné aparecen en la billetera de la empresa
+            // activa; se recuerda por empresa y ocultar no borra las fotos.
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Text(L.t("Preferencias visuales", "Visual preferences"), style = LabelCapsLg, color = OnSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp))
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest)
+                ) {
+                    Column {
+                        ToggleRow(
+                            Icons.Filled.Badge, AppPrimary,
+                            L.t("Mostrar ", "Show ") + CarnetPerfil.FOTO.titulo(empresa),
+                            PreferenciasVisualesPerfilStore.visible(CarnetPerfil.FOTO, empresa)
+                        ) { activo ->
+                            PreferenciasVisualesPerfilStore.establecer(activo, CarnetPerfil.FOTO, empresa)
+                        }
+                        Divider(modifier = Modifier.padding(start = 56.dp))
+                        ToggleRow(
+                            Icons.Filled.School, Tertiary,
+                            L.t("Mostrar ", "Show ") + CarnetPerfil.DIGITAL.titulo(empresa),
+                            PreferenciasVisualesPerfilStore.visible(CarnetPerfil.DIGITAL, empresa)
+                        ) { activo ->
+                            PreferenciasVisualesPerfilStore.establecer(activo, CarnetPerfil.DIGITAL, empresa)
+                        }
+                    }
+                }
+                Text(
+                    L.t(
+                        "Elige los carnets que aparecen en tu billetera de ${empresa.nombre}. Se recuerda para cada empresa; ocultarlos conserva tus fotos.",
+                        "Choose the cards shown in your ${empresa.nombre} wallet. Choices are remembered for each company; hiding cards keeps your photos."
+                    ),
+                    style = BodyXs, color = OnSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp)
+                )
             }
             Spacer(Modifier.height(16.dp))
 
@@ -302,9 +368,17 @@ fun PerfilScreen(router: AppRouter) {
                     colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest)
                 ) {
                     Column {
-                        ToggleRow(Icons.Filled.Notifications, AppPrimary, L.t("Notificaciones", "Notifications"), notifOn) { notifOn = it }
+                        // Persistidas (PreferenciasPerfilStore): sobreviven al
+                        // reinicio, igual que notificaciones/compartir del iOS.
+                        ToggleRow(Icons.Filled.Notifications, AppPrimary, L.t("Notificaciones", "Notifications"), notifOn) { activo ->
+                            PreferenciasPerfilStore.establecerNotificaciones(activo)
+                        }
                         Divider(modifier = Modifier.padding(start = 56.dp))
-                        ToggleRow(Icons.Filled.LocationOn, Secondary, L.t("Compartir ubicación", "Share location"), ubicacionOn) { ubicacionOn = it }
+                        ToggleRow(Icons.Filled.LocationOn, Secondary, L.t("Compartir ubicación", "Share location"), ubicacionOn) { activo ->
+                            PreferenciasPerfilStore.establecerCompartirUbicacion(activo)
+                            // Popup informativo honesto al activar (iOS idem).
+                            if (activo) popupCompartirUbicacion = true
+                        }
                         Divider(modifier = Modifier.padding(start = 56.dp))
                         ToggleRow(Icons.Filled.CreditCard, Tertiary, L.t("Modo económico", "Saver mode"), ecoOff) { ecoOff = it }
                         Divider(modifier = Modifier.padding(start = 56.dp))
@@ -333,14 +407,26 @@ fun PerfilScreen(router: AppRouter) {
                         }
                         Divider(modifier = Modifier.padding(start = 56.dp))
                         ChevronRow(Icons.Filled.Edit, OnSurfaceVariant, L.t("Editar perfil", "Edit profile")) {
-                            newNameInput = nombre
-                            showEditDialog = true
+                            showDatosPersonales = true
+                        }
+                        Divider(modifier = Modifier.padding(start = 56.dp))
+                        // Modo offline: qué funciona sin conexión (OfflineMapSheet).
+                        ChevronRow(Icons.Filled.CloudOff, Secondary, L.t("Modo offline", "Offline mode")) {
+                            showOffline = true
+                        }
+                        Divider(modifier = Modifier.padding(start = 56.dp))
+                        // Ayuda de TalkBack (VoiceOverHelpSheet iOS adaptado).
+                        ChevronRow(Icons.Filled.Accessibility, Tertiary, L.t("Accesibilidad (TalkBack)", "Accessibility (TalkBack)")) {
+                            showAccesibilidad = true
                         }
                     }
                 }
             }
 
-            Spacer(Modifier.height(90.dp))
+            // Holgura inferior: la BottomNavBar superpuesta mide ~64 dp MAS
+            // los insets de navegacion del sistema (~24-48 dp); 90 dp dejaba
+            // la ultima fila ("Accesibilidad") medio tapada.
+            Spacer(Modifier.height(120.dp))
         }
 
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
@@ -394,24 +480,57 @@ fun PerfilScreen(router: AppRouter) {
         }
     }
 
-    // Carnet scanner: al "escanear", abre el carné digital.
+    // Carnet scanner: al "escanear", abre el carné digital para añadir la
+    // foto del carné (la captura del scanner es simulada, sin OCR).
     if (showCarnetScanner) {
         CarnetScannerScreen(
             onCapture = {
-                carnetVerificado = true
                 showCarneDigital = true
             },
             onDismiss = { showCarnetScanner = false }
         )
     }
 
-    // Carné digital (tras escanear o al tocar la tarjeta ya verificada).
+    // Carné digital: foto persistida POR EMPRESA (CarnetImageStore).
     if (showCarneDigital) {
         CarneDigitalScreen(
             nombre = nombre,
-            foto = fotoPerfil,
-            onFotoChange = { fotoPerfil = it },
+            empresa = empresa,
             onCerrar = { showCarneDigital = false }
+        )
+    }
+
+    // Datos personales (drawer iOS / Editar perfil): ficha + contacto +
+    // emergencia + foto con editor de encuadre.
+    if (showDatosPersonales) {
+        DatosPersonalesSheet(onCerrar = { showDatosPersonales = false })
+    }
+
+    // Modo offline y ayuda de accesibilidad.
+    if (showOffline) {
+        OfflineMapSheet(onCerrar = { showOffline = false })
+    }
+    if (showAccesibilidad) {
+        AyudaAccesibilidadSheet(onCerrar = { showAccesibilidad = false })
+    }
+
+    // Popup informativo honesto al activar "Compartir ubicación".
+    if (popupCompartirUbicacion) {
+        AlertDialog(
+            onDismissRequest = { popupCompartirUbicacion = false },
+            title = { Text(L.t("Compartir ubicación", "Share location")) },
+            text = {
+                Text(
+                    L.t(
+                        "Esta preferencia queda guardada solo en tu teléfono. La app no envía tu ubicación a ningún servidor por sí sola: el intercambio solo ocurre si activas «Ayudar con ubicaciones» en Ajustes y se detecta un viaje.",
+                        "This preference is saved on your phone only. The app doesn't send your location to any server on its own: sharing only happens if you turn on \"Help with locations\" in Settings and a trip is detected."
+                    ),
+                    style = BodySm
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { popupCompartirUbicacion = false }) { Text(L.t("Entendido", "Got it")) }
+            }
         )
     }
     }

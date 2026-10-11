@@ -47,6 +47,10 @@ class MainActivity : ComponentActivity() {
         TransporteApp.init(this)
         com.example.rutautpnative.ui.theme.aplicarTemaOscuro(TemaStore.oscuroActual)
         Persistencia.migrarSiHaceFalta(this)
+        // Datos del perfil: telefono/correo, emergencia, preferencias y
+        // visibilidad de los carnets por empresa.
+        com.example.rutautpnative.data.PreferenciasPerfilStore.init(this)
+        com.example.rutautpnative.data.PreferenciasVisualesPerfilStore.init(this)
         GTFSRepository.init(this)
         LugaresStore.init(this)
         SeguridadTilesStore.init(this)

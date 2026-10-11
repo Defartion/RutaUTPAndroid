@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
@@ -35,6 +36,8 @@ import kotlinx.coroutines.launch
 fun SideDrawer(router: AppRouter, onClose: () -> Unit) {
     var activeSheet by remember { mutableStateOf<DrawerSheet?>(null) }
     var showLogoutConfirm by remember { mutableStateOf(false) }
+    // Datos personales: se abren desde el avatar del drawer (iOS idem).
+    var mostrarDatosPersonales by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Backdrop
@@ -67,14 +70,41 @@ fun SideDrawer(router: AppRouter, onClose: () -> Unit) {
                         .padding(top = 20.dp, bottom = 20.dp, start = 24.dp, end = 24.dp)
                 ) {
                     Column {
-                        Box(
-                            modifier = Modifier
-                                .size(52.dp)
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.18f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("JD", style = HeadlineMd, color = Color.White)
+                        // Avatar: foto de perfil persistida (ProfileImageStore,
+                        // compartida con Perfil y Datos Personales) o iniciales.
+                        // El badge de lapiz abre Datos Personales (iOS idem).
+                        val contexto = androidx.compose.ui.platform.LocalContext.current
+                        val fotoPerfil by androidx.compose.runtime.produceState<android.graphics.Bitmap?>(initialValue = null, com.example.rutautpnative.data.imagenes.ProfileImageStore.revision) {
+                            value = com.example.rutautpnative.data.imagenes.ProfileImageStore.cargar(contexto)
+                        }
+                        Box {
+                            Box(
+                                modifier = Modifier
+                                    .size(52.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.18f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                fotoPerfil?.let { foto ->
+                                    androidx.compose.foundation.Image(
+                                        bitmap = foto.asImageBitmap(),
+                                        contentDescription = L.t("Foto de perfil", "Profile photo"),
+                                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                } ?: Text("JD", style = HeadlineMd, color = Color.White)
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .size(20.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White)
+                                    .clickable { mostrarDatosPersonales = true },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Filled.Edit, L.t("Datos personales", "Personal details"), tint = AppPrimary, modifier = Modifier.size(11.dp))
+                            }
                         }
                         Spacer(Modifier.height(10.dp))
                         Text("Ruta UTP Trujillo", style = HeadlineSm, color = Color.White)
@@ -114,6 +144,13 @@ fun SideDrawer(router: AppRouter, onClose: () -> Unit) {
             DrawerSheet.SOPORTE         -> SoporteSheet(onDismiss = { activeSheet = null })
             DrawerSheet.SOBRE_NOSOTROS  -> SobreNosotrosSheet(onDismiss = { activeSheet = null })
         }
+    }
+
+    // Datos personales (desde el avatar del drawer).
+    if (mostrarDatosPersonales) {
+        com.example.rutautpnative.ui.screens.DatosPersonalesSheet(
+            onCerrar = { mostrarDatosPersonales = false }
+        )
     }
 
     if (showLogoutConfirm) {

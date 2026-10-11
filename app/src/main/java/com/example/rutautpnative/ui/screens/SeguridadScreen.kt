@@ -151,7 +151,8 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
                     viewModel = viewModel,
                     onAnadir = { showPublicarComunidad = true }
                 )
-                Spacer(Modifier.height(90.dp))
+                // Holgura para la BottomNavBar superpuesta (~64 dp + insets).
+                Spacer(Modifier.height(120.dp))
             }
         }
 

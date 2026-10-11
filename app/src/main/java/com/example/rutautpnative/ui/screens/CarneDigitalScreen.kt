@@ -12,7 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Badge
-import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Crop
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -29,24 +30,42 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.rutautpnative.data.imagenes.CarnetImageStore
 import com.example.rutautpnative.ui.components.CodigoBarras
+import com.example.rutautpnative.ui.components.EditorEncuadre
 import com.example.rutautpnative.ui.components.rememberSelectorFoto
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
+import com.example.rutautpnative.ui.theme.TematicaEmpresa
 
 //----Carné Digital (port de CarneDigitalView)----
-// Foto y nombre: estado de sesión (no se persiste), igual que el resto de Perfil.
+// La foto PERSISTE por empresa (CarnetImageStore: carnet-<empresa>.jpg),
+// separada de la foto de perfil; el editor de encuadre recorta antes de
+// guardar y puede reajustar la guardada. "Carné guardado" confirma el
+// almacenamiento, no una verificación universitaria.
 private const val CODIGO_UTP = "1234567" // dato de ejemplo, igual que en iOS
 
 @Composable
 fun CarneDigitalScreen(
     nombre: String,
-    foto: Bitmap?,
-    onFotoChange: (Bitmap?) -> Unit,
+    empresa: TematicaEmpresa,
     onCerrar: () -> Unit
 ) {
-    // Selector cámara/galería compartido (ui/components/SelectorFoto.kt).
-    val abrirSelectorFoto = rememberSelectorFoto(titulo = L.t("Foto del carné", "ID card photo")) { onFotoChange(it) }
+    val contexto = LocalContext.current
+
+    // Foto del carné persistida por empresa (fuente unica).
+    var foto by remember { mutableStateOf<Bitmap?>(null) }
+    LaunchedEffect(CarnetImageStore.revision, empresa.id) {
+        foto = CarnetImageStore.cargar(contexto, empresa.id)
+    }
+
+    var bitmapParaEncuadre by remember { mutableStateOf<Bitmap?>(null) }
+    val abrirSelectorFoto = rememberSelectorFoto(titulo = L.t("Foto del carné", "ID card photo")) {
+        bitmapParaEncuadre = it
+    }
+
+    val esUtp = empresa == TematicaEmpresa.UTP
+    val codigo = if (esUtp) CODIGO_UTP else "DEMO-EMPRESA"
 
     Dialog(
         onDismissRequest = onCerrar,
@@ -75,7 +94,11 @@ fun CarneDigitalScreen(
                         Icon(Icons.Filled.Badge, null, tint = AppPrimary, modifier = Modifier.size(20.dp))
                     }
                     Spacer(Modifier.width(12.dp))
-                    Text(L.t("Carné Digital", "Digital ID Card"), style = HeadlineLg, color = AppPrimary)
+                    Text(
+                        if (esUtp) L.t("Carné Digital", "Digital ID Card")
+                        else L.t("Carnet de empresa", "Company Card"),
+                        style = HeadlineLg, color = AppPrimary
+                    )
                 }
                 Spacer(Modifier.height(24.dp))
 
@@ -100,7 +123,7 @@ fun CarneDigitalScreen(
                             ) {
                                 if (foto != null) {
                                     Image(
-                                        bitmap = foto.asImageBitmap(),
+                                        bitmap = foto!!.asImageBitmap(),
                                         contentDescription = L.t("Foto del carné", "ID card photo"),
                                         contentScale = ContentScale.Crop,
                                         modifier = Modifier.fillMaxSize()
@@ -109,7 +132,7 @@ fun CarneDigitalScreen(
                                     Text(inicialesDe(nombre), style = HeadlineMd, color = Color.White)
                                 }
                             }
-                            // Insignia de cámara (círculo blanco con borde morado).
+                            // Insignia de cámara: camara o galeria -> editor.
                             Box(
                                 modifier = Modifier
                                     .align(Alignment.BottomEnd)
@@ -119,31 +142,40 @@ fun CarneDigitalScreen(
                                     .clickable { abrirSelectorFoto() },
                                 contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(2.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.White),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(Icons.Filled.AddAPhoto, "Cambiar foto", tint = AppPrimary, modifier = Modifier.size(13.dp))
-                                }
+                                Icon(Icons.Filled.AddAPhoto, L.t("Cambiar foto del carné", "Change ID card photo"), tint = AppPrimary, modifier = Modifier.size(13.dp))
                             }
                         }
-                        Spacer(Modifier.height(14.dp))
+                        Spacer(Modifier.height(10.dp))
+                        // "Ajustar encuadre": recortar de nuevo la foto guardada
+                        // (iOS idem; cancelar conserva la actual).
+                        if (foto != null) {
+                            TextButton(onClick = { bitmapParaEncuadre = foto }) {
+                                Icon(Icons.Filled.Crop, null, tint = AppPrimary, modifier = Modifier.size(14.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text(L.t("Ajustar encuadre", "Adjust frame"), style = BodyXs, color = AppPrimary)
+                            }
+                        }
+                        Spacer(Modifier.height(4.dp))
                         Text(nombre, style = HeadlineMd, color = OnSurface)
-                        Text(L.t("Estudiante UTP", "UTP Student"), style = BodySm, color = OnSurfaceVariant)
+                        Text(
+                            if (esUtp) L.t("Estudiante UTP", "UTP Student")
+                            else L.t("Colaborador", "Employee"),
+                            style = BodySm, color = OnSurfaceVariant
+                        )
+                        Text(L.t("Identidad no verificada", "Identity not verified"), style = BodyXs, color = OnSurfaceVariant)
                         Spacer(Modifier.height(18.dp))
 
-                        Divider(modifier = Modifier.padding(horizontal = 20.dp))
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp))
                         Spacer(Modifier.height(16.dp))
 
-                        //----Código UTP----
-                        Text(L.t("CÓDIGO UTP", "UTP CODE"), style = LabelCapsMd, color = OnSurfaceVariant)
+                        //----Código (UTP o demo de empresa)----
+                        Text(
+                            if (esUtp) L.t("CÓDIGO UTP", "UTP CODE") else L.t("CÓDIGO DE EMPRESA", "COMPANY CODE"),
+                            style = LabelCapsMd, color = OnSurfaceVariant
+                        )
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            CODIGO_UTP,
+                            codigo,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
                             fontSize = 30.sp,
@@ -151,7 +183,7 @@ fun CarneDigitalScreen(
                             color = OnSurface
                         )
                         Spacer(Modifier.height(16.dp))
-                        Divider(modifier = Modifier.padding(horizontal = 20.dp))
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp))
                         Spacer(Modifier.height(16.dp))
 
                         //----Código de barras Code 128 (generado local)----
@@ -162,13 +194,13 @@ fun CarneDigitalScreen(
                             val altoDp = 84.dp
                             val anchoPx = with(LocalDensity.current) { anchoDp.roundToPx() }
                             val altoPx = with(LocalDensity.current) { altoDp.roundToPx() }
-                            val barcode = remember(anchoPx, altoPx) {
-                                CodigoBarras.code128(CODIGO_UTP, anchoPx, altoPx)
+                            val barcode = remember(anchoPx, altoPx, codigo) {
+                                CodigoBarras.code128(codigo, anchoPx, altoPx)
                             }
                             barcode?.let { bmp ->
                                 Image(
                                     bitmap = bmp.asImageBitmap(),
-                                    contentDescription = L.t("Código de barras del código UTP", "UTP code barcode"),
+                                    contentDescription = L.t("Código de barras del carné", "ID card barcode"),
                                     modifier = Modifier
                                         .width(anchoDp)
                                         .height(altoDp)
@@ -211,8 +243,6 @@ fun CarneDigitalScreen(
                         )
                         Spacer(Modifier.width(12.dp))
                         Text(
-                            // Advertencia de disciplina: tono formal, la traducción
-                            // mantiene el nivel legal de la original (no casual).
                             L.t(
                                 "Recuerda que compartir tus credenciales de identificación es una infracción muy grave que conlleva la máxima sanción bajo el Reglamento de Disciplina.",
                                 "Please be advised that sharing your identification credentials is a serious disciplinary offense, subject to the maximum penalty under the Disciplinary Regulations."
@@ -238,8 +268,18 @@ fun CarneDigitalScreen(
         }
     }
 
-    // (El diálogo de selector de foto lo incluye rememberSelectorFoto,
-    //  compartido en ui/components/SelectorFoto.kt)
+    //----Editor de encuadre rectangular (carné)----
+    bitmapParaEncuadre?.let { bitmap ->
+        EditorEncuadre(
+            bitmap = bitmap,
+            circular = false,
+            onGuardar = { recorte ->
+                CarnetImageStore.guardar(contexto, empresa.id, recorte)
+                bitmapParaEncuadre = null
+            },
+            onCancelar = { bitmapParaEncuadre = null }
+        )
+    }
 }
 
 private fun inicialesDe(nombre: String): String =
