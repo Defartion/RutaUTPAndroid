@@ -38,12 +38,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.rutautpnative.data.gtfs.ParaderosIluminados
 import com.example.rutautpnative.model.CategoriaLugar
@@ -54,9 +56,12 @@ import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.navigation.DestinoPendiente
 import com.example.rutautpnative.ui.components.BottomNavBar
+import com.example.rutautpnative.ui.components.Signable
 import com.example.rutautpnative.ui.components.iconoParaCategoria
+import com.example.rutautpnative.ui.components.senableAccion
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
+import com.google.android.gms.maps.model.LatLng
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import java.util.Calendar
@@ -108,7 +113,10 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
                 Spacer(Modifier.width(12.dp))
                 Text(L.t("Seguridad", "Safety"), style = HeadlineLg, color = AppPrimary, modifier = Modifier.weight(1f))
                 Box(
-                    modifier = Modifier.clip(CircleShape).background(AppPrimary).clickable { showReportarSheet = true }.padding(horizontal = 14.dp, vertical = 8.dp)
+                    // "Reportar" señable (Fase 6): tarjeta 3 s y luego el sheet.
+                    modifier = Modifier.clip(CircleShape).background(AppPrimary)
+                        .senableAccion("seguridad.reportar") { showReportarSheet = true }
+                        .padding(horizontal = 14.dp, vertical = 8.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Icon(Icons.Filled.Warning, null, tint = Color.White, modifier = Modifier.size(12.dp))
@@ -125,11 +133,17 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
             ) {
                 Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(L.t("Alertas hoy: 2", "Alerts today: 2"), style = BodySmMedium, color = OnSurface)
+                        // Conteo REAL de alertas del feed (iOS: contado del
+                        // array, no hardcodeado) + paraderos iluminados.
+                        Text(L.t("Alertas hoy: ${com.example.rutautpnative.data.ComunidadDatos.alertasHoy}", "Alerts today: ${com.example.rutautpnative.data.ComunidadDatos.alertasHoy}"), style = BodySmMedium, color = OnSurface)
                         Text(L.t("Paraderos iluminados: $numParaderos", "Well-lit stops: $numParaderos"), style = BodySmMedium, color = OnSurface)
                     }
                     Box(
-                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(SurfaceContainerHigh).clickable { showLlamarDialog = true }.padding(horizontal = 12.dp, vertical = 8.dp)
+                        // "Llamar 105" señable (Fase 6): tarjeta 3 s y luego el
+                        // dialogo de confirmacion de la llamada.
+                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(SurfaceContainerHigh)
+                            .senableAccion("seguridad.emergencia") { showLlamarDialog = true }
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
                         Text(L.t("Llamar 105", "Call 105"), style = BodyXsMedium, color = OnSurface)
                     }
@@ -143,7 +157,13 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
                 Spacer(Modifier.height(28.dp))
                 LugaresSection(router, viewModel)
                 Spacer(Modifier.height(28.dp))
-                RutasSegurasSection(numParaderos = numParaderos, onOpenParaderos = { mostrarParaderos = true })
+                RutasSegurasSection(
+                    numParaderos = numParaderos,
+                    posicionesParaderos = remember(rutas) {
+                        ParaderosIluminados.seleccionar(rutas).map { LatLng(it.lat, it.lon) }
+                    },
+                    onOpenParaderos = { mostrarParaderos = true }
+                )
                 Spacer(Modifier.height(28.dp))
                 ZonasReferenciaSection(onZona = { zona -> viewModel.buscarZona(zona.nombre) })
                 Spacer(Modifier.height(28.dp))
@@ -234,7 +254,13 @@ private fun LugaresSection(router: AppRouter, viewModel: SeguridadViewModel) {
 
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(L.t("Lugares Guardados", "Saved Places"), style = HeadlineSm, color = OnSurface, modifier = Modifier.weight(1f))
+            // Titulo señable en bucle (Fase 6).
+            Signable(
+                clave = "seguridad.lugares_guardados",
+                es = "Lugares Guardados", en = "Saved Places",
+                style = HeadlineSm, color = OnSurface,
+                modifier = Modifier.weight(1f)
+            )
             TextButton(onClick = { modoEdicion = !modoEdicion }) {
                 Icon(if (modoEdicion) Icons.Filled.Check else Icons.Filled.Edit, null, modifier = Modifier.size(14.dp))
                 Spacer(Modifier.width(4.dp))
@@ -532,24 +558,36 @@ private fun ElegirLugaresSheet(
     }
 }
 
-// TODO(banner-rutas-seguras): en iOS este bloque es una ilustración de mini-mapa
-// nocturno con focos pulsantes; hoy es un degradado simple a propósito.
+//----Banner de paraderos iluminados (puerto del BannerParaderosPreview)----
+// Mini-mapa nocturno: calles dibujadas y focos AMBAR pulsando con desfase
+// en las POSICIONES REALES de los paraderos cargados. Focos decorativos
+// mientras el catálogo llega. Sigue el ciclo del tema, no Reduce Motion.
 @Composable
-private fun RutasSegurasSection(numParaderos: Int, onOpenParaderos: () -> Unit) {
+private fun RutasSegurasSection(
+    numParaderos: Int,
+    posicionesParaderos: List<LatLng>,
+    onOpenParaderos: () -> Unit
+) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(Icons.Filled.Shield, null, tint = Tertiary, modifier = Modifier.size(20.dp))
-            Text(L.t("Rutas Seguras Hoy", "Safe Routes Today"), style = HeadlineSm, color = OnSurface)
+            // Titulo señable en bucle (Fase 6).
+            Signable(
+                clave = "seguridad.rutas_seguras",
+                es = "Rutas Seguras Hoy", en = "Safe Routes Today",
+                style = HeadlineSm, color = OnSurface
+            )
         }
         Spacer(Modifier.height(12.dp))
         Box(
             modifier = Modifier
                 .fillMaxWidth().height(192.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .background(Brush.linearGradient(listOf(Tertiary.copy(alpha = 0.65f), Secondary.copy(alpha = 0.45f))))
+                .background(Brush.linearGradient(listOf(Color(0xFF0A1628), Color(0xFF132238))))
                 .clickable { onOpenParaderos() },
             contentAlignment = Alignment.BottomStart
         ) {
+            BannerParaderosNocturno(posiciones = posicionesParaderos)
             Box(
                 modifier = Modifier.clip(CircleShape).background(Color.Black.copy(alpha = 0.4f)).padding(horizontal = 12.dp, vertical = 8.dp).padding(start = 12.dp, bottom = 12.dp)
             ) {
@@ -558,6 +596,68 @@ private fun RutasSegurasSection(numParaderos: Int, onOpenParaderos: () -> Unit) 
                     Text(L.t("Paraderos iluminados activos: $numParaderos", "Well-lit stops active: $numParaderos"), style = BodySm, color = Color.White)
                 }
             }
+        }
+    }
+}
+
+/// Dibujo del mini-mapa nocturno: grid de calles + focos pulsando.
+@Composable
+private fun BannerParaderosNocturno(posiciones: List<LatLng>) {
+    // Pulsos desfasados por indice (focos que "respiran" como en el iOS).
+    val transicion = rememberInfiniteTransition(label = "focos")
+    val focos = if (posiciones.isEmpty()) {
+        // Catálogo aun no cargado: focos decorativos fijos (iOS idem).
+        listOf(Offset(0.2f, 0.4f), Offset(0.5f, 0.6f), Offset(0.8f, 0.3f))
+    } else {
+        // Proyeccion de las posiciones reales al rectangulo del banner.
+        val lats = posiciones.map { it.latitude }
+        val lons = posiciones.map { it.longitude }
+        val minLat = lats.min(); val maxLat = lats.max()
+        val minLon = lons.min(); val maxLon = lons.max()
+        val rangoLat = (maxLat - minLat).takeIf { it > 1e-9 } ?: 1.0
+        val rangoLon = (maxLon - minLon).takeIf { it > 1e-9 } ?: 1.0
+        posiciones.map {
+            Offset(
+                x = ((it.longitude - minLon) / rangoLon).toFloat() * 0.86f + 0.07f,
+                y = 1f - (((it.latitude - minLat) / rangoLat).toFloat() * 0.86f + 0.07f)
+            )
+        }
+    }
+    androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+        val w = size.width
+        val h = size.height
+        // Calles: lineas horizontales y verticales tenues.
+        val colorCalle = Color(0xFF22384F)
+        repeat(4) { i ->
+            val y = h * (i + 1) / 5f
+            drawLine(colorCalle, Offset(0f, y), Offset(w, y), strokeWidth = 2.dp.toPx(), alpha = 0.8f)
+        }
+        repeat(5) { i ->
+            val x = w * (i + 1) / 6f
+            drawLine(colorCalle, Offset(x, 0f), Offset(x, h), strokeWidth = 2.dp.toPx(), alpha = 0.8f)
+        }
+        // Avenida diagonal (protagonista).
+        drawLine(Color(0xFF2C4A66), Offset(0f, h * 0.75f), Offset(w, h * 0.25f), strokeWidth = 4.dp.toPx(), alpha = 0.9f)
+        // Focos: halo + nucleo ambar pulsando con desfase por indice.
+        val tiempo = System.nanoTime() / 1_000_000_000f
+        focos.forEachIndexed { i, pos ->
+            val fase = (tiempo * 1.2f + i * 0.7f) % 1f
+            val pulso = 0.5f + 0.5f * kotlin.math.sin(fase * 2f * Math.PI.toFloat())
+            val cx = pos.x * w
+            val cy = pos.y * h
+            val ambar = Color(0xFFFFC94D)
+            // Halo (radio creciente, alpha decreciente).
+            drawCircle(
+                ambar.copy(alpha = 0.18f + 0.14f * pulso),
+                radius = (10f + 6f * pulso) * density,
+                center = Offset(cx, cy)
+            )
+            // Nucleo.
+            drawCircle(
+                ambar.copy(alpha = 0.75f + 0.25f * pulso),
+                radius = 3.5.dp.toPx(),
+                center = Offset(cx, cy)
+            )
         }
     }
 }
@@ -651,12 +751,18 @@ private fun ZonaCard(numero: Int, zona: ZonaReferencia, onClick: () -> Unit) {
 private fun ComunidadSection(viewModel: SeguridadViewModel, onAnadir: () -> Unit) {
     val ventana by viewModel.ventanaComunidad.collectAsState()
     val votos by viewModel.votosComunidad.collectAsState()
+    var reporteDetalle by remember { mutableStateOf<ReporteComunidad?>(null) }
 
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)) {
                 Icon(Icons.Filled.Group, null, tint = AppPrimary, modifier = Modifier.size(20.dp))
-                Text(L.t("Comunidad", "Community"), style = HeadlineSm, color = OnSurface)
+                // Titulo señable en bucle (Fase 6).
+                Signable(
+                    clave = "seguridad.comunidad",
+                    es = "Comunidad", en = "Community",
+                    style = HeadlineSm, color = OnSurface
+                )
             }
             TextButton(onClick = onAnadir) { Text(L.t("AÑADIR", "ADD"), style = LabelCapsSm, color = AppPrimary) }
         }
@@ -678,12 +784,24 @@ private fun ComunidadSection(viewModel: SeguridadViewModel, onAnadir: () -> Unit
                         votoActual = votos[r.id],
                         utiles = viewModel.utilesMostrados(r),
                         noUtiles = viewModel.noUtilesMostrados(r),
-                        onVotar = { voto -> viewModel.votar(r.id, voto) }
+                        onVotar = { voto -> viewModel.votar(r.id, voto) },
+                        onAbrirDetalle = { reporteDetalle = r }
                     )
                     Spacer(Modifier.height(12.dp))
                 }
             }
         }
+    }
+
+    // Detalle de la publicacion (ReporteDetailSheet iOS): cuerpo completo,
+    // foto con atribucion/licita, votos y comentarios demo.
+    reporteDetalle?.let { r ->
+        DetalleReporteSheet(
+            reporte = r,
+            utiles = viewModel.utilesMostrados(r),
+            noUtiles = viewModel.noUtilesMostrados(r),
+            onCerrar = { reporteDetalle = null }
+        )
     }
 }
 
@@ -694,12 +812,13 @@ private fun ReporteCard(
     votoActual: VotoComunidad?,
     utiles: Int,
     noUtiles: Int,
-    onVotar: (VotoComunidad) -> Unit
+    onVotar: (VotoComunidad) -> Unit,
+    onAbrirDetalle: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth().clickable { onAbrirDetalle() }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -709,14 +828,38 @@ private fun ReporteCard(
                 Spacer(Modifier.width(10.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(reporte.nombre, style = BodyMdMedium, color = OnSurface)
-                    Text(reporte.hace, style = LabelCapsSm, color = OnSurfaceVariant)
+                    Text(reporte.tiempoLocalizado, style = LabelCapsSm, color = OnSurfaceVariant)
                 }
                 Box(modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(reporte.tipo.background).padding(horizontal = 8.dp, vertical = 4.dp)) {
                     Text(reporte.tipo.etiqueta, style = LabelCapsSm, color = reporte.tipo.foreground)
                 }
             }
             Spacer(Modifier.height(12.dp))
-            Text(reporte.cuerpo, style = BodyMd, color = OnSurface)
+            // Cuerpo en el idioma activo (4 lineas en la tarjeta; completo
+            // en el detalle).
+            Text(reporte.cuerpoLocalizado, style = BodyMd, color = OnSurface, maxLines = 4, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            // Foto de archivo con etiqueta de demo (ReporteCard iOS).
+            reporte.foto?.let { foto ->
+                Spacer(Modifier.height(10.dp))
+                Box {
+                    FotoComunidadImagen(asset = foto.asset, modifier = Modifier.fillMaxWidth().height(140.dp))
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .clip(RoundedCornerShape(topEnd = 8.dp))
+                            .background(Color.Black.copy(alpha = 0.65f))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            L.t("PUBLICACIÓN DEMO · FOTO DE REFERENCIA", "DEMO POST · REFERENCE PHOTO"),
+                            style = androidx.compose.ui.text.TextStyle(fontSize = 8.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+                            color = Color.White
+                        )
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(foto.lugar, style = BodyXs, color = OnSurfaceVariant, maxLines = 1)
+            }
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // Voto "útil"
@@ -735,12 +878,175 @@ private fun ReporteCard(
                     onClick = { onVotar(VotoComunidad.NO_UTIL) }
                 )
                 Spacer(Modifier.width(16.dp))
-                // Solo el número de comentarios (no hay comentarios reales que abrir).
+                // Comentarios (abren el detalle).
                 Icon(Icons.Filled.ChatBubbleOutline, null, tint = OnSurfaceVariant, modifier = Modifier.size(14.dp))
                 Spacer(Modifier.width(6.dp))
                 Text("${reporte.comentarios}", style = BodySm, color = OnSurfaceVariant)
             }
         }
+    }
+}
+
+//----Imagen de foto de comunidad desde assets (decodificacion en background)----
+@Composable
+private fun FotoComunidadImagen(asset: String, modifier: Modifier = Modifier) {
+    val contexto = LocalContext.current
+    val bitmap by androidx.compose.runtime.produceState<android.graphics.Bitmap?>(initialValue = null, asset) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                android.graphics.BitmapFactory.decodeStream(contexto.assets.open("comunidad/$asset.jpg"))
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+    Box(modifier = modifier.clip(RoundedCornerShape(10.dp)).background(SurfaceContainerHigh)) {
+        bitmap?.let { bmp ->
+            androidx.compose.foundation.Image(
+                bitmap = bmp.asImageBitmap(),
+                contentDescription = null,
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        } ?: run {
+            // Cargando: placeholder sutil centrado.
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = OnSurfaceVariant)
+            }
+        }
+    }
+}
+
+//----Detalle de la publicación (ReporteDetailSheet iOS)----
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DetalleReporteSheet(
+    reporte: ReporteComunidad,
+    utiles: Int,
+    noUtiles: Int,
+    onCerrar: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onCerrar, containerColor = AppSurface) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 28.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(L.t("Publicación de demostración", "Demo post"), style = HeadlineSm, color = OnSurface, modifier = Modifier.weight(1f))
+                TextButton(onClick = onCerrar) { Text(L.t("Cerrar", "Close")) }
+            }
+            Spacer(Modifier.height(10.dp))
+            // Cabecera (avatar, autor ficticio, tipo).
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier.size(36.dp).clip(CircleShape).background(reporte.avatarColor), contentAlignment = Alignment.Center) {
+                    Text(reporte.iniciales, style = LabelCapsMd, color = reporte.avatarForeground)
+                }
+                Spacer(Modifier.width(10.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(reporte.nombre, style = BodyMdMedium, color = OnSurface)
+                    Text(reporte.tiempoLocalizado, style = LabelCapsSm, color = OnSurfaceVariant)
+                }
+                Box(modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(reporte.tipo.background).padding(horizontal = 8.dp, vertical = 4.dp)) {
+                    Text(reporte.tipo.etiqueta, style = LabelCapsSm, color = reporte.tipo.foreground)
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            // Cuerpo completo.
+            Text(reporte.cuerpoLocalizado, style = BodyMd, color = OnSurface)
+            // Foto con ATRIBUCION y enlaces a fuente/licencia.
+            reporte.foto?.let { foto ->
+                Spacer(Modifier.height(14.dp))
+                FotoComunidadImagen(asset = foto.asset, modifier = Modifier.fillMaxWidth().height(220.dp))
+                Spacer(Modifier.height(8.dp))
+                Text(foto.descripcionLocalizada, style = BodyXs, color = OnSurfaceVariant)
+                Spacer(Modifier.height(4.dp))
+                Text(foto.atribucion, style = BodyXs, color = OnSurfaceVariant)
+                Spacer(Modifier.height(4.dp))
+                val contexto = LocalContext.current
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text(
+                        L.t("Ver fuente", "View source"),
+                        style = BodyXsMedium,
+                        color = AppPrimary,
+                        modifier = Modifier.clickable {
+                            try {
+                                contexto.startActivity(
+                                    android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(foto.fuente))
+                                )
+                            } catch (e: Exception) { }
+                        }
+                    )
+                    foto.licenciaURL?.let { url ->
+                        Text(
+                            foto.licencia ?: "",
+                            style = BodyXsMedium,
+                            color = AppPrimary,
+                            modifier = Modifier.clickable {
+                                try {
+                                    contexto.startActivity(
+                                        android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                                    )
+                                } catch (e: Exception) { }
+                            }
+                        )
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    L.t(
+                        "Autor ficticio. La foto de archivo pertenece a su respectivo titular.",
+                        "Fictional author. The archive photo belongs to its respective holder."
+                    ),
+                    style = BodyXs, color = OnSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(14.dp))
+            // Votos.
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(L.t("Útil ($utiles)", "Useful ($utiles)"), style = BodySmMedium, color = OnSurface)
+                Text(L.t("No útil ($noUtiles)", "Not useful ($noUtiles)"), style = BodySmMedium, color = OnSurfaceVariant)
+            }
+            Spacer(Modifier.height(14.dp))
+            // Comentarios demo DETERMINISTAS (semilla por UUID del reporte).
+            val comentarios = remember(reporte.id) { comentariosDemo(reporte) }
+            if (comentarios.isNotEmpty()) {
+                Text(L.t("COMENTARIOS", "COMMENTS"), style = LabelCapsMd, color = OnSurfaceVariant)
+                Spacer(Modifier.height(8.dp))
+                comentarios.forEach { comentario ->
+                    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(vertical = 4.dp)) {
+                        Box(modifier = Modifier.size(24.dp).clip(CircleShape).background(SurfaceContainerHigh), contentAlignment = Alignment.Center) {
+                            Text(comentario.first, style = androidx.compose.ui.text.TextStyle(fontSize = 9.sp), color = OnSurfaceVariant)
+                        }
+                        Column {
+                            Text(comentario.second, style = BodySm, color = OnSurface)
+                            Text(comentario.third, style = BodyXs, color = OnSurfaceVariant)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Comentarios de ejemplo deterministas por publicacion (semilla del UUID,
+/// iOS idem: los mismos comentarios para el mismo reporte, siempre).
+private fun comentariosDemo(reporte: ReporteComunidad): List<Triple<String, String, String>> {
+    val semilla = kotlin.math.abs(reporte.id.hashCode())
+    val autores = listOf("MC" to "Marco C.", "JS" to "Julia S.", "RB" to "Rosa B.", "TA" to "Tomás A.")
+    val textos = listOf(
+        L.t("Gracias por avisar, justo iba a salir.", "Thanks for the heads-up, I was just leaving.") to L.t("HACE 2 MIN", "2 MIN AGO"),
+        L.t("Me pasó lo mismo ayer por esa zona.", "The same happened to me yesterday near there.") to L.t("HACE 5 MIN", "5 MIN AGO"),
+        L.t("Confirmado, sigo esa ruta todos los días.", "Confirmed, I take that route every day.") to L.t("HACE 10 MIN", "10 MIN AGO"),
+        L.t("¿Hay desvío por otra avenida?", "Is there a detour via another avenue?") to L.t("HACE 15 MIN", "15 MIN AGO")
+    )
+    val cantidad = 2 + semilla % 3   // 2 a 4 comentarios
+    return (0 until cantidad).map { i ->
+        val autor = autores[(semilla + i) % autores.size]
+        val texto = textos[(semilla + i * 7) % textos.size]
+        Triple(autor.first, texto.first, texto.second)
     }
 }
 

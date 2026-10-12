@@ -30,7 +30,10 @@ import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.navigation.DestinoPendiente
 import com.example.rutautpnative.ui.components.BottomNavBar
+import com.example.rutautpnative.ui.components.Signable
 import com.example.rutautpnative.ui.components.iconoParaCategoria
+import com.example.rutautpnative.ui.components.senableAccion
+import com.example.rutautpnative.ui.components.signable
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
 import com.google.android.gms.maps.model.LatLng
@@ -68,10 +71,14 @@ fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()
             ) {
                 Icon(Icons.Filled.Bookmark, null, tint = AppPrimary, modifier = Modifier.size(28.dp))
                 Spacer(Modifier.width(12.dp))
-                Text(L.t("Guardado", "Saved"), style = HeadlineLg, color = AppPrimary, modifier = Modifier.weight(1f))
+                Text(L.t("Guardado", "Saved"), style = HeadlineLg, color = AppPrimary, modifier = Modifier.weight(1f).signable("guardado.titulo"))
                 Box(
+                    // "+ Añadir" señable (Fase 6): la clave depende de la pestaña
+                    // activa (anadir_lugar / anadir_linea); tarjeta 3 s -> abrir.
                     modifier = Modifier.clip(CircleShape).background(PrimaryContainer)
-                        .clickable { showAddSheet = true }
+                        .senableAccion(
+                            if (selectedTab == 0) "guardado.anadir_lugar" else "guardado.anadir_linea"
+                        ) { showAddSheet = true }
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -81,7 +88,7 @@ fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()
                 }
             }
 
-            // Tabs
+            // Tabs (señables en bucle, Fase 6)
             Row(
                 modifier = Modifier
                     .fillMaxWidth().background(AppSurface)
@@ -92,7 +99,12 @@ fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()
                         modifier = Modifier.weight(1f).clickable { selectedTab = idx }.padding(vertical = 12.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(label, style = BodyMdMedium, color = if (selectedTab == idx) AppPrimary else OnSurfaceVariant)
+                        Signable(
+                            clave = if (idx == 0) "guardado.lugares" else "guardado.lineas",
+                            es = label, en = label,
+                            style = BodyMdMedium,
+                            color = if (selectedTab == idx) AppPrimary else OnSurfaceVariant
+                        )
                         Spacer(Modifier.height(6.dp))
                         Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(if (selectedTab == idx) AppPrimary else Color.Transparent))
                     }
@@ -567,14 +579,17 @@ private fun AddLugarSheet(onSave: (LugarGuardado) -> Unit, onDismiss: () -> Unit
             Spacer(Modifier.height(20.dp))
             Button(
                 onClick = {
-                    val p = coordenada ?: return@Button
-                    onSave(LugarGuardado(
-                        nombre = nombre.ifBlank { "Nuevo lugar" },
-                        direccion = direccion.ifBlank { "Sin dirección" },
-                        categoria = categoria,
-                        lat = p.latitude,
-                        lon = p.longitude
-                    ))
+                    // Botón señable (Fase 6): tarjeta 3 s y luego guarda.
+                    com.example.rutautpnative.data.senias.SeniasOverlay.ejecutarTrasVerSenia("guardado.guardar_lugar") {
+                        val p = coordenada ?: return@ejecutarTrasVerSenia
+                        onSave(LugarGuardado(
+                            nombre = nombre.ifBlank { "Nuevo lugar" },
+                            direccion = direccion.ifBlank { "Sin dirección" },
+                            categoria = categoria,
+                            lat = p.latitude,
+                            lon = p.longitude
+                        ))
+                    }
                 },
                 enabled = puedeGuardar,
                 modifier = Modifier.fillMaxWidth().height(52.dp),

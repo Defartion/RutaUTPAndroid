@@ -6,21 +6,23 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.rutautpnative.data.senias.SeniasOverlayHost
+import com.example.rutautpnative.data.senias.SeniasOverlay
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
+import com.example.rutautpnative.ui.components.SeniasVentana
 import com.example.rutautpnative.ui.screens.*
 import com.example.rutautpnative.ui.screens.mapa.MapaScreen
 import com.example.rutautpnative.ui.theme.AppBackground
 
 @Composable
 fun RootView(router: AppRouter = viewModel()) {
-    // La raíz envuelve todo: el mini-reproductor de señas va como último
-    // elemento para quedar por encima de cualquier pantalla, diálogo o sheet.
-    // El fondo del Box raíz pinta TAMBIÉN la zona tras la status bar
-    // (edge-to-edge): en modo oscuro se ve oscuro, en claro claro.
+    // La raíz envuelve todo. El fondo del Box raíz pinta TAMBIÉN la zona tras
+    // la status bar (edge-to-edge): en modo oscuro se ve oscuro, en claro claro.
     Box(modifier = Modifier.fillMaxSize().background(AppBackground)) {
         Crossfade(
             targetState = router.currentScreen,
@@ -38,7 +40,17 @@ fun RootView(router: AppRouter = viewModel()) {
             }
         }
 
-        // Mini-reproductor global del Modo Señas (siempre encima).
-        SeniasOverlayHost()
+        //----Ventana de señas (Fase 6)----
+        // Se compone SOLO mientras hay presentación vigente: al crearse se
+        // apila sobre las ventanas ya existentes (Dialogs, ModalBottomSheets),
+        // como la UIWindow a nivel .alert del iOS.
+        val presentacion by SeniasOverlay.presentacion.collectAsState()
+        presentacion?.let { SeniasVentana(it) }
+    }
+
+    // Cambiar de pantalla cancela la seña en curso y su acción pendiente
+    // SIN ejecutarla (iOS: "salir a otra pantalla cancela la anterior").
+    LaunchedEffect(router.currentScreen) {
+        SeniasOverlay.cancelarPorNavegacion()
     }
 }

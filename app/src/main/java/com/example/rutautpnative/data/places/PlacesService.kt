@@ -6,21 +6,21 @@ import com.example.rutautpnative.data.gtfs.GTFSRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.double
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.double
+import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
-import java.net.URLEncoder
 
-//----Servicio de búsqueda de lugares (Places API, Text Search legacy)----
-// Busca un lugar por texto cerca del campus UTP y devuelve el primer resultado
-// con su nombre real y coordenada. Sin librerías nuevas: HTTP directo, igual
-// que DirectionsService.
-// TODO(places-precision): el Text Search legacy solo SESGA por ubicación (no filtra);
-// caso conocido: "Real Plaza, Trujillo" devolvió "Mall Aventura" por cercanía/tipo.
-// Evaluar migrar a Places API (New) con locationRestriction si se quiere precisión exacta.
+//----Servicio de búsqueda de lugares (Places API (New) Text Search)----
+// Migrado del Text Search LEGACY (que solo SESGABA por ubicación; caso
+// conocido: "Real Plaza, Trujillo" devolvía "Mall Aventura") a la
+// Places API (New) con locationRestriction RECTANGULAR: los resultados
+// quedan DENTRO del área de Trujillo, sin sorpresas de cercanía.
+// POST https://places.googleapis.com/v1/places:searchText
+// Header X-Goog-FieldMask define qué campos volverán.
 object PlacesService {
 
     sealed class Resultado {
@@ -46,54 +46,89 @@ object PlacesService {
     }
 
     private var appContext: Context? = null
+    private val json = Json { ignoreUnknownKeys = true }
 
     fun init(context: Context) {
         appContext = context.applicationContext
     }
 
-    //----Búsqueda de texto centrada en el campus UTP----
+    /// Rectángulo de Trujillo (locationRestriction de la Places API New):
+    /// garantiza que TODO resultado caiga dentro del área metropolitana.
+    private fun cuerpoRestriccion(): String = """
+        {
+          "textQuery": "%s",
+          "languageCode": "es",
+          "locationRestriction": {
+            "rectangle": {
+              "low": { "latitude": -8.145, "longitude": -79.075 },
+              "high": { "latitude": -8.050, "longitude": -78.990 }
+            }
+          }
+        }
+    """.trimIndent()
+
+    //----Búsqueda de texto (primer resultado dentro del rectángulo)----
     suspend fun buscarTexto(consulta: String): Resultado = withContext(Dispatchers.IO) {
         val apiKey = leerApiKey() ?: return@withContext Resultado.Error
-        val centro = GTFSRepository.coordenadaUTP
-        val url = "https://maps.googleapis.com/maps/api/place/textsearch/json" +
-            "?query=" + URLEncoder.encode(consulta, "UTF-8") +
-            "&location=${centro.latitude},${centro.longitude}" +
-            "&radius=8000" +
-            "&language=es" +
-            "&key=$apiKey"
+        val respuesta = consultar(consulta, apiKey) ?: return@withContext Resultado.Error
+        val lugares = respuesta["places"]?.jsonArray ?: return@withContext Resultado.SinResultados
+        val primero = lugares.firstOrNull()?.jsonObject ?: return@withContext Resultado.SinResultados
+        val nombre = primero["displayName"]?.jsonObject
+            ?.get("text")?.jsonPrimitive?.content
+            ?: return@withContext Resultado.SinResultados
+        val loc = primero["location"]?.jsonObject ?: return@withContext Resultado.SinResultados
+        val lat = loc["latitude"]?.jsonPrimitive?.double ?: return@withContext Resultado.SinResultados
+        val lon = loc["longitude"]?.jsonPrimitive?.double ?: return@withContext Resultado.SinResultados
+        Resultado.Exito(nombre = nombre, lat = lat, lon = lon)
+    }
 
-        try {
-            val con = URL(url).openConnection() as HttpURLConnection
+    //----Sugerencias de autocompletado (dropdown del buscador del Mapa)----
+    suspend fun buscarSugerencias(consulta: String): ResultadoSugerencias = withContext(Dispatchers.IO) {
+        val apiKey = leerApiKey() ?: return@withContext ResultadoSugerencias.Error
+        val respuesta = consultar(consulta, apiKey) ?: return@withContext ResultadoSugerencias.Error
+        val lugares = respuesta["places"]?.jsonArray ?: return@withContext ResultadoSugerencias.SinResultados
+        val sugerencias = lugares.take(5).mapNotNull { entrada ->
+            val obj = entrada.jsonObject
+            val nombre = obj["displayName"]?.jsonObject?.get("text")?.jsonPrimitive?.content
+                ?: return@mapNotNull null
+            val direccion = obj["formattedAddress"]?.jsonPrimitive?.content
+                ?: obj["shortFormattedAddress"]?.jsonPrimitive?.content ?: ""
+            val loc = obj["location"]?.jsonObject ?: return@mapNotNull null
+            val lat = loc["latitude"]?.jsonPrimitive?.double ?: return@mapNotNull null
+            val lon = loc["longitude"]?.jsonPrimitive?.double ?: return@mapNotNull null
+            Sugerencia(nombre = nombre, direccion = direccion, lat = lat, lon = lon)
+        }
+        if (sugerencias.isEmpty()) ResultadoSugerencias.SinResultados
+        else ResultadoSugerencias.Exito(sugerencias)
+    }
+
+    /// Llamada compartida: POST a searchText con el FieldMask de siempre.
+    private fun consultar(consulta: String, apiKey: String): kotlinx.serialization.json.JsonObject? {
+        return try {
+            val con = URL("https://places.googleapis.com/v1/places:searchText")
+                .openConnection() as HttpURLConnection
+            con.requestMethod = "POST"
             con.connectTimeout = 10_000
             con.readTimeout = 10_000
+            con.doOutput = true
+            con.setRequestProperty("X-Goog-Api-Key", apiKey)
+            con.setRequestProperty(
+                "X-Goog-FieldMask",
+                "places.displayName,places.formattedAddress,places.shortFormattedAddress,places.location"
+            )
+            con.setRequestProperty("Content-Type", "application/json")
+            con.connect()
+            OutputStreamWriter(con.outputStream).use { salida ->
+                salida.write(cuerpoRestriccion().replace("%s", consulta))
+            }
             val texto = try {
                 con.inputStream.bufferedReader().use { it.readText() }
             } finally {
                 con.disconnect()
             }
-
-            val raiz = Json.parseToJsonElement(texto).jsonObject
-            when (raiz["status"]?.jsonPrimitive?.content) {
-                "OK" -> {
-                    val resultados = raiz["results"]?.jsonArray
-                    val primero = resultados?.firstOrNull()?.jsonObject
-                        ?: return@withContext Resultado.SinResultados
-                    val nombre = primero["name"]?.jsonPrimitive?.content
-                        ?: return@withContext Resultado.SinResultados
-                    val loc = primero["geometry"]?.jsonObject
-                        ?.get("location")?.jsonObject
-                        ?: return@withContext Resultado.SinResultados
-                    val lat = loc["lat"]?.jsonPrimitive?.double
-                        ?: return@withContext Resultado.SinResultados
-                    val lon = loc["lng"]?.jsonPrimitive?.double
-                        ?: return@withContext Resultado.SinResultados
-                    Resultado.Exito(nombre = nombre, lat = lat, lon = lon)
-                }
-                "ZERO_RESULTS" -> Resultado.SinResultados
-                else -> Resultado.Error
-            }
+            json.parseToJsonElement(texto).jsonObject
         } catch (e: Exception) {
-            Resultado.Error
+            null
         }
     }
 
@@ -106,50 +141,5 @@ object PlacesService {
             ?.getString("com.google.android.geo.API_KEY")
     } catch (e: Exception) {
         null
-    }
-
-    //----Sugerencias de autocompletado (dropdown del buscador del Mapa)----
-    suspend fun buscarSugerencias(consulta: String): ResultadoSugerencias = withContext(Dispatchers.IO) {
-        val apiKey = leerApiKey() ?: return@withContext ResultadoSugerencias.Error
-        val centro = GTFSRepository.coordenadaUTP
-        val url = "https://maps.googleapis.com/maps/api/place/textsearch/json" +
-            "?query=" + URLEncoder.encode(consulta, "UTF-8") +
-            "&location=${centro.latitude},${centro.longitude}" +
-            "&radius=8000" +
-            "&language=es" +
-            "&key=$apiKey"
-
-        try {
-            val con = URL(url).openConnection() as HttpURLConnection
-            con.connectTimeout = 10_000
-            con.readTimeout = 10_000
-            val texto = try {
-                con.inputStream.bufferedReader().use { it.readText() }
-            } finally {
-                con.disconnect()
-            }
-
-            val raiz = Json.parseToJsonElement(texto).jsonObject
-            when (raiz["status"]?.jsonPrimitive?.content) {
-                "OK" -> {
-                    val resultados = raiz["results"]?.jsonArray ?: return@withContext ResultadoSugerencias.SinResultados
-                    val sugerencias = resultados.take(5).mapNotNull { entrada ->
-                        val obj = entrada.jsonObject
-                        val nombre = obj["name"]?.jsonPrimitive?.content ?: return@mapNotNull null
-                        val direccion = obj["formatted_address"]?.jsonPrimitive?.content ?: ""
-                        val loc = obj["geometry"]?.jsonObject?.get("location")?.jsonObject ?: return@mapNotNull null
-                        val lat = loc["lat"]?.jsonPrimitive?.double ?: return@mapNotNull null
-                        val lon = loc["lng"]?.jsonPrimitive?.double ?: return@mapNotNull null
-                        Sugerencia(nombre = nombre, direccion = direccion, lat = lat, lon = lon)
-                    }
-                    if (sugerencias.isEmpty()) ResultadoSugerencias.SinResultados
-                    else ResultadoSugerencias.Exito(sugerencias)
-                }
-                "ZERO_RESULTS" -> ResultadoSugerencias.SinResultados
-                else -> ResultadoSugerencias.Error
-            }
-        } catch (e: Exception) {
-            ResultadoSugerencias.Error
-        }
     }
 }

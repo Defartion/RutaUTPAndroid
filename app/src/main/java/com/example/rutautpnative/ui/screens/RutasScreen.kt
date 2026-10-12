@@ -33,6 +33,7 @@ import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.DestinoPendiente
 import com.example.rutautpnative.ui.components.BottomNavBar
 import com.example.rutautpnative.ui.components.Signable
+import com.example.rutautpnative.ui.components.signable
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
 import kotlinx.coroutines.launch
@@ -161,18 +162,20 @@ private fun ListaRutasScreen(
                     Spacer(Modifier.width(10.dp))
                     Text(
                         if (TransporteApp.busesUTPActivos) L.t("Rutas UTP", "UTP routes") else L.t("Rutas", "Routes"),
-                        style = HeadlineLg, color = AppPrimary, modifier = Modifier.weight(1f)
+                        style = HeadlineLg, color = AppPrimary,
+                        // Titulo señable (Fase 6): seña en bucle al tocar.
+                        modifier = Modifier.weight(1f).signable("rutas.titulo")
                     )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
+                    // Badge con el número de resultados (RutasView iOS); el
+                    // "EN VIVO" decorativo se retiró: el real vive solo en el
+                    // mapa, ligado a la flota MQTT (fase-mejoras-futuras).
+                    Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(50))
                             .background(PrimaryFixed)
                             .padding(horizontal = 10.dp, vertical = 5.dp)
                     ) {
-                        Box(modifier = Modifier.size(7.dp).clip(CircleShape).background(AppPrimary))
-                        Spacer(Modifier.width(5.dp))
-                        Text(L.t("EN VIVO", "LIVE"), style = LabelCapsSm, color = AppPrimary)
+                        Text("${rutas.size}", style = LabelCapsSm, color = AppPrimary)
                     }
                 }
             }
@@ -374,8 +377,6 @@ private fun DetalleRutaScreen(
 ) {
     val borderColor = OutlineVariant.copy(alpha = 0.25f)
     var mostrarExplorador by remember { mutableStateOf(false) }
-    val modoSenias by SeniasPrefs.observarActivo().collectAsState(initial = false)
-    val scope = rememberCoroutineScope()
 
     // --- Datos para la guía paso a paso ---
     // Ubicación del usuario (mock) mientras no haya GPS real en esta pantalla;
@@ -514,7 +515,8 @@ private fun DetalleRutaScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(L.t("FRECUENCIA", "FREQUENCY"), style = LabelCapsMd, color = OnPrimaryContainer)
+                                // Señas de texto (Fase 6): FRECUENCIA al tocar, en bucle.
+                                Signable(clave = "rutas.frecuencia", es = "FRECUENCIA", en = "FREQUENCY", style = LabelCapsMd, color = OnPrimaryContainer)
                                 Text(if (ruta.headwayMin > 0) "${ruta.headwayMin} min" else "—", style = DisplayNumberMd, color = OnPrimaryContainer)
                             }
                         }
@@ -522,20 +524,30 @@ private fun DetalleRutaScreen(
                 }
                 Spacer(Modifier.height(16.dp))
 
-                // Stats grid
+                // Stats grid (señables, Fase 6: tiempo/costo en bucle al tocar).
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    StatTile(L.t("TIEMPO", "TIME"), if (ruta.duracionMin > 0) "${ruta.duracionMin} min" else "—", Icons.Filled.Schedule, AppPrimary, Modifier.weight(1f))
-                    StatTile(L.t("COSTO", "PRICE"), ruta.precioTexto, Icons.Filled.Payments, AppPrimary, Modifier.weight(1f))
+                    StatTile(L.t("TIEMPO", "TIME"), if (ruta.duracionMin > 0) "${ruta.duracionMin} min" else "—", Icons.Filled.Schedule, AppPrimary, Modifier.weight(1f).signable("rutas.tiempo"))
+                    StatTile(L.t("COSTO", "PRICE"), ruta.precioTexto, Icons.Filled.Payments, AppPrimary, Modifier.weight(1f).signable("rutas.costo"))
                 }
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    StatTile(L.t("TRANSBORDOS", "TRANSFERS"), "0", Icons.Filled.SwapCalls, AppPrimary, Modifier.weight(1f))
-                    StatTile(L.t("CONGESTIÓN", "CONGESTION"), "—", Icons.Filled.BarChart, Secondary, Modifier.weight(1f))
+                    // Stats reales del feed (iOS idem): PARADEROS y RECORRIDO
+                    // en vez de TRANSBORDOS/CONGESTION fijos. Señables (Fase 6).
+                    StatTile(
+                        L.t("PARADEROS", "STOPS"),
+                        "${ruta.paraderos.size}",
+                        Icons.Filled.Place, AppPrimary, Modifier.weight(1f).signable("rutas.paraderos")
+                    )
+                    StatTile(
+                        L.t("RECORRIDO", "ROUTE"),
+                        if (ruta.distanciaKm > 0) String.format(java.util.Locale.US, "%.1f km", ruta.distanciaKm) else "—",
+                        Icons.Filled.Route, AppPrimary, Modifier.weight(1f).signable("rutas.recorrido")
+                    )
                 }
                 Spacer(Modifier.height(20.dp))
 
-                // Pasos
-                Text(L.t("Guía paso a paso", "Step-by-step guide"), style = HeadlineXs, color = OnSurface)
+                // Pasos (titulo señable en bucle, Fase 6).
+                Signable(clave = "rutas.guia", es = "Guía paso a paso", en = "Step-by-step guide", style = HeadlineXs, color = OnSurface)
                 Spacer(Modifier.height(16.dp))
                 PasoRow(
                     "1",
@@ -547,13 +559,11 @@ private fun DetalleRutaScreen(
                 PasoRow("3", L.t("Baja en", "Get off at") + " ${paraderoDestino?.nombre ?: L.t("destino final", "final destination")}", L.t("Llegada a destino final", "Final destination arrival"), Icons.Filled.School, Tertiary, Color.White, isLast = true)
                 Spacer(Modifier.height(20.dp))
 
-                // Botón Iniciar Navegación (señable: con el Modo Señas activo
-                // muestra la seña en vez de iniciar el tracking).
+                // Botón Iniciar Navegación señable (Fase 6): con el modo
+                // activo, tarjeta 3 s y LUEGO inicia la navegación.
                 Button(
                     onClick = {
-                        if (modoSenias) {
-                            scope.launch { SeniasOverlay.mostrar("nav.iniciar") }
-                        } else {
+                        com.example.rutautpnative.data.senias.SeniasOverlay.ejecutarTrasVerSenia("nav.iniciar") {
                             onIniciarNavegacion()
                         }
                     },

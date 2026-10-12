@@ -98,5 +98,9 @@ class MainActivity : ComponentActivity() {
         // iOS suspende el proceso poco despues de esto: el socket y el GPS
         // mueren sin despedida. Se cierra la publicacion de forma limpia.
         PassiveTrackingCoordinator.pausarParaSegundoPlano()
+        // Paso a segundo plano: la seña en curso y su acción pendiente se
+        // cancelan SIN ejecutarla (iOS idem: "pasar a background detiene la
+        // presentación").
+        com.example.rutautpnative.data.senias.SeniasOverlay.cancelarPorNavegacion()
     }
 }

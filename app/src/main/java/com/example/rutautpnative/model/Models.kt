@@ -112,10 +112,26 @@ data class ReporteComunidad(
     val hace: String,
     val tipo: TipoReporte,
     val cuerpo: String,
+    val cuerpoIngles: String? = null,
+    val foto: FotoComunidad? = null,
     val utiles: Int,
     val dislikes: Int = 0,
     val comentarios: Int,
     val utilMarcado: Boolean = false,
     val avatarColor: Color = SurfaceContainerHigh,
     val avatarForeground: Color = OnSurfaceVariant
-)
+) {
+    val cuerpoLocalizado: String get() = if (com.example.rutautpnative.ui.idioma.L.esIngles) cuerpoIngles ?: cuerpo else cuerpo
+
+    val tiempoLocalizado: String
+        get() {
+            if (!com.example.rutautpnative.ui.idioma.L.esIngles) return hace
+            val traducciones = mapOf(
+                "HACE 3 MIN" to "3 MIN AGO", "HACE 8 MIN" to "8 MIN AGO",
+                "HACE 12 MIN" to "12 MIN AGO", "HACE 20 MIN" to "20 MIN AGO",
+                "HACE 35 MIN" to "35 MIN AGO", "HACE 1 HORA" to "1 HOUR AGO",
+                "HACE 2 HORAS" to "2 HOURS AGO"
+            )
+            return traducciones[hace] ?: hace
+        }
+}

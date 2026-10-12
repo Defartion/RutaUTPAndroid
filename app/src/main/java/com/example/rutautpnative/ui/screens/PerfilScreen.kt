@@ -384,8 +384,21 @@ fun PerfilScreen(router: AppRouter) {
                         Divider(modifier = Modifier.padding(start = 56.dp))
                         // Persistida: reactiva vía Flow; al tocar textos señables
                         // en cualquier pantalla se muestra el clip de señas.
+                        // Fase 6: al ACTIVAR el modo se reproduce una vez el
+                        // video de activación (media pantalla, cierra al
+                        // terminar); reiniciar la app con el modo encendido NO
+                        // lo reproduce (iOS idem).
                         ToggleRow(Icons.Filled.SignLanguage, AppPrimary, L.t("Modo Señas", "Sign language mode"), modoSenias) { activo ->
-                            scope.launch { SeniasPrefs.establecerActivo(activo) }
+                            scope.launch {
+                                SeniasPrefs.establecerActivo(activo)
+                                if (activo) {
+                                    com.example.rutautpnative.data.senias.SeniasOverlay.mostrarActivacionDelModo()
+                                } else {
+                                    // Apagar el modo detiene la presentacion en
+                                    // curso (video de activacion o tarjeta).
+                                    com.example.rutautpnative.data.senias.SeniasOverlay.cancelarPorNavegacion()
+                                }
+                            }
                         }
                         Divider(modifier = Modifier.padding(start = 56.dp))
                         // TODO(tema-en-perfil): aquí hubo un switch de tema oscuro
@@ -395,11 +408,16 @@ fun PerfilScreen(router: AppRouter) {
                         // queda documentado como posible mejora futura, no olvidado.
                         // ES = switch apagado, EN = encendido. Persiste como las dos
                         // anteriores; toda la app reacciona al instante (L).
+                        // Fase 6: botón señable (tarjeta 3 s -> cambiar idioma).
                         ToggleRow(
                             Icons.Filled.Language, AppPrimary,
                             if (esIngles) "Idioma: English" else "Idioma: Español",
                             esIngles
-                        ) { activo -> L.establecer(if (activo) "en" else "es") }
+                        ) { activo ->
+                            com.example.rutautpnative.data.senias.SeniasOverlay.ejecutarTrasVerSenia("perfil.idioma") {
+                                L.establecer(if (activo) "en" else "es")
+                            }
+                        }
                         Divider(modifier = Modifier.padding(start = 56.dp))
                         ChevronRow(Icons.Filled.Person, AppPrimary, L.t("Nombre: $nombre", "Name: $nombre")) {
                             newNameInput = nombre

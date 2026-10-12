@@ -37,7 +37,6 @@ import com.example.rutautpnative.model.SedeTrabajo
 import com.example.rutautpnative.data.geo.Geocodificacion
 import com.example.rutautpnative.data.routing.TransitPlanner
 import com.example.rutautpnative.data.senias.SeniasOverlay
-import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.data.tracking.MQTTObservationPublisher
 import com.example.rutautpnative.data.tracking.MQTTConfiguration
 import com.example.rutautpnative.data.tracking.OccupancyService
@@ -46,6 +45,7 @@ import com.example.rutautpnative.data.ubicacion.LocationService
 import com.example.rutautpnative.model.LugarGuardado
 import com.example.rutautpnative.model.TipoReporte
 import com.example.rutautpnative.ui.components.BottomNavBar
+import com.example.rutautpnative.ui.components.senableAccion
 import com.example.rutautpnative.ui.components.iconoParaCategoria
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.screens.MapaUbicacionPicker
@@ -618,11 +618,12 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             ) {
                 if (viajeActivo) {
                     Box(
+                        // REPORTAR del modo viaje, tambien senable (Fase 6).
                         modifier = Modifier
                             .padding(start = 20.dp)
                             .clip(CircleShape)
                             .background(AppPrimary)
-                            .clickable { showReportarSheet = true }
+                            .senableAccion("mapa.reportar") { showReportarSheet = true }
                             .padding(horizontal = 16.dp, vertical = 9.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1019,21 +1020,22 @@ private fun MapaHeader(
             Text(titulo ?: L.t("Mapa", "Map"), style = HeadlineLg, color = AppPrimary)
             // Con flota real: frescura de las POSICIONES (tener credenciales
             // no demuestra que hayan llegado datos). Verde = recientes.
+            // Fondo TRANSLUCIDO al 14% (iOS .opacity(0.14)): opaco parecia una
+            // barra marron pegada al titulo.
             if (fuenteReal) {
                 Spacer(Modifier.width(10.dp))
+                val colorBadge = if (datosRecientes) VerdeExito else OnSurfaceVariant
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(
-                            if (datosRecientes) VerdeExito else OnSurfaceVariant
-                        )
+                        .background(colorBadge.copy(alpha = 0.14f))
                         .padding(horizontal = 7.dp, vertical = 4.dp)
                 ) {
                     Text(
                         if (datosRecientes) L.t("DATOS RECIENTES", "RECENT DATA")
                         else L.t("ESPERANDO DATOS", "WAITING FOR DATA"),
                         style = LabelCapsSm,
-                        color = if (datosRecientes) VerdeExito else OnSurfaceVariant,
+                        color = colorBadge,
                         fontSize = 9.sp
                     )
                 }
@@ -1055,7 +1057,6 @@ private fun SearchPanel(
 ) {
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
-    val modoSenias by SeniasPrefs.observarActivo().collectAsState(initial = false)
 
     Card(
         shape = RoundedCornerShape(14.dp),
@@ -1202,8 +1203,12 @@ private fun SearchPanel(
                             destino = destino.copy(label = etiqueta),
                             isActive = vm.destinoSeleccionado?.id == destino.id,
                             onClick = {
-                                if (modoSenias && claveSenia != null) {
-                                    scope.launch { SeniasOverlay.mostrar(claveSenia) }
+                                // Chip señable (Fase 6): con el modo activo,
+                                // tarjeta 3 s y LUEGO selecciona el destino.
+                                if (claveSenia != null) {
+                                    SeniasOverlay.ejecutarTrasVerSenia(claveSenia) {
+                                        onSearch(); vm.seleccionar(destino)
+                                    }
                                 } else {
                                     onSearch(); vm.seleccionar(destino)
                                 }
@@ -1249,10 +1254,11 @@ private fun BottomPanel(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
+                // REPORTAR señable (Fase 6): tarjeta 3 s y luego abre el sheet.
                 modifier = Modifier
                     .clip(CircleShape)
                     .background(AppPrimary)
-                    .clickable { onReportar() }
+                    .senableAccion("mapa.reportar") { onReportar() }
                     .padding(horizontal = 16.dp, vertical = 9.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1264,12 +1270,15 @@ private fun BottomPanel(
             // Al colapsar, el texto se retira y queda solo el icono de bus
             // (NearbyTransportPanel iOS: ancla fija a la derecha).
             if (!colapsado) {
-                Text(
-                    // Buses UTP sin feed institucional: el estado del modo, no un
-                    // "0 líneas" engañoso (NearbyTransportPanel iOS: "Rutas
-                    // próximamente").
-                    if (utpPendiente) L.t("Rutas próximamente", "Routes coming soon")
-                    else if (rutas.size == 1) L.t("1 línea operando ahora", "1 route operating now") else L.t("${rutas.size} líneas operando ahora", "${rutas.size} routes operating now"),
+                // Título señable (Fase 6): mapa.cercanos, en bucle al tocar.
+                com.example.rutautpnative.ui.components.Signable(
+                    clave = "mapa.cercanos",
+                    es = if (utpPendiente) L.t("Rutas próximamente", "Routes coming soon")
+                    else if (rutas.size == 1) L.t("1 línea operando ahora", "1 route operating now")
+                    else L.t("${rutas.size} líneas operando ahora", "${rutas.size} routes operating now"),
+                    en = if (utpPendiente) L.t("Rutas próximamente", "Routes coming soon")
+                    else if (rutas.size == 1) L.t("1 línea operando ahora", "1 route operating now")
+                    else L.t("${rutas.size} líneas operando ahora", "${rutas.size} routes operating now"),
                     style = HeadlineBody,
                     color = OnSurface.copy(alpha = 0.85f),
                     modifier = Modifier.weight(1f)

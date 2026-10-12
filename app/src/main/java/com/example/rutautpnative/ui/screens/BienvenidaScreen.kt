@@ -91,7 +91,11 @@ fun BienvenidaScreen(router: AppRouter) {
                     color = AppPrimary,
                     modifier = Modifier.weight(1f)
                 )
-                TextButton(onClick = { router.navigate(AppScreen.MapaPrincipal) }) {
+                TextButton(onClick = {
+                    com.example.rutautpnative.data.senias.SeniasOverlay.ejecutarTrasVerSenia("bienvenida.saltar") {
+                        router.navigate(AppScreen.MapaPrincipal)
+                    }
+                }) {
                     Text(L.t("Saltar", "Skip"), style = BodySm, color = OnSurfaceVariant)
                 }
             }
@@ -196,14 +200,11 @@ fun BienvenidaScreen(router: AppRouter) {
                 )
                 Spacer(Modifier.height(14.dp))
 
-                // CTA (señable: con el Modo Señas activo, muestra la seña en
-                // vez de navegar — el botón recupera su acción al apagarlo).
-                val modoSenias by SeniasPrefs.observarActivo().collectAsState(initial = false)
+                // CTA señable (Fase 6): con el Modo Señas activo, muestra la
+                // tarjeta 3 s y LUEGO navega; con el modo apagado, directo.
                 Button(
                     onClick = {
-                        if (modoSenias) {
-                            scope.launch { SeniasOverlay.mostrar("bienvenida.comenzar") }
-                        } else {
+                        com.example.rutautpnative.data.senias.SeniasOverlay.ejecutarTrasVerSenia("bienvenida.comenzar") {
                             router.navigate(AppScreen.MapaPrincipal)
                         }
                     },
