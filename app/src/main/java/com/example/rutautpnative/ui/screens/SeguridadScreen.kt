@@ -392,7 +392,11 @@ private fun LugarTile(
                         .size(20.dp)
                         .clip(CircleShape)
                         .background(AppError)
-                        .clickable(onClick = onQuitar),
+                        .clickable {
+                            // Háptico al quitar (iOS idem).
+                            com.example.rutautpnative.ui.components.AppHaptics.impacto()
+                            onQuitar()
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Text("−", color = Color.White, style = BodyMdMedium)

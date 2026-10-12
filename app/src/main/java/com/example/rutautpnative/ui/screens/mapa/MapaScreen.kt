@@ -14,13 +14,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
@@ -104,6 +109,90 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     var mostrarElegirDestino by remember { mutableStateOf(false) }
+
+    //----Colocación de marcador estilo Uber (Fase 5)----
+    // El punto se fija AUTOMÁTICAMENTE 1 s después de que la cámara deja de
+    // moverse; con TalkBack activo el botón abre el picker accesible.
+    var modoColocarMarcador by remember { mutableStateOf(false) }
+    var confirmacionMarcador by remember { mutableStateOf<Job?>(null) }
+    var marcadorUsuario by remember { mutableStateOf<LatLng?>(null) }
+
+    fun cancelarPendienteMarcador() {
+        confirmacionMarcador?.cancel()
+        confirmacionMarcador = null
+    }
+
+    fun fijarMarcadorEnCentro() {
+        cancelarPendienteMarcador()
+        if (!modoColocarMarcador) return
+        val centro = vm.cameraPositionState.position.target
+        if (!centro.latitude.isFinite() || !centro.longitude.isFinite()) return
+        com.example.rutautpnative.ui.components.AppHaptics.impacto(medio = true)
+        marcadorUsuario = centro
+        modoColocarMarcador = false
+        // Misma entrada que buscador y destinos guardados: calcula caminata +
+        // micro + caminata y actualiza las líneas cercanas.
+        vm.seleccionarLugarExterno(
+            titulo = L.t("Punto marcado", "Marked point"),
+            lat = centro.latitude,
+            lon = centro.longitude
+        )
+    }
+
+    fun programarConfirmacionMarcador() {
+        cancelarPendienteMarcador()
+        if (!modoColocarMarcador) return
+        val punto = vm.cameraPositionState.position.target
+        if (!punto.latitude.isFinite() || !punto.longitude.isFinite()) return
+        confirmacionMarcador = scope.launch {
+            delay(1_000)
+            if (modoColocarMarcador) fijarMarcadorEnCentro()
+        }
+    }
+
+    fun cancelarMarcador() {
+        cancelarPendienteMarcador()
+        com.example.rutautpnative.ui.components.AppHaptics.impacto()
+        modoColocarMarcador = false
+    }
+
+    /// Quita el pin colocado y devuelve los paneles; si el pin ES el destino
+    /// actual, también limpia la ruta (despejarMarcador del iOS).
+    fun despejarMarcador() {
+        cancelarPendienteMarcador()
+        com.example.rutautpnative.ui.components.AppHaptics.impacto()
+        val pin = marcadorUsuario
+        val destino = vm.destinoSeleccionado
+        if (pin != null && destino != null &&
+            pin.latitude == destino.lat && pin.longitude == destino.lon
+        ) {
+            vm.limpiar()
+        }
+        marcadorUsuario = null
+    }
+
+    // La cámara en movimiento cancela la confirmación pendiente; al frenar se
+    // reprograma con el nuevo centro.
+    LaunchedEffect(vm.cameraPositionState.isMoving) {
+        if (modoColocarMarcador) {
+            if (vm.cameraPositionState.isMoving) cancelarPendienteMarcador()
+            else programarConfirmacionMarcador()
+        }
+    }
+    // Cambiar o limpiar el destino retira el pin si ya no coincide (iOS idem).
+    LaunchedEffect(vm.destinoSeleccionado?.id) {
+        val pin = marcadorUsuario ?: return@LaunchedEffect
+        val destino = vm.destinoSeleccionado ?: run { marcadorUsuario = null; return@LaunchedEffect }
+        if (pin.latitude != destino.lat || pin.longitude != destino.lon) {
+            marcadorUsuario = null
+        }
+    }
+
+    //----Destinos guardados del drawer de búsqueda (Fase 5)----
+    var mostrarDestinosGuardados by remember { mutableStateOf(false) }
+    // Panel de cercanos colapsable a solo el icono de bus (persistente
+    // mientras vive la pantalla, como el NearbyTransportPanel del iOS).
+    var panelColapsado by rememberSaveable { mutableStateOf(false) }
 
     //----Flujo "¿Ya subiste? Confirma tu línea" (Fase 9)----
     // Puerto del bloque de recordatorio del MapaView.swift iOS: pregunta
@@ -384,9 +473,12 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                 }
             }
 
-            // Marcador del destino buscado (iOS lo oculta si es la UTP).
+            // Marcador del destino buscado (iOS lo oculta si es la UTP; y si
+            // el pin colocado por el usuario ES el destino, manda el pin).
             vm.destinoSeleccionado?.let { d ->
-                if (d.label != "UTP") {
+                val pin = marcadorUsuario
+                val pinEsDestino = pin != null && pin.latitude == d.lat && pin.longitude == d.lon
+                if (d.label != "UTP" && !pinEsDestino) {
                     MarkerComposable(
                         state = MarkerState(LatLng(d.lat, d.lon)),
                         anchor = Offset(0.5f, 1f),
@@ -394,6 +486,21 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                     ) {
                         MarcadorDestinoBuscado(d.label)
                     }
+                }
+            }
+
+            // Pin colocado por el usuario (MarcadorPin iOS): tocarlo lo quita.
+            marcadorUsuario?.let { pin ->
+                MarkerComposable(
+                    state = MarkerState(pin),
+                    anchor = Offset(0.5f, 1f),
+                    title = L.t("Mi punto", "My point"),
+                    onClick = {
+                        despejarMarcador()
+                        true
+                    }
+                ) {
+                    MarcadorPinColocado()
                 }
             }
 
@@ -409,11 +516,14 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
 
         // Ui Flotante
         Column(modifier = Modifier.fillMaxSize()) {
-            if (!viajeActivo) {
-                // Header: "Mapa" o "Buses UTP" según el modo de transporte.
+            if (!viajeActivo && !modoColocarMarcador) {
+                // Header: "Mapa" o "Buses UTP" según el modo de transporte;
+                // con flota real, badge de frescura de las posiciones.
                 MapaHeader(
                     onMenuClick = { mostrarDrawer = true },
-                    titulo = if (TransporteApp.busesUTPActivos) L.t("Buses UTP", "UTP buses") else null
+                    titulo = if (TransporteApp.busesUTPActivos) L.t("Buses UTP", "UTP buses") else null,
+                    fuenteReal = vm.fuenteFlota == FuenteFlota.REAL,
+                    datosRecientes = vm.hayPosicionesRealesRecientes
                 )
 
                 // Cápsula de estado de la contribución (baliza del pasajero):
@@ -430,6 +540,7 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                     onEnfoqueCambio = { campoEnfocado = it },
                     onSearch = { focusManager.clearFocus() },
                     onElegirEnMapa = { mostrarElegirDestino = true },
+                    onDestinosGuardados = { mostrarDestinosGuardados = true },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                 )
 
@@ -499,6 +610,8 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             // - Con permiso sin fix: primario, recentra al tocar (relanza GPS).
             // - Con posicion: primario, recentra la camara sobre el usuario.
             // Con viaje activo comparte fila con REPORTAR (overlay del iOS).
+            // Sin itinerario, encima va el boton de COLOCAR MARCADOR (Fase 5);
+            // durante la colocacion ambos se retiran (solo queda el overlay).
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = if (viajeActivo) Arrangement.SpaceBetween else Arrangement.End
@@ -518,48 +631,180 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                         }
                     }
                 }
-                Box(
-                    modifier = Modifier
-                        .padding(end = 20.dp, bottom = 8.dp)
-                        .size(48.dp)
-                        .shadow(4.dp, CircleShape)
-                        .clip(CircleShape)
-                        .background(AppSurface)
-                        .clickable {
-                            if (!autorizadoGPS) permisoUbicacion.launchPermissionRequest()
-                            else vm.recenterOnUser()
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        if (autorizadoGPS) Icons.Filled.MyLocation else Icons.Filled.LocationOff,
-                        contentDescription = L.t("Mi ubicación", "My location"),
-                        tint = if (autorizadoGPS) AppPrimary else OnSurfaceVariant.copy(alpha = 0.6f),
-                        modifier = Modifier.size(22.dp)
-                    )
+                if (modoColocarMarcador) {
+                    // El overlay de colocacion trae sus propios controles.
+                } else {
+                    Column(horizontalAlignment = Alignment.End) {
+                        if (!viajeActivo && vm.itinerario == null) {
+                            // Colocar marcador estilo Uber: retira la UI y fija
+                            // el punto al parar la camara. Con TalkBack activo,
+                            // abre el picker accesible en su lugar.
+                            Box(
+                                modifier = Modifier
+                                    .padding(end = 20.dp, bottom = 10.dp)
+                                    .size(44.dp)
+                                    .shadow(4.dp, CircleShape)
+                                    .clip(CircleShape)
+                                    .background(SurfaceContainerLow)
+                                    .clickable {
+                                        focusManager.clearFocus()
+                                        if (com.example.rutautpnative.ui.components.AppHaptics.lectorDePantallaActivo()) {
+                                            mostrarElegirDestino = true
+                                            return@clickable
+                                        }
+                                        com.example.rutautpnative.ui.components.AppHaptics.impacto()
+                                        // Acercar a las calles sin alejar un mapa
+                                        // que ya estuviera mas cerca (~350 m).
+                                        val actual = vm.cameraPositionState.position
+                                        val zoom350m = 16.2f
+                                        val nuevoZoom = if (actual.zoom > zoom350m) actual.zoom else zoom350m
+                                        scope.launch {
+                                            vm.cameraPositionState.animate(
+                                                com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
+                                                    actual.target, nuevoZoom
+                                                )
+                                            )
+                                        }
+                                        modoColocarMarcador = true
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Filled.LocationOn,
+                                    contentDescription = L.t("Colocar un marcador en el mapa", "Drop a marker on the map"),
+                                    tint = OnSurface,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                        Box(
+                            modifier = Modifier
+                                .padding(end = 20.dp, bottom = 8.dp)
+                                .size(48.dp)
+                                .shadow(4.dp, CircleShape)
+                                .clip(CircleShape)
+                                .background(AppSurface)
+                                .clickable {
+                                    if (!autorizadoGPS) permisoUbicacion.launchPermissionRequest()
+                                    else vm.recenterOnUser()
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                if (autorizadoGPS) Icons.Filled.MyLocation else Icons.Filled.LocationOff,
+                                contentDescription = L.t("Mi ubicación", "My location"),
+                                tint = if (autorizadoGPS) AppPrimary else OnSurfaceVariant.copy(alpha = 0.6f),
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    }
                 }
             }
 
-            // Bottom panel
-            if (!viajeActivo) {
+            // Bottom panel: colapsable a solo el icono de bus (Fase 5, iOS
+            // idem); durante la colocación del marcador se retira.
+            if (!viajeActivo && !modoColocarMarcador) {
                 BottomPanel(
                     rutas = vm.rutasCercanas,
                     buses = vm.busesAnimados,
                     fuenteReal = vm.fuenteFlota == FuenteFlota.REAL,
                     utpPendiente = TransporteApp.rutasUTPPendientes,
+                    colapsado = panelColapsado,
+                    onAlternarColapso = {
+                        com.example.rutautpnative.ui.components.AppHaptics.impacto()
+                        panelColapsado = !panelColapsado
+                    },
                     onReportar = { showReportarSheet = true },
                     onSeleccionarBus = { vm.seleccionarBus(it) }
                 )
                 Spacer(modifier = Modifier.height(100.dp)) // espacio para BottomNavBar
-            } else {
+            } else if (viajeActivo) {
                 Spacer(modifier = Modifier.height(28.dp))
+            }
+        }
+
+        // OVERLAY DE COLOCACIÓN DEL MARCADOR (MarkerPlacementOverlay iOS):
+        // pin elevado + anillo en el centro, instrucción y Cancelar. Los
+        // elementos no clicables dejan pasar los gestos al mapa, que es quien
+        // coloca el punto; solo Cancelar recibe toques.
+        if (modoColocarMarcador) {
+            // Pin en colocación: anillo en el centro + pin elevado encima.
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.align(Alignment.Center)
+            ) {
+                Icon(
+                    Icons.Filled.LocationOn,
+                    contentDescription = null,
+                    tint = AppPrimary,
+                    modifier = Modifier
+                        .offset(y = (-26).dp)
+                        .size(40.dp)
+                )
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .offset(y = 6.dp)
+                        .graphicsLayer {
+                            // Anillo hundido: solo contorno, sin bloquear gestos.
+                            alpha = 0.9f
+                        }
+                        .drawBehind {
+                            drawCircle(
+                                color = AppPrimary.copy(alpha = 0.9f),
+                                radius = size.minDimension / 2f,
+                                style = Stroke(width = 3.dp.toPx())
+                            )
+                        }
+                )
+            }
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 90.dp)
+                    .navigationBarsPadding(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color.Black.copy(alpha = 0.55f))
+                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                ) {
+                    Icon(Icons.Filled.TouchApp, null, tint = Color.White, modifier = Modifier.size(12.dp))
+                    Text(
+                        L.t(
+                            "Pon el círculo sobre tu destino. Al parar 1 s, se calcula la ruta",
+                            "Place the circle over your destination. Pause for 1 s to calculate the route"
+                        ),
+                        style = BodyXsMedium, color = Color.White,
+                        modifier = Modifier.width(240.dp),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .shadow(4.dp, RoundedCornerShape(20.dp))
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(AppSurface)
+                        .clickable { cancelarMarcador() }
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Icon(Icons.Filled.Close, null, tint = OnSurface, modifier = Modifier.size(13.dp))
+                        Text(L.t("Cancelar", "Cancel"), style = BodySmMedium, color = OnSurface)
+                    }
+                }
             }
         }
 
         // POPUP DETALLE DE BUS (encima del panel inferior, como el
         // BusDetailPopup de iOS). Con viaje activo no aparece (iOS idem).
         AnimatedVisibility(
-            visible = vm.busSeleccionado != null && !viajeActivo,
+            visible = vm.busSeleccionado != null && !viajeActivo && !modoColocarMarcador,
             enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
             exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
             modifier = Modifier
@@ -629,6 +874,25 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                 }
             },
             onCerrar = { mostrarElegirDestino = false }
+        )
+    }
+
+    //----Destinos guardados (drawer de búsqueda, Fase 5): paraderos y----
+    //----lugares; elegir uno calcula la ruta desde la ubicación actual.----
+    if (mostrarDestinosGuardados) {
+        DestinosGuardadosSheet(
+            onSeleccionar = { lugar ->
+                mostrarDestinosGuardados = false
+                val lat = lugar.lat ?: return@DestinosGuardadosSheet
+                val lon = lugar.lon ?: return@DestinosGuardadosSheet
+                marcadorUsuario = null
+                vm.seleccionarLugarExterno(lugar.nombre, lat, lon)
+            },
+            onAdministrarParaderos = {
+                mostrarDestinosGuardados = false
+                router.navigate(AppScreen.Seguridad)
+            },
+            onCerrar = { mostrarDestinosGuardados = false }
         )
     }
 
@@ -723,7 +987,12 @@ private fun EstadoContribucion(modifier: Modifier = Modifier) {
 
 // Header
 @Composable
-private fun MapaHeader(onMenuClick: () -> Unit, titulo: String? = null) {    Column(
+private fun MapaHeader(
+    onMenuClick: () -> Unit,
+    titulo: String? = null,
+    fuenteReal: Boolean = false,
+    datosRecientes: Boolean = false
+) {    Column(
         modifier = Modifier
             .fillMaxWidth()
             .statusBarsPadding()
@@ -748,6 +1017,27 @@ private fun MapaHeader(onMenuClick: () -> Unit, titulo: String? = null) {    Col
             }
             Spacer(Modifier.width(12.dp))
             Text(titulo ?: L.t("Mapa", "Map"), style = HeadlineLg, color = AppPrimary)
+            // Con flota real: frescura de las POSICIONES (tener credenciales
+            // no demuestra que hayan llegado datos). Verde = recientes.
+            if (fuenteReal) {
+                Spacer(Modifier.width(10.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(
+                            if (datosRecientes) VerdeExito else OnSurfaceVariant
+                        )
+                        .padding(horizontal = 7.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        if (datosRecientes) L.t("DATOS RECIENTES", "RECENT DATA")
+                        else L.t("ESPERANDO DATOS", "WAITING FOR DATA"),
+                        style = LabelCapsSm,
+                        color = if (datosRecientes) VerdeExito else OnSurfaceVariant,
+                        fontSize = 9.sp
+                    )
+                }
+            }
         }
     }
 }
@@ -760,6 +1050,7 @@ private fun SearchPanel(
     onEnfoqueCambio: (Boolean) -> Unit,
     onSearch: () -> Unit,
     onElegirEnMapa: () -> Unit,
+    onDestinosGuardados: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
@@ -826,6 +1117,24 @@ private fun SearchPanel(
                         contentDescription = L.t("Elegir en el mapa", "Pick on map"),
                         tint = OnSurfaceVariant,
                         modifier = Modifier.size(16.dp)
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
+                // Destinos guardados (bookmark del MapSearchPanel iOS): abre
+                // la hoja con paraderos y lugares guardados.
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(CircleShape)
+                        .background(SurfaceContainerHighest)
+                        .clickable { onSearch(); onDestinosGuardados() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Filled.Bookmark,
+                        contentDescription = L.t("Destinos guardados", "Saved destinations"),
+                        tint = OnSurfaceVariant,
+                        modifier = Modifier.size(15.dp)
                     )
                 }
             }
@@ -929,6 +1238,8 @@ private fun BottomPanel(
     buses: List<BusAnimado>,
     fuenteReal: Boolean,
     utpPendiente: Boolean,
+    colapsado: Boolean,
+    onAlternarColapso: () -> Unit,
     onReportar: () -> Unit,
     onSeleccionarBus: (BusAnimado) -> Unit
 ) {
@@ -950,16 +1261,41 @@ private fun BottomPanel(
                 }
             }
             Spacer(Modifier.width(12.dp))
-            Text(
-                // Buses UTP sin feed institucional: el estado del modo, no un
-                // "0 líneas" engañoso (NearbyTransportPanel iOS: "Rutas
-                // próximamente").
-                if (utpPendiente) L.t("Rutas próximamente", "Routes coming soon")
-                else if (rutas.size == 1) L.t("1 línea operando ahora", "1 route operating now") else L.t("${rutas.size} líneas operando ahora", "${rutas.size} routes operating now"),
-                style = HeadlineBody,
-                color = OnSurface.copy(alpha = 0.85f),
-                modifier = Modifier.weight(1f)
-            )
+            // Al colapsar, el texto se retira y queda solo el icono de bus
+            // (NearbyTransportPanel iOS: ancla fija a la derecha).
+            if (!colapsado) {
+                Text(
+                    // Buses UTP sin feed institucional: el estado del modo, no un
+                    // "0 líneas" engañoso (NearbyTransportPanel iOS: "Rutas
+                    // próximamente").
+                    if (utpPendiente) L.t("Rutas próximamente", "Routes coming soon")
+                    else if (rutas.size == 1) L.t("1 línea operando ahora", "1 route operating now") else L.t("${rutas.size} líneas operando ahora", "${rutas.size} routes operating now"),
+                    style = HeadlineBody,
+                    color = OnSurface.copy(alpha = 0.85f),
+                    modifier = Modifier.weight(1f)
+                )
+            } else {
+                Spacer(Modifier.weight(1f))
+            }
+            // Icono de bus: colapsa/expande el panel (36dp, ancla fija).
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(PrimaryContainer)
+                    .clickable { onAlternarColapso() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Filled.DirectionsBus,
+                    contentDescription = if (colapsado)
+                        L.t("Mostrar transportes cercanos", "Show nearby transport")
+                    else
+                        L.t("Ocultar transportes cercanos", "Hide nearby transport"),
+                    tint = OnPrimaryContainer,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
             Spacer(Modifier.width(6.dp))
             // Badge "En vivo": SOLO con flota real del broker (igual que iOS,
             // que lo enciende con fuenteFlota == .real).
@@ -978,19 +1314,51 @@ private fun BottomPanel(
             }
         }
         Spacer(Modifier.height(10.dp))
-        Row(
-            modifier = Modifier
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Cards con TODAS las líneas que pasan por el punto (el tope de 8
-            // es solo para los marcadores del mapa). Tap â†’ popup del bus.
-            buses.forEach { bus ->
-                BusCard(bus = bus) { onSeleccionarBus(bus) }
+        if (!colapsado) {
+            Row(
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Cards con TODAS las líneas que pasan por el punto (el tope de 8
+                // es solo para los marcadores del mapa). Tap → popup del bus.
+                buses.forEach { bus ->
+                    BusCard(bus = bus) { onSeleccionarBus(bus) }
+                }
             }
         }
         Spacer(Modifier.height(8.dp))
+    }
+}
+
+//----Pin colocado por el usuario (MarcadorPin iOS, forma de gota)----
+// Tocable: quita el pin (y limpia la ruta si el pin era el destino actual).
+@Composable
+private fun MarcadorPinColocado() {
+    Box(
+        modifier = Modifier
+            .size(width = 30.dp, height = 40.dp),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+            // Gota: circulo + triangulo hacia la punta (anclada abajo-centro).
+            val ancho = size.width
+            val alto = size.height
+            val path = androidx.compose.ui.graphics.Path().apply {
+                moveTo(ancho / 2f, alto)                       // punta
+                cubicTo(ancho * 0.05f, alto * 0.55f, 0f, alto * 0.38f, 0f, alto * 0.30f)
+                lineTo(0f, alto * 0.28f)
+                arcTo(
+                    androidx.compose.ui.geometry.Rect(0f, 0f, ancho, alto * 0.56f),
+                    180f, 180f, true
+                )
+                lineTo(ancho / 2f, alto)
+                close()
+            }
+            drawPath(path, AppPrimary)
+            drawCircle(Color.White, radius = ancho * 0.14f, center = androidx.compose.ui.geometry.Offset(ancho / 2f, alto * 0.28f))
+        }
     }
 }
 
@@ -1364,6 +1732,7 @@ private fun BusOccupancyPanel(vehicleId: String) {
             },
             confirmButton = {
                 TextButton(onClick = {
+                    com.example.rutautpnative.ui.components.AppHaptics.exito()
                     servicio?.reportar(vehicleId, estado)
                     estadoPendiente = null
                 }) {

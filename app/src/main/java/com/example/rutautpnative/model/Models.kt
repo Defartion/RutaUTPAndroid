@@ -1,6 +1,7 @@
 package com.example.rutautpnative.model
 
 import androidx.compose.ui.graphics.Color
+import com.example.rutautpnative.data.gtfs.ParaderoGTFS
 import com.example.rutautpnative.ui.theme.*
 import kotlinx.serialization.Serializable
 import java.util.UUID
@@ -43,6 +44,15 @@ data class LugarGuardado(
             com.google.android.gms.maps.model.LatLng(lat, lon),
             com.google.android.gms.maps.model.LatLng(latParadero, lonParadero)
         ) < 5.0
+    }
+
+    /// ¿Es un paradero del catálogo GTFS? Reconocimiento por nombre +
+    /// coordenadas a <5 m (el iOS usa tambien el paraderoID persistido;
+    /// aqui los paraderos guardados se reconocen igual que los registros
+    /// antiguos del iOS, que tampoco lo traian).
+    fun esParaderoGuardadoEn(catalogo: List<ParaderoGTFS>): Boolean {
+        if (lat == null || lon == null) return false
+        return catalogo.any { coincideCon(it.nombre, it.lat, it.lon) }
     }
 }
 

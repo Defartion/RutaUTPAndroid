@@ -122,6 +122,13 @@ class MapaViewModel : ViewModel() {
     var fuenteFlota by mutableStateOf(FuenteFlota.SIMULADA)
         private set
 
+    //----Frescura de las posiciones reales (hayPosicionesRealesRecientes iOS)----
+    // Tener credenciales no demuestra que HAYAN llegado posiciones: el
+    // proveedor retira los vehiculos cuando sus datos caducan, asi que el
+    // header anuncia "DATOS RECIENTES" solo con flota viva.
+    var hayPosicionesRealesRecientes by mutableStateOf(false)
+        private set
+
     private var providerReal: MQTTTrackingProvider? = null
     private var flotaRealJob: Job? = null
     private var catalogoPorId: Map<String, RutaGTFS> = emptyMap()
@@ -361,6 +368,9 @@ class MapaViewModel : ViewModel() {
                 fuente = FuenteFlota.REAL
             )
         }
+        // Flota viva = posiciones recientes; vacio = "ESPERANDO DATOS".
+        val hayDatos = posiciones.isNotEmpty()
+        if (hayDatos != hayPosicionesRealesRecientes) hayPosicionesRealesRecientes = hayDatos
         busesAnimados = flotaBuses
     }
 

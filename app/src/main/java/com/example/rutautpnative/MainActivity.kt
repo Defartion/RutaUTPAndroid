@@ -65,6 +65,9 @@ class MainActivity : ComponentActivity() {
         SeniasPrefs.init(this)
         LocationService.init(this)
         PassiveTrackingCoordinator.init(this)
+        // Hapticos compartidos (AppHaptics del iOS): el TalkBack check lee el
+        // servicio de accesibilidad, se inicializa una sola vez aqui.
+        com.example.rutautpnative.ui.components.AppHaptics.init(this)
         // Si el usuario ya habia consentido, la baliza se reanuda al arrancar
         // (startIfConsented del iOS); sin consentimiento no hace nada.
         // Ahora va DESPUES de L.init: los mensajes salen en el idioma correcto.
