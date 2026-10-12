@@ -14,7 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -190,9 +189,10 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
 
     //----Destinos guardados del drawer de búsqueda (Fase 5)----
     var mostrarDestinosGuardados by remember { mutableStateOf(false) }
-    // Panel de cercanos colapsable a solo el icono de bus (persistente
-    // mientras vive la pantalla, como el NearbyTransportPanel del iOS).
-    var panelColapsado by rememberSaveable { mutableStateOf(false) }
+    // Panel de cercanos colapsable: el estado vive en el ViewModel (sobrevive
+    // al cambio de pestaña, igual que la flota — "persistido en pantalla"
+    // del iOS; rememberSaveable NO sirve aqui porque Crossfade descarta el
+    // estado al salir de composicion).
 
     //----Flujo "¿Ya subiste? Confirma tu línea" (Fase 9)----
     // Puerto del bloque de recordatorio del MapaView.swift iOS: pregunta
@@ -709,10 +709,10 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                     buses = vm.busesAnimados,
                     fuenteReal = vm.fuenteFlota == FuenteFlota.REAL,
                     utpPendiente = TransporteApp.rutasUTPPendientes,
-                    colapsado = panelColapsado,
+                    colapsado = vm.panelColapsado,
                     onAlternarColapso = {
                         com.example.rutautpnative.ui.components.AppHaptics.impacto()
-                        panelColapsado = !panelColapsado
+                        vm.alternarPanelColapsado()
                     },
                     onReportar = { showReportarSheet = true },
                     onSeleccionarBus = { vm.seleccionarBus(it) }

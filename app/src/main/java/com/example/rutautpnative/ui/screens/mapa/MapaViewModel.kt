@@ -139,6 +139,16 @@ class MapaViewModel : ViewModel() {
 
     fun seleccionarBus(bus: BusAnimado?) { busSeleccionado = bus }
 
+    //----Panel de cercanos colapsable (Fase 5)----
+    // Vive en el ViewModel (que SOBREVIVE al cambio de pestaña, como la
+    // flota): el estado plegado/expandido se conserva al ir a Rutas o
+    // Seguridad y volver al mapa. Es el "persistido en pantalla" del iOS;
+    // no se guarda en disco (al reiniciar la app vuelve expandido).
+    var panelColapsado by mutableStateOf(false)
+        private set
+
+    fun alternarPanelColapsado() { panelColapsado = !panelColapsado }
+
     private var flotaBuses: List<BusAnimado> = emptyList()
     private var ultimasPublicadas: List<BusAnimado> = emptyList()
 
