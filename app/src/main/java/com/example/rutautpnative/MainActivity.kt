@@ -4,7 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.data.LineasGuardadasStore
 import com.example.rutautpnative.data.LugaresStore
 import com.example.rutautpnative.data.SedeTrabajoStore
@@ -79,6 +81,30 @@ class MainActivity : ComponentActivity() {
             val modoOscuro = TemaStore.oscuroActual
             RutaUTPNativeTheme(modoOscuro = modoOscuro) {
                 val router: AppRouter = viewModel()
+                //----Argumentos de depuración (Fase 8)----
+                // Puerto del `--pantalla` de iOS (DEBUG only): solo en
+                // compilaciones de desarrollo, se puede abrir directo a una
+                // pantalla pasando el extra "pantalla" en el intent:
+                //   adb shell am start -n com.example.rutautpnative/.MainActivity \
+                //     --es pantalla tracking
+                // Valores: mapa | rutas | guardado | seguridad | perfil | tracking.
+                // "ruta" con un id abre el detalle de ESA línea en Rutas.
+                if (BuildConfig.DEBUG) {
+                    LaunchedEffect(Unit) {
+                        when (intent?.getStringExtra("pantalla")?.lowercase()) {
+                            "mapa" -> router.navigate(AppScreen.MapaPrincipal)
+                            "rutas" -> router.navigate(AppScreen.Rutas)
+                            "guardado" -> router.navigate(AppScreen.Guardado)
+                            "seguridad" -> router.navigate(AppScreen.Seguridad)
+                            "perfil" -> router.navigate(AppScreen.Perfil)
+                            "tracking" -> router.navigate(AppScreen.TrackingDemo)
+                        }
+                        intent?.getStringExtra("ruta")?.let { id ->
+                            router.rutaPendiente = id
+                            router.navigate(AppScreen.Rutas)
+                        }
+                    }
+                }
                 RootView(router)
             }
         }
