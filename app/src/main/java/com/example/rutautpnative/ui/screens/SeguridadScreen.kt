@@ -749,7 +749,6 @@ private fun ZonaCard(numero: Int, zona: ZonaReferencia, onClick: () -> Unit) {
 //----Sección Comunidad: publicaciones demo que rotan cada 4 minutos----
 @Composable
 private fun ComunidadSection(viewModel: SeguridadViewModel, onAnadir: () -> Unit) {
-    val ventana by viewModel.ventanaComunidad.collectAsState()
     val votos by viewModel.votosComunidad.collectAsState()
     var reporteDetalle by remember { mutableStateOf<ReporteComunidad?>(null) }
 
@@ -757,39 +756,35 @@ private fun ComunidadSection(viewModel: SeguridadViewModel, onAnadir: () -> Unit
         Row(verticalAlignment = Alignment.CenterVertically) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)) {
                 Icon(Icons.Filled.Group, null, tint = AppPrimary, modifier = Modifier.size(20.dp))
-                // Titulo señable en bucle (Fase 6).
-                Signable(
-                    clave = "seguridad.comunidad",
-                    es = "Comunidad", en = "Community",
-                    style = HeadlineSm, color = OnSurface
-                )
+                Column {
+                    // Titulo señable en bucle (Fase 6) + subtitulo honesto (iOS).
+                    Signable(
+                        clave = "seguridad.comunidad",
+                        es = "Comunidad", en = "Community",
+                        style = HeadlineSm, color = OnSurface
+                    )
+                    Text(
+                        L.t("Trujillo · publicaciones de demostración", "Trujillo · demo posts"),
+                        style = BodyXs, color = OnSurfaceVariant
+                    )
+                }
             }
             TextButton(onClick = onAnadir) { Text(L.t("AÑADIR", "ADD"), style = LabelCapsSm, color = AppPrimary) }
         }
         Spacer(Modifier.height(12.dp))
 
-        // Transición suave (fade + slide) al cambiar de ventana.
-        AnimatedContent(
-            targetState = ventana,
-            transitionSpec = {
-                (fadeIn() + slideInHorizontally { it / 3 }) togetherWith
-                    (fadeOut() + slideOutHorizontally { -it / 3 })
-            },
-            label = "ventanaComunidad"
-        ) { ventanaActual ->
-            Column {
-                viewModel.publicacionesVisibles().forEach { r ->
-                    ReporteCard(
-                        reporte = r,
-                        votoActual = votos[r.id],
-                        utiles = viewModel.utilesMostrados(r),
-                        noUtiles = viewModel.noUtilesMostrados(r),
-                        onVotar = { voto -> viewModel.votar(r.id, voto) },
-                        onAbrirDetalle = { reporteDetalle = r }
-                    )
-                    Spacer(Modifier.height(12.dp))
-                }
-            }
+        // TODAS las publicaciones visibles al deslizar (LazyVStack iOS), no
+        // una ventana de 3 rotando: el feed se lee completo en scroll.
+        com.example.rutautpnative.data.ComunidadDatos.publicaciones.forEach { r ->
+            ReporteCard(
+                reporte = r,
+                votoActual = votos[r.id],
+                utiles = viewModel.utilesMostrados(r),
+                noUtiles = viewModel.noUtilesMostrados(r),
+                onVotar = { voto -> viewModel.votar(r.id, voto) },
+                onAbrirDetalle = { reporteDetalle = r }
+            )
+            Spacer(Modifier.height(12.dp))
         }
     }
 
