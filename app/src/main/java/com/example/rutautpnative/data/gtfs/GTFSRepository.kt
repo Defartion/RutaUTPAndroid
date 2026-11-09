@@ -39,8 +39,10 @@ object GTFSRepository {
     // disparó la primera petición se limpia. Equivale al `Task` del actor Swift.
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutex = Mutex()
-    private var cache: List<RutaGTFS>? = null
-    private var cargaActiva: Deferred<List<RutaGTFS>>? = null
+    private val cache = mutableMapOf<String, List<RutaGTFS>>()
+    private val cargas = mutableMapOf<String, Deferred<List<RutaGTFS>>>()
+    private val _errorCarga = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
+    val errorCarga: kotlinx.coroutines.flow.StateFlow<String?> = _errorCarga
 
     //----Configuración----
     // Se llama una vez (MainActivity.onCreate) antes de usar el repositorio.
@@ -52,22 +54,30 @@ object GTFSRepository {
     //----Consultas----
 
     /// Devuelve todas las rutas del feed, ordenadas por cercanía a UTP.
-    suspend fun rutas(): List<RutaGTFS> {
+    suspend fun rutas(reintentar: Boolean = false, carpeta: String = if (TransporteApp.busesUTPActivos) "gtfs-utp" else "gtfs"): List<RutaGTFS> {
         val am = assetManager ?: return emptyList()
-
-        // Resuelve la carga compartida de forma idempotente: si ya hay caché la
-        // usa; si hay una carga en curso la reutiliza; si no, arranca una nueva.
         val deferred = mutex.withLock {
-            cache?.let { return it }
-            cargaActiva ?: scope.async { parsearFeed(am) }.also { cargaActiva = it }
+            if (reintentar) cache.remove(carpeta)
+            cache[carpeta]?.let { return it }
+            cargas[carpeta] ?: scope.async {
+                if (carpeta == "gtfs-utp" && am.list(carpeta).isNullOrEmpty()) emptyList()
+                else parsear(am, carpeta)
+            }.also { cargas[carpeta] = it }
         }
-
-        val resultado = deferred.await()
-        mutex.withLock {
-            cache = resultado
-            cargaActiva = null
+        return try {
+            val resultado = deferred.await()
+            mutex.withLock { cache[carpeta] = resultado; if (cargas[carpeta] === deferred) cargas.remove(carpeta) }
+            _errorCarga.value = null
+            resultado
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            mutex.withLock { if (cargas[carpeta] === deferred) cargas.remove(carpeta) }
+            _errorCarga.value = "No se pudo cargar el catálogo de rutas. Vuelve a intentarlo."
+            Log.w("GTFS", "Carga fallida en $carpeta", e)
+            // El fallo no se memoriza como un catálogo vacío: cualquier consumidor puede reintentar.
+            emptyList()
         }
-        return resultado
     }
 
     /// Las `n` rutas cuyo recorrido pasa más cerca del campus UTP.
@@ -89,48 +99,41 @@ object GTFSRepository {
 
     //----Parseo del feed----
 
-    private fun parsearFeed(am: AssetManager): List<RutaGTFS> = try {
-        parsear(am)
-    } catch (e: Exception) {
-        Log.w("GTFS", "Error parseando feed: ${e.message}", e)
-        emptyList()
-    }
-
-    private fun parsear(am: AssetManager): List<RutaGTFS> {
+    private fun parsear(am: AssetManager, carpeta: String): List<RutaGTFS> {
         // 1. Agencias (agency_id → nombre)
-        val agency = GTFSCSV.parsear(leer(am, "agency"))
+        val agency = GTFSCSV.parsear(leer(am, carpeta, "agency"))
         val nombresAgencia = diccionario(agency.columna("agency_id"), agency.columna("agency_name"))
 
         // 2. Rutas
-        val routeRows = GTFSParser.routeRows(leer(am, "routes"))
+        val routeRows = GTFSParser.routeRows(leer(am, carpeta, "routes"))
 
         // 3. Trips (en este feed: 1 trip por ruta, trip_id == route_id)
-        val tripRows = GTFSParser.tripRows(leer(am, "trips"))
+        val tripRows = GTFSParser.tripRows(leer(am, carpeta, "trips"))
         val tripShape = tripRows.associate { it.tripId to it.shapeId }
         val routeTrip = tripRows.associate { it.routeId to it.tripId }
 
         // 4. Shapes agrupados por id y ordenados por secuencia
-        val shapeRows = GTFSParser.shapeRows(leer(am, "shapes"))
+        val shapeRows = GTFSParser.shapeRows(leer(am, carpeta, "shapes"))
         val shapesPorId = shapeRows
             .groupBy { it.shapeId }
             .mapValues { (_, pts) -> pts.sortedBy { it.sequence }.map { LatLng(it.lat, it.lon) } }
 
         // 5. Paraderos (stop_id → ParaderoGTFS)
-        val stopRows = GTFSParser.stopRows(leer(am, "stops"))
+        val stopRows = GTFSParser.stopRows(leer(am, carpeta, "stops"))
         val paraderosPorId = stopRows.associate { it.stopId to ParaderoGTFS(it.stopId, it.stopName, it.lat, it.lon) }
 
         // 6. Stop times agrupados por trip
-        val stopTimeRows = GTFSParser.stopTimeRows(leer(am, "stop_times"))
+        val stopTimeRows = GTFSParser.stopTimeRows(leer(am, carpeta, "stop_times"))
         val paradasPorTrip = stopTimeRows.groupBy { it.tripId }
 
         // 7. Frecuencias (headway) por trip
-        val frequencyRows = GTFSParser.frequencyRows(leer(am, "frequencies"))
+        val frequencyRows = GTFSParser.frequencyRows(leer(am, carpeta, "frequencies"))
         val headwayPorTrip = frequencyRows.associate { it.tripId to it.headwaySecs }
 
         // 8. Tarifas: route_id → precio
-        val fareAttributeRows = GTFSParser.fareAttributeRows(leer(am, "fare_attributes"))
+        val fareAttributeRows = GTFSParser.fareAttributeRows(leer(am, carpeta, "fare_attributes"))
         val precioPorFare = fareAttributeRows.associate { it.fareId to it.price }
-        val fareRuleRows = GTFSParser.fareRuleRows(leer(am, "fare_rules"))
+        val fareRuleRows = GTFSParser.fareRuleRows(leer(am, carpeta, "fare_rules"))
         val precioPorRuta = HashMap<String, Double>()
         for (rule in fareRuleRows) {
             precioPorFare[rule.fareId]?.let { precioPorRuta[rule.routeId] = it }
@@ -178,8 +181,8 @@ object GTFSRepository {
 
     //----Helpers----
 
-    private fun leer(am: AssetManager, nombre: String): String =
-        am.open("gtfs/$nombre.txt").bufferedReader(Charsets.UTF_8).use { it.readText() }
+    private fun leer(am: AssetManager, carpeta: String, nombre: String): String =
+        am.open("$carpeta/$nombre.txt").bufferedReader(Charsets.UTF_8).use { it.readText() }
 
     private fun diccionario(claves: List<String>, valores: List<String>): Map<String, String> {
         val resultado = mutableMapOf<String, String>()
@@ -211,16 +214,10 @@ object GTFSRepository {
         return 2 * radioTierra * asin(min(1.0, sqrt(h)))
     }
 
-    private fun distanciaMinima(puntos: List<LatLng>, destino: LatLng): Double {
-        var minima = Double.POSITIVE_INFINITY
-        for (p in puntos) {
-            val d = distanciaMetros(p, destino)
-            if (d < minima) minima = d
-        }
-        // Sin shape: INFINITO, no 0.0 (una ruta sin geometria no esta "a 0 m
-        // de todo"; antes el 0.0 la ponia PRIMERO en rutas() y colaba por
-        // cualquier filtro de cercania).
-        return if (minima.isInfinite()) Double.POSITIVE_INFINITY else minima
+    private fun distanciaMinima(puntos: List<LatLng>, destino: LatLng): Double = when (puntos.size) {
+        0 -> Double.POSITIVE_INFINITY
+        1 -> distanciaMetros(puntos.first(), destino)
+        else -> com.example.rutautpnative.data.geo.PolylineMatching.proyectarEnShape(destino, puntos)?.distanciaM ?: Double.POSITIVE_INFINITY
     }
 
     private fun longitudTotalKm(puntos: List<LatLng>): Double {

@@ -11,6 +11,10 @@ import java.util.UUID
 enum class CategoriaLugar(val label: String, val icono: String) {
     UNIVERSIDAD("Universidad", "school"),
     HOGAR("Hogar",            "home"),
+    TRABAJO("Trabajo", "work"), ESTUDIOS("Estudios", "menu_book"), SALUD("Salud", "medical_services"),
+    MERCADO("Mercado", "shopping_basket"), CENTRO_COMERCIAL("Centro comercial", "shopping_bag"),
+    CAFETERIA("Cafetería", "local_cafe"), PARQUE("Parque", "park"), GIMNASIO("Gimnasio", "fitness_center"),
+    PARADERO("Paradero", "directions_bus"), PERSONALIZADO("Personalizado", "star"),
     TIENDA("Tienda",          "storefront"),
     RESTAURANTE("Restaurante","restaurant"),
     PLAZA("Plaza",            "account_balance"),
@@ -27,10 +31,13 @@ data class LugarGuardado(
     val categoria: CategoriaLugar,
     val esFrecuente: Boolean = false,
     val lat: Double? = null,
-    val lon: Double? = null
+    val lon: Double? = null,
+    val esFijo: Boolean = false,
+    val paraderoID: String? = null,
+    val iconoPersonalizado: String? = null
 ) {
     // Lugares fijos (UTP) no se pueden eliminar desde la UI.
-    val esFijo: Boolean get() = nombre.equals("UTP", ignoreCase = true)
+    val esParadero: Boolean get() = categoria == CategoriaLugar.PARADERO || paraderoID != null
 
     /// ¿Este lugar guardado ES el paradero dado? (mismo nombre y a <5 m).
     /// Antes duplicado 4 veces en ParaderosIluminadosScreen con `!!`.
@@ -51,8 +58,8 @@ data class LugarGuardado(
     /// aqui los paraderos guardados se reconocen igual que los registros
     /// antiguos del iOS, que tampoco lo traian).
     fun esParaderoGuardadoEn(catalogo: List<ParaderoGTFS>): Boolean {
-        if (lat == null || lon == null) return false
-        return catalogo.any { coincideCon(it.nombre, it.lat, it.lon) }
+        if (esFijo) return false
+        return esParadero || catalogo.any { paraderoID == it.id || coincideCon(it.nombre, it.lat, it.lon) }
     }
 }
 
@@ -121,7 +128,7 @@ data class ReporteComunidad(
     val avatarColor: Color = SurfaceContainerHigh,
     val avatarForeground: Color = OnSurfaceVariant
 ) {
-    val cuerpoLocalizado: String get() = if (com.example.rutautpnative.ui.idioma.L.esIngles) cuerpoIngles ?: cuerpo else cuerpo
+    val cuerpoLocalizado: String get() = com.example.rutautpnative.ui.idioma.L.t(cuerpo, cuerpoIngles ?: cuerpo)
 
     val tiempoLocalizado: String
         get() {

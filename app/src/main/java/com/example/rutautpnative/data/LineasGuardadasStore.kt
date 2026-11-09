@@ -6,6 +6,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.rutautpnative.model.LineaGuardadaRef
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -18,6 +21,8 @@ private val Context.lineasDataStore by preferencesDataStore(name = "lineas_guard
 
 object LineasGuardadasStore {
 
+    private val _datosInvalidos = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val datosInvalidos: kotlinx.coroutines.flow.StateFlow<Boolean> = _datosInvalidos
     private val KEY = stringPreferencesKey("lineas_json")
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -30,18 +35,45 @@ object LineasGuardadasStore {
     suspend fun cargar(): List<LineaGuardadaRef> {
         val ctx = appContext ?: return emptyList()
         val raw = ctx.lineasDataStore.data.first()[KEY].orEmpty()
-        if (raw.isBlank()) return emptyList()
+        return deserializar(raw)
+    }
+
+    fun observar(): Flow<List<LineaGuardadaRef>> {
+        val ctx = appContext ?: return flowOf(emptyList())
+        return ctx.lineasDataStore.data.map { deserializar(it[KEY].orEmpty()) }
+    }
+
+    private fun deserializar(raw: String): List<LineaGuardadaRef> {
+        if (raw.isBlank()) { _datosInvalidos.value = false; return emptyList() }
         return try {
-            json.decodeFromString<List<LineaGuardadaRef>>(raw)
+            json.decodeFromString<List<LineaGuardadaRef>>(raw).also { _datosInvalidos.value = false }
         } catch (e: Exception) {
+            _datosInvalidos.value = true
             emptyList()
         }
     }
 
     suspend fun guardar(refs: List<LineaGuardadaRef>) {
+        modificar { refs }
+    }
+
+    suspend fun modificar(transformar: (List<LineaGuardadaRef>) -> List<LineaGuardadaRef>) {
         val ctx = appContext ?: return
         ctx.lineasDataStore.edit { prefs ->
-            prefs[KEY] = json.encodeToString(refs)
+            val actual = deserializar(prefs[KEY].orEmpty())
+            if (_datosInvalidos.value) return@edit
+            prefs[KEY] = json.encodeToString(transformar(actual).distinctBy { it.routeId })
         }
+        com.example.rutautpnative.data.notificaciones.PushRutasService.sincronizar()
     }
+    suspend fun reiniciarConRespaldo() {
+        val ctx = checkNotNull(appContext)
+        ctx.lineasDataStore.edit { prefs ->
+            RecuperacionPreferencias.archivar(ctx, "lineas", prefs.asMap().mapKeys { it.key.name })
+            prefs[KEY] = "[]"
+        }
+        _datosInvalidos.value = false
+        com.example.rutautpnative.data.notificaciones.PushRutasService.sincronizar()
+    }
+
 }

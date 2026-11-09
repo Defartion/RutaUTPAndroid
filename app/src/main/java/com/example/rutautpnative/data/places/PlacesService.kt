@@ -119,7 +119,7 @@ object PlacesService {
             con.setRequestProperty("Content-Type", "application/json")
             con.connect()
             OutputStreamWriter(con.outputStream).use { salida ->
-                salida.write(cuerpoRestriccion().replace("%s", consulta))
+                salida.write(cuerpoRestriccion().replace("\"%s\"", kotlinx.serialization.json.JsonPrimitive(consulta).toString()))
             }
             val texto = try {
                 con.inputStream.bufferedReader().use { it.readText() }

@@ -1,6 +1,8 @@
 package com.example.rutautpnative
 
 import android.os.Bundle
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -31,6 +33,12 @@ import com.example.rutautpnative.ui.theme.RutaUTPNativeTheme
 import com.example.rutautpnative.ui.theme.TematicaEmpresaStore
 
 class MainActivity : ComponentActivity() {
+    private var notificacionIntent by androidx.compose.runtime.mutableStateOf<android.content.Intent?>(null)
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        notificacionIntent = intent
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -47,6 +55,7 @@ class MainActivity : ComponentActivity() {
         com.example.rutautpnative.model.CatalogoSedesTrabajo.init(this)
         SedeTrabajoStore.init(this)
         TransporteApp.init(this)
+        com.example.rutautpnative.data.tracking.MapVehiclePreferences.init(this)
         com.example.rutautpnative.ui.theme.aplicarTemaOscuro(TemaStore.oscuroActual)
         Persistencia.migrarSiHaceFalta(this)
         // Datos del perfil: telefono/correo, emergencia, preferencias y
@@ -66,6 +75,7 @@ class MainActivity : ComponentActivity() {
         SeniasService.init(this)
         SeniasPrefs.init(this)
         LocationService.init(this)
+        com.example.rutautpnative.data.tracking.TrackingProviderFactory.init(this)
         PassiveTrackingCoordinator.init(this)
         // Hapticos compartidos (AppHaptics del iOS): el TalkBack check lee el
         // servicio de accesibilidad, se inicializa una sola vez aqui.
@@ -74,6 +84,9 @@ class MainActivity : ComponentActivity() {
         // (startIfConsented del iOS); sin consentimiento no hace nada.
         // Ahora va DESPUES de L.init: los mensajes salen en el idioma correcto.
         PassiveTrackingCoordinator.reanudarSiConsentido()
+        com.example.rutautpnative.data.notificaciones.NotificacionesService.init(this)
+        com.example.rutautpnative.data.notificaciones.PushRutasService.init(this)
+        notificacionIntent = intent
         setContent {
             // Tema oscuro manual (persistido): la raíz lee el espejo reactivo
             // del TemaStore — ya hidratado SINCRONAMENTE en init(): el primer
@@ -105,6 +118,31 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+                LaunchedEffect(notificacionIntent) {
+                    val llegada = notificacionIntent ?: return@LaunchedEffect
+                    llegada.getStringExtra("notificacionDestinoID")?.let { id ->
+                        val lugar = LugaresStore.cargar().firstOrNull { "lugar:${it.id}" == id }
+                        val sede = com.example.rutautpnative.model.CatalogoSedesTrabajo.todas.firstOrNull { "sede:${it.id}" == id }
+                        val lat = lugar?.lat ?: sede?.lat
+                        val lon = lugar?.lon ?: sede?.lon
+                        if (lat != null && lon != null) router.destinoPendiente = com.example.rutautpnative.navigation.DestinoPendiente(lugar?.nombre ?: sede!!.nombre, lat, lon)
+                        router.navigate(AppScreen.MapaPrincipal)
+                    }
+                    llegada.getStringExtra("pushRouteID")?.let { route ->
+                        val vigente = llegada.getDoubleExtra("pushExpiresAt", 0.0) > System.currentTimeMillis() / 1000.0
+                        val guardada = LineasGuardadasStore.cargar().any { it.routeId == route }
+                        if (vigente && guardada && PassiveTrackingCoordinator.rutaViajeSeleccionada.value == null) {
+                            router.cambioRutaPendiente = route
+                            router.navigate(AppScreen.MapaPrincipal)
+                        } else android.widget.Toast.makeText(this@MainActivity, com.example.rutautpnative.ui.idioma.L.t("El aviso venció, la línea ya no está guardada o hay un viaje activo.", "The notification expired, the route is no longer saved, or a trip is active."), android.widget.Toast.LENGTH_LONG).show()
+                    }
+                    if (llegada.hasExtra("notificacionDiaria")) router.navigate(when (llegada.getIntExtra("notificacionDiaria", 0)) {
+                        2 -> AppScreen.Perfil
+                        3 -> AppScreen.Guardado
+                        1 -> AppScreen.Seguridad
+                        else -> AppScreen.Rutas
+                    })
+                }
                 RootView(router)
             }
         }
@@ -114,9 +152,11 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         // El permiso puede haber cambiado en Ajustes con la app en segundo plano.
         LocationService.refrescarEstadoAutorizacion()
+        com.example.rutautpnative.data.notificaciones.NotificacionesService.refrescar()
         // Vuelve del segundo plano: reanuda la publicacion del viaje vigente
         // con el MISMO sessionId (resumeObservationSessionIfNeeded del iOS).
         PassiveTrackingCoordinator.reanudarSesionSiPosible()
+        com.example.rutautpnative.data.notificaciones.PushRutasService.primerPlano(true)
     }
 
     override fun onStop() {
@@ -124,6 +164,7 @@ class MainActivity : ComponentActivity() {
         // iOS suspende el proceso poco despues de esto: el socket y el GPS
         // mueren sin despedida. Se cierra la publicacion de forma limpia.
         PassiveTrackingCoordinator.pausarParaSegundoPlano()
+        com.example.rutautpnative.data.notificaciones.PushRutasService.primerPlano(false)
         // Paso a segundo plano: la seña en curso y su acción pendiente se
         // cancelan SIN ejecutarla (iOS idem: "pasar a background detiene la
         // presentación").

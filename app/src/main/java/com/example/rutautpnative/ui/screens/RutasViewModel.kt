@@ -2,6 +2,8 @@ package com.example.rutautpnative.ui.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.rutautpnative.data.gtfs.IndiceBusquedaRuta
+import com.example.rutautpnative.data.gtfs.ConsultaRuta
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.RutaGTFS
 import com.example.rutautpnative.data.gtfs.TransporteApp
@@ -45,17 +47,9 @@ class RutasViewModel : ViewModel() {
 
     val rutasFiltradas: StateFlow<ResultadoFiltro> =
         combine(_rutas, _textoBusqueda, _lugarCercano) { rutas, texto, lugar ->
-            val q = texto.trim()
-            var base = if (q.isEmpty()) {
-                rutas
-            } else {
-                rutas.filter { r ->
-                    r.linea.contains(q, ignoreCase = true) ||
-                        r.empresa.contains(q, ignoreCase = true) ||
-                        r.recorrido.contains(q, ignoreCase = true) ||
-                        r.variante.contains(q, ignoreCase = true)
-                }
-            }
+            val indices = rutas.associate { it.id to IndiceBusquedaRuta(it) }
+            val consulta = ConsultaRuta(texto, indices.values.map { it.letra }.filter { it.isNotBlank() }.toSet())
+            var base = rutas.filter { indices[it.id]?.coincide(consulta) == true }
 
             var distancias = emptyMap<String, Int>()
             if (lugar != null) {
@@ -89,15 +83,18 @@ class RutasViewModel : ViewModel() {
         _lugarCercano.value = lugar
     }
 
+    private val _cargando = MutableStateFlow(true)
+    val cargando = _cargando.asStateFlow()
+    val errorCarga = GTFSRepository.errorCarga
+    fun cargar(reintentar: Boolean = false) {
+        viewModelScope.launch {
+            _cargando.value = true
+            try { _rutas.value = GTFSRepository.rutas(reintentar) } finally { _cargando.value = false }
+        }
+    }
     init {
         viewModelScope.launch {
-            // Modo Buses UTP: mientras el feed institucional no exista, la
-            // lista queda vacía y la pantalla muestra "rutas próximamente"
-            // (el repositorio del iOS conmuta a un catálogo igualmente vacío).
-            androidx.compose.runtime.snapshotFlow { TransporteApp.busesUTPActivos }
-                .collect {
-                    _rutas.value = if (TransporteApp.busesUTPActivos) emptyList() else GTFSRepository.rutas()
-                }
+            androidx.compose.runtime.snapshotFlow { TransporteApp.busesUTPActivos }.collect { cargar() }
         }
     }
 }

@@ -52,10 +52,14 @@ private const val VELOCIDAD_CAMINATA_KMH = 5.0
 @Composable
 fun RutasScreen(router: AppRouter, viewModel: RutasViewModel = viewModel()) {
     val rutas by viewModel.rutas.collectAsState()
+    val cargando by viewModel.cargando.collectAsState()
+    val errorCarga by viewModel.errorCarga.collectAsState()
     val textoBusqueda by viewModel.textoBusqueda.collectAsState()
     val filtro by viewModel.rutasFiltradas.collectAsState()
     val lugarCercano by viewModel.lugarCercano.collectAsState()
 
+    var galeria3d by remember { mutableStateOf(false) }
+    var identificacion3d by remember { mutableStateOf<RutaGTFS?>(null) }
     var rutaSeleccionada by remember { mutableStateOf<RutaGTFS?>(null) }
     var mostrarNavegacion by remember { mutableStateOf(false) }
     var rutaNavegando by remember { mutableStateOf<RutaGTFS?>(null) }
@@ -96,7 +100,8 @@ fun RutasScreen(router: AppRouter, viewModel: RutasViewModel = viewModel()) {
                     ruta = ruta,
                     router = router,
                     onBack = { rutaSeleccionada = null },
-                    onIniciarNavegacion = { rutaNavegando = ruta; mostrarNavegacion = true }
+                    onIniciarNavegacion = { rutaNavegando = ruta; mostrarNavegacion = true },
+                    onVer3D = { identificacion3d = ruta }
                 )
             } else {
                 ListaRutasScreen(
@@ -105,15 +110,21 @@ fun RutasScreen(router: AppRouter, viewModel: RutasViewModel = viewModel()) {
                     distancias = filtro.distancias,
                     lugarCercano = lugarCercano,
                     totalRutas = rutas.size,
+                    cargando = cargando,
+                    errorCarga = errorCarga,
+                    onReintentar = { viewModel.cargar(true) },
                     textoBusqueda = textoBusqueda,
                     onSearchChange = viewModel::actualizarBusqueda,
                     onClearSearch = viewModel::limpiarBusqueda,
                     onQuitarFiltro = { viewModel.filtrarCercaDe(null) },
-                    onSelectRuta = { rutaSeleccionada = it }
+                    onSelectRuta = { rutaSeleccionada = it },
+                    onVer3D = { galeria3d = true }
                 )
             }
         }
 
+        if (galeria3d) Transportes3DScreen(onCerrar = { galeria3d = false })
+        identificacion3d?.let { Transportes3DScreen(ruta = it, onCerrar = { identificacion3d = null }) }
         val navegando = rutaNavegando
         if (mostrarNavegacion && navegando != null) {
             NavegacionScreen(
@@ -132,11 +143,15 @@ private fun ListaRutasScreen(
     distancias: Map<String, Int>,
     lugarCercano: DestinoPendiente?,
     totalRutas: Int,
+    cargando: Boolean,
+    errorCarga: String?,
+    onReintentar: () -> Unit,
     textoBusqueda: String,
     onSearchChange: (String) -> Unit,
     onClearSearch: () -> Unit,
     onQuitarFiltro: () -> Unit,
-    onSelectRuta: (RutaGTFS) -> Unit
+    onSelectRuta: (RutaGTFS) -> Unit,
+    onVer3D: () -> Unit
 ) {
     val borderColor = OutlineVariant.copy(alpha = 0.25f)
     Box(modifier = Modifier.fillMaxSize().background(AppBackground)) {
@@ -166,6 +181,7 @@ private fun ListaRutasScreen(
                         // Titulo señable (Fase 6): seña en bucle al tocar.
                         modifier = Modifier.weight(1f).signable("rutas.titulo")
                     )
+                    TextButton(onClick = onVer3D) { Text("3D") }
                     // Badge con el número de resultados (RutasView iOS); el
                     // "EN VIVO" decorativo se retiró: el real vive solo en el
                     // mapa, ligado a la flota MQTT (fase-mejoras-futuras).
@@ -269,7 +285,17 @@ private fun ListaRutasScreen(
                     }
                 }
 
-                if (rutas.isEmpty() && textoBusqueda.isNotBlank()) {
+                if (cargando || errorCarga != null) {
+                    item {
+                        Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            if (cargando) CircularProgressIndicator(color = AppPrimary)
+                            else {
+                                Text(L.t("No se pudo cargar el catálogo de rutas.", "Could not load the route catalog."), color = OnSurface)
+                                TextButton(onClick = onReintentar) { Text(L.t("Reintentar", "Retry")) }
+                            }
+                        }
+                    }
+                } else if (rutas.isEmpty() && textoBusqueda.isNotBlank()) {
                     item {
                         Box(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
@@ -373,7 +399,8 @@ private fun DetalleRutaScreen(
     ruta: RutaGTFS,
     router: AppRouter,
     onBack: () -> Unit,
-    onIniciarNavegacion: () -> Unit
+    onIniciarNavegacion: () -> Unit,
+    onVer3D: () -> Unit
 ) {
     val borderColor = OutlineVariant.copy(alpha = 0.25f)
     var mostrarExplorador by remember { mutableStateOf(false) }
@@ -430,6 +457,9 @@ private fun DetalleRutaScreen(
             ) {
                 Spacer(Modifier.height(16.dp))
 
+                ReferenciaTransporte(ruta)
+                OutlinedButton(onClick = onVer3D, modifier = Modifier.fillMaxWidth()) { Text(L.t("Identificar transporte en 3D", "Identify transport in 3D")) }
+                Spacer(Modifier.height(12.dp))
                 // Mapa con el recorrido real
                 Box(
                     modifier = Modifier

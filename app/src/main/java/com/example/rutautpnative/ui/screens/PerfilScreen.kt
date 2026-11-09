@@ -61,7 +61,7 @@ fun PerfilScreen(router: AppRouter) {
     // de las demás de arriba, porque la leen todas las pantallas de la app.
     val modoSenias by SeniasPrefs.observarActivo().collectAsState(initial = false)
     // Idioma: la otra preferencia persistida de Perfil (ES por defecto, EN opcional).
-    val esIngles = L.esIngles
+    var mostrarIdiomas by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var newNameInput by remember { mutableStateOf("") }
     var showCarnetScanner by remember { mutableStateOf(false) }
@@ -69,6 +69,7 @@ fun PerfilScreen(router: AppRouter) {
     // Hojas nuevas (Fase de perfil completo): datos personales, offline y
     // ayuda de accesibilidad.
     var showDatosPersonales by remember { mutableStateOf(false) }
+    var mostrarRespaldos by remember { mutableStateOf(false) }
     var showOffline by remember { mutableStateOf(false) }
     var showAccesibilidad by remember { mutableStateOf(false) }
     // Foto de perfil PERSISTIDA (ProfileImageStore): fuente única compartida
@@ -409,14 +410,8 @@ fun PerfilScreen(router: AppRouter) {
                         // ES = switch apagado, EN = encendido. Persiste como las dos
                         // anteriores; toda la app reacciona al instante (L).
                         // Fase 6: botón señable (tarjeta 3 s -> cambiar idioma).
-                        ToggleRow(
-                            Icons.Filled.Language, AppPrimary,
-                            if (esIngles) "Idioma: English" else "Idioma: Español",
-                            esIngles
-                        ) { activo ->
-                            com.example.rutautpnative.data.senias.SeniasOverlay.ejecutarTrasVerSenia("perfil.idioma") {
-                                L.establecer(if (activo) "en" else "es")
-                            }
+                        ChevronRow(Icons.Filled.Language, AppPrimary, L.t("Idioma", "Language") + ": " + L.nombreIdioma) {
+                            mostrarIdiomas = true
                         }
                         Divider(modifier = Modifier.padding(start = 56.dp))
                         ChevronRow(Icons.Filled.Person, AppPrimary, L.t("Nombre: $nombre", "Name: $nombre")) {
@@ -427,6 +422,8 @@ fun PerfilScreen(router: AppRouter) {
                         ChevronRow(Icons.Filled.Edit, OnSurfaceVariant, L.t("Editar perfil", "Edit profile")) {
                             showDatosPersonales = true
                         }
+                        Divider(modifier = Modifier.padding(start = 56.dp))
+                        ChevronRow(Icons.Filled.Restore, Secondary, L.t("Respaldos y recuperación", "Backups and recovery")) { mostrarRespaldos = true }
                         Divider(modifier = Modifier.padding(start = 56.dp))
                         // Modo offline: qué funciona sin conexión (OfflineMapSheet).
                         ChevronRow(Icons.Filled.CloudOff, Secondary, L.t("Modo offline", "Offline mode")) {
@@ -450,6 +447,25 @@ fun PerfilScreen(router: AppRouter) {
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             BottomNavBar(router)
         }
+    }
+
+    if (mostrarRespaldos) RespaldosRecuperacionSheet { mostrarRespaldos = false }
+
+    if (mostrarIdiomas) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { mostrarIdiomas = false },
+            title = { Text(L.t("Idioma", "Language")) },
+            text = {
+                Column {
+                    L.idiomas.forEach { idioma ->
+                        TextButton(onClick = { L.establecer(idioma.codigo); mostrarIdiomas = false }, modifier = Modifier.fillMaxWidth()) {
+                            Text((if (L.codigo == idioma.codigo) "✓ " else "") + idioma.nombre, color = OnSurface)
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { mostrarIdiomas = false }) { Text(L.t("Cerrar", "Close")) } }
+        )
     }
 
     // Edit name dialog

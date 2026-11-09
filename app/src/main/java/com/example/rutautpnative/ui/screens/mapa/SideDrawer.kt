@@ -138,7 +138,7 @@ fun SideDrawer(router: AppRouter, onClose: () -> Unit) {
     // Active sheet
     activeSheet?.let { sheet ->
         when (sheet) {
-            DrawerSheet.NOTIFICACIONES  -> NotificacionesSheet(onDismiss = { activeSheet = null })
+            DrawerSheet.NOTIFICACIONES  -> com.example.rutautpnative.ui.screens.NotificacionesScreen(onCerrar = { activeSheet = null })
             DrawerSheet.CIUDAD          -> CiudadSheet(onDismiss = { activeSheet = null })
             DrawerSheet.AJUSTES         -> AjustesSheet(onDismiss = { activeSheet = null })
             DrawerSheet.SOPORTE         -> SoporteSheet(onDismiss = { activeSheet = null })
@@ -316,6 +316,14 @@ private fun AjustesSheet(onDismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(modifier = Modifier.padding(20.dp)) {
             SheetHeader(Icons.Filled.Settings, OnSurfaceVariant, L.t("Ajustes", "Settings"))
+            Text(L.t("Micros visibles en el mapa", "Buses visible on the map"), style = BodyMdMedium, color = OnSurface)
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                val prefs = com.example.rutautpnative.data.tracking.MapVehiclePreferences
+                prefs.opciones.forEach { limite ->
+                    FilterChip(selected = prefs.limite == limite, onClick = { prefs.establecer(limite) },
+                        label = { Text(if (limite == 0) L.t("Todos", "All") else "$limite") })
+                }
+            }
             Spacer(Modifier.height(16.dp))
             Text(L.t("APARIENCIA", "APPEARANCE"), style = LabelCapsMd, color = OnSurfaceVariant)
             Spacer(Modifier.height(8.dp))
@@ -381,7 +389,7 @@ private fun AjustesSheet(onDismiss: () -> Unit) {
                         Text(L.t("Ayudar con ubicaciones", "Help with locations"), style = BodyMdMedium, color = OnSurface)
                         Text(
                             if (contribuyendo) mensajeContribucion
-                            else L.t("Comparte observaciones anónimas de tus viajes en micro.", "Share anonymous observations of your bus rides."),
+                            else L.t("Comparte ubicaciones de tus viajes vinculadas a una sesión y tu cuenta MQTT.", "Share trip locations linked to a session and your MQTT account."),
                             style = BodyXs, color = OnSurfaceVariant
                         )
                     }
@@ -450,8 +458,8 @@ private fun AjustesSheet(onDismiss: () -> Unit) {
             text = {
                 Text(
                     L.t(
-                        "La app analizará tu ubicación y tu actividad física para detectar cuándo viajas en una línea de transporte, y compartirá observaciones anónimas con el servidor de prueba: ni tu nombre, ni datos personales, ni identificadores permanentes se envían. Solo se publica tras confirmar un viaje, y la publicación se pausa al pasar a segundo plano.",
-                        "The app will analyze your location and physical activity to detect when you ride a transit line, and will share anonymous observations with the test server: neither your name, personal data, nor permanent identifiers are sent. Publishing only starts after a ride is confirmed, and it pauses in the background."
+                        "La app usa tu ubicación y actividad física para detectar un viaje. Comparte sesión, ruta, coordenadas, hora, velocidad, rumbo, precisión y actividad con el servidor, mediante tu cuenta MQTT. No envía nombre ni correo, pero el broker y el backend pueden relacionar viajes. El envío se pausa en segundo plano. Terminar el viaje no borra los datos del servidor ni garantiza anonimato.",
+                        "The app uses location and physical activity to detect a trip. It shares session, route, coordinates, time, speed, heading, accuracy and activity through your MQTT account. It sends no name or email, but the broker and backend can link trips. Sending pauses in the background. Ending a trip does not delete server data or guarantee anonymity."
                     ),
                     style = BodySm
                 )

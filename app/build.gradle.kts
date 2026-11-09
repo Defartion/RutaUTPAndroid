@@ -6,6 +6,9 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+// Firebase es opcional: una instalación sin proyecto sigue compilando y usando avisos locales.
+if (file("google-services.json").isFile) apply(plugin = "com.google.gms.google-services")
+
 // MQTT: las credenciales viven en local.properties (gitignored) o -P por
 // línea de comandos, NUNCA en el repo. Sin MQTT_HOST el canal queda
 // "no configurado" y la baliza del pasajero se desactiva sola (igual que iOS,
@@ -35,6 +38,7 @@ android {
         buildConfigField("String", "MQTT_USERNAME", "\"${mqttProp("MQTT_USERNAME")}\"")
         buildConfigField("String", "MQTT_PASSWORD", "\"${mqttProp("MQTT_PASSWORD")}\"")
         buildConfigField("String", "MQTT_TLS", "\"${mqttProp("MQTT_TLS")}\"")
+        buildConfigField("String", "MQTT_READ_ONLY", "\"${mqttProp("MQTT_READ_ONLY")}\"")
         buildConfigField("String", "MQTT_CA_ASSET", "\"${mqttProp("MQTT_CA_ASSET")}\"")
     }
 
@@ -49,12 +53,14 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    testOptions { unitTests.all { it.systemProperty("rutautp.assets", file("src/main/assets").absolutePath) } }
     buildFeatures {
         compose = true
         buildConfig = true
     }
 }
 dependencies {
+    implementation("com.google.firebase:firebase-messaging:26.0.1")
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)

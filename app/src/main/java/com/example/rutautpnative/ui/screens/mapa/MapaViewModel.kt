@@ -65,7 +65,11 @@ data class BusAnimado(
     val velocidadMS: Double,              // crucero propia del vehiculo
     val isMovingForward: Boolean,
     val tramoActual: Int,                 // cache del segmento [i, i+1]
-    val fuente: FuenteFlota = FuenteFlota.SIMULADA
+    val fuente: FuenteFlota = FuenteFlota.SIMULADA,
+    val dataOrigin: com.example.rutautpnative.data.tracking.VehicleDataOrigin = com.example.rutautpnative.data.tracking.VehicleDataOrigin.SIMULATED,
+    val simulationRunId: String? = null,
+    val controlRevision: Long? = null,
+    val scenarioOccupancy: String? = null
 ) {
     // La variante del feed no se confunde con una matricula ni se traduce.
     val ramalTexto: String
@@ -259,7 +263,37 @@ class MapaViewModel : ViewModel() {
     var mensajeRuta by mutableStateOf<String?>(null)
         private set
 
+    var alternativas by mutableStateOf<List<TransitPlanner.Plan>>(emptyList())
+        private set
+    var destacadas by mutableStateOf<List<TransitPlanner.Destacada>>(emptyList())
+        private set
+    var seleccionandoAlternativa by mutableStateOf(false)
+        private set
+    var mensajeAlternativa by mutableStateOf<String?>(null)
+        private set
+    private var alternativaJob: Job? = null
     private var itinerarioJob: Job? = null
+
+    fun seleccionarAlternativa(plan: TransitPlanner.Plan) {
+        if (plan.optionID == itinerario?.optionID || alternativas.none { it.optionID == plan.optionID }) return
+        alternativaJob?.cancel()
+        val destino = destinoSeleccionado?.id
+        alternativaJob = viewModelScope.launch {
+            seleccionandoAlternativa = true
+            mensajeAlternativa = null
+            try {
+                val verificada = TransitPlanner.conCaminatasReales(plan) { a, b -> TransitPlanner.caminataReal(a, b) }
+                if (destinoSeleccionado?.id != destino) return@launch
+                if (verificada.caminataBoardMetros > TransitPlanner.RADIO_PIE_METROS || verificada.caminataDestinoMetros > TransitPlanner.RADIO_PIE_METROS || !verificada.dentroDeLimiteTransbordo) {
+                    mensajeAlternativa = L.t("La caminata de esta ruta supera el límite. Elige otra opción.", "This route's walk exceeds the limit. Choose another option.")
+                } else {
+                    itinerario = verificada
+                    alternativas = alternativas.map { if (it.optionID == plan.optionID) verificada else it }
+                    enfocarItinerario(verificada)
+                }
+            } finally { seleccionandoAlternativa = false }
+        }
+    }
 
     //----GPS real (Fase 1)----
     // Posicion del usuario en vivo: nula hasta el primer fix. Dibuja el
@@ -375,14 +409,24 @@ class MapaViewModel : ViewModel() {
                 velocidadMS = p.speed.coerceAtLeast(0.0),
                 isMovingForward = true,
                 tramoActual = 0,
-                fuente = FuenteFlota.REAL
+                fuente = FuenteFlota.REAL,
+                dataOrigin = p.dataOrigin,
+                simulationRunId = p.simulationRunId,
+                controlRevision = p.controlRevision,
+                scenarioOccupancy = p.scenarioOccupancy
             )
         }
         // Flota viva = posiciones recientes; vacio = "ESPERANDO DATOS".
         val hayDatos = posiciones.isNotEmpty()
         if (hayDatos != hayPosicionesRealesRecientes) hayPosicionesRealesRecientes = hayDatos
         busesAnimados = flotaBuses
+        busSeleccionado = busSeleccionado?.let { selected -> flotaBuses.firstOrNull {
+            it.id == selected.id && it.rutaId == selected.rutaId && it.dataOrigin == selected.dataOrigin &&
+                it.simulationRunId == selected.simulationRunId && it.controlRevision == selected.controlRevision
+        } }
     }
+    fun pausarFlota() { providerReal?.pausar() }
+    fun reanudarFlota() { providerReal?.reanudar() }
 
     // Seleccion
     fun seleccionar(destino: DestinoChip) {
@@ -422,13 +466,27 @@ class MapaViewModel : ViewModel() {
             return
         }
         itinerarioJob?.cancel()
+        alternativaJob?.cancel()
+        alternativas = emptyList()
+        destacadas = emptyList()
         itinerarioJob = viewModelScope.launch {
             calculandoItinerario = true
             mensajeRuta = null
             itinerario = null
             try {
                 val rutas = GTFSRepository.rutas()
-                val plan = TransitPlanner.plan(origen, destino, rutas) { a, b -> TransitPlanner.caminataReal(a, b) }
+                val opciones = TransitPlanner.opciones(origen, destino, rutas)
+                alternativas = opciones.alternativas
+                destacadas = opciones.destacadas
+                val recomendadas = opciones.destacadas.filter { TransitPlanner.Categoria.RECOMENDADA in it.categorias }.map { it.plan }
+                var plan: TransitPlanner.Plan? = null
+                for (candidato in (recomendadas + opciones.alternativas).distinctBy { it.optionID }.take(4)) {
+                    val resuelto = TransitPlanner.conCaminatasReales(candidato) { a, b -> TransitPlanner.caminataReal(a, b) }
+                    if (resuelto.caminataBoardMetros <= TransitPlanner.RADIO_PIE_METROS && resuelto.caminataDestinoMetros <= TransitPlanner.RADIO_PIE_METROS && resuelto.dentroDeLimiteTransbordo) {
+                        plan = resuelto
+                        break
+                    }
+                }
                 itinerario = plan
                 if (plan == null) {
                     // Radio de busqueda del mapa: hasta 1600 m a pie en cada
@@ -500,6 +558,9 @@ class MapaViewModel : ViewModel() {
         busesAnimados = emptyList()
         busSeleccionado = null
         itinerarioJob?.cancel()
+        alternativaJob?.cancel()
+        alternativas = emptyList()
+        destacadas = emptyList()
         itinerario = null
         mensajeRuta = null
         calculandoItinerario = false

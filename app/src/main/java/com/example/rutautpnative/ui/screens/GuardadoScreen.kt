@@ -46,14 +46,21 @@ import kotlinx.coroutines.launch
 fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()) {
     val lugares by viewModel.lugares.collectAsState()
     val lineas by viewModel.lineas.collectAsState()
+    val lugaresInvalidos by com.example.rutautpnative.data.LugaresStore.datosInvalidos.collectAsState()
+    val lineasInvalidas by com.example.rutautpnative.data.LineasGuardadasStore.datosInvalidos.collectAsState()
     val catalogo by viewModel.catalogo.collectAsState()
     var selectedTab by remember { mutableStateOf(0) }
     var showAddSheet by remember { mutableStateOf(false) }
     var showAddLineaSheet by remember { mutableStateOf(false) }
     var selectedLugar by remember { mutableStateOf<LugarGuardado?>(null) }
+    var editarLugar by remember { mutableStateOf<LugarGuardado?>(null) }
     var selectedLinea by remember { mutableStateOf<RutaGTFS?>(null) }
     var exploradorRuta by remember { mutableStateOf<RutaGTFS?>(null) }
 
+    LaunchedEffect(router.lugarGuardadoPendiente, lugares) {
+        val id = router.lugarGuardadoPendiente ?: return@LaunchedEffect
+        lugares.firstOrNull { it.id == id }?.let { selectedLugar = it; router.lugarGuardadoPendiente = null }
+    }
     val borderColor = OutlineVariant.copy(alpha = 0.25f)
     val tabs = listOf(L.t("Lugares", "Places"), L.t("Líneas", "Routes"))
 
@@ -78,7 +85,7 @@ fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()
                     modifier = Modifier.clip(CircleShape).background(PrimaryContainer)
                         .senableAccion(
                             if (selectedTab == 0) "guardado.anadir_lugar" else "guardado.anadir_linea"
-                        ) { showAddSheet = true }
+                        ) { if (selectedTab == 0) showAddSheet = true else showAddLineaSheet = true }
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -111,6 +118,7 @@ fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()
                 }
             }
 
+            if (lugaresInvalidos || lineasInvalidas) Text(L.t("No se pueden leer algunos datos guardados. Se conservan sin sobrescribirlos. Abre Perfil → Respaldos y recuperación.", "Some saved data cannot be read. It is preserved without overwriting. Open Profile → Backups and recovery."), style = BodySm, color = AppError, modifier = Modifier.padding(16.dp))
             // Content
             Column(
                 modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
@@ -175,6 +183,7 @@ fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()
         LugarDetailSheet(
             lugar = lugar,
             router = router,
+            onEditar = { editarLugar = lugar; selectedLugar = null },
             onEliminar = { viewModel.eliminar(lugar); selectedLugar = null },
             onDismiss = { selectedLugar = null }
         )
@@ -189,6 +198,9 @@ fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()
         )
     }
 
+    editarLugar?.let { lugar ->
+        AddLugarSheet(inicial = lugar, onSave = { viewModel.actualizar(it); editarLugar = null }, onDismiss = { editarLugar = null })
+    }
     if (showAddSheet) {
         AddLugarSheet(
             onSave = { nuevo -> viewModel.agregar(nuevo); showAddSheet = false },
@@ -223,7 +235,7 @@ private fun LugarRow(lugar: LugarGuardado, onClick: () -> Unit) {
                 modifier = Modifier.size(48.dp).clip(CircleShape).background(if (isUTP) AppPrimary else PrimaryContainer.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(iconoParaCategoria(lugar.categoria), null, tint = if (isUTP) Color.White else AppPrimary, modifier = Modifier.size(24.dp))
+                Icon(com.example.rutautpnative.ui.components.iconoParaLugar(lugar), null, tint = if (isUTP) Color.White else AppPrimary, modifier = Modifier.size(24.dp))
             }
             Spacer(Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -267,7 +279,7 @@ private fun LineaRow(ruta: RutaGTFS, onClick: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LugarDetailSheet(lugar: LugarGuardado, router: AppRouter, onEliminar: () -> Unit, onDismiss: () -> Unit) {
+private fun LugarDetailSheet(lugar: LugarGuardado, router: AppRouter, onEditar: () -> Unit, onEliminar: () -> Unit, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -300,7 +312,7 @@ private fun LugarDetailSheet(lugar: LugarGuardado, router: AppRouter, onEliminar
             val isUTP = lugar.nombre == "UTP"
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(modifier = Modifier.size(56.dp).clip(CircleShape).background(if (isUTP) AppPrimary else PrimaryContainer.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
-                    Icon(iconoParaCategoria(lugar.categoria), null, tint = if (isUTP) Color.White else AppPrimary, modifier = Modifier.size(28.dp))
+                    Icon(com.example.rutautpnative.ui.components.iconoParaLugar(lugar), null, tint = if (isUTP) Color.White else AppPrimary, modifier = Modifier.size(28.dp))
                 }
                 Spacer(Modifier.width(16.dp))
                 Column {
@@ -334,6 +346,8 @@ private fun LugarDetailSheet(lugar: LugarGuardado, router: AppRouter, onEliminar
             }, modifier = Modifier.fillMaxWidth().height(48.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = PrimaryContainer)) {
                 Icon(Icons.Filled.DirectionsBus, null, tint = OnPrimaryContainer); Spacer(Modifier.width(8.dp)); Text(L.t("Buscar transporte cercano", "Find nearby transport"), style = BodyMdMedium, color = OnPrimaryContainer)
             }
+            Spacer(Modifier.height(10.dp))
+            OutlinedButton(onClick = onEditar, modifier = Modifier.fillMaxWidth().height(48.dp)) { Text(L.t("Editar lugar", "Edit place")) }
             Spacer(Modifier.height(10.dp))
             Button(onClick = onEliminar, enabled = !lugar.esFijo, modifier = Modifier.fillMaxWidth().height(48.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = ErrorContainer)) {
                 Icon(Icons.Filled.Delete, null, tint = OnErrorContainer); Spacer(Modifier.width(8.dp)); Text(L.t("Eliminar de guardados", "Remove from saved"), style = BodyMdMedium, color = OnErrorContainer)
@@ -470,14 +484,16 @@ private enum class EstadoDireccion {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddLugarSheet(onSave: (LugarGuardado) -> Unit, onDismiss: () -> Unit) {
+private fun AddLugarSheet(onSave: (LugarGuardado) -> Unit, onDismiss: () -> Unit, inicial: LugarGuardado? = null) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var nombre by remember { mutableStateOf("") }
-    var direccion by remember { mutableStateOf("") }
-    var categoria by remember { mutableStateOf(CategoriaLugar.OTRO) }
-    var coordenada by remember { mutableStateOf<LatLng?>(null) }
+    var nombre by remember { mutableStateOf(inicial?.nombre.orEmpty()) }
+    var direccion by remember { mutableStateOf(inicial?.direccion.orEmpty()) }
+    var categoria by remember { mutableStateOf(inicial?.categoria ?: CategoriaLugar.OTRO) }
+    var icono by remember { mutableStateOf(inicial?.iconoPersonalizado) }
+    var frecuente by remember { mutableStateOf(inicial?.esFrecuente ?: false) }
+    var coordenada by remember { mutableStateOf(inicial?.let { lugar -> lugar.lat?.let { lat -> lugar.lon?.let { lon -> LatLng(lat, lon) } } }) }
     var estadoDireccion by remember { mutableStateOf(EstadoDireccion.SIN_BUSCAR) }
     var geocodeJob by remember { mutableStateOf<Job?>(null) }
     var mostrarPicker by remember { mutableStateOf(false) }
@@ -508,7 +524,7 @@ private fun AddLugarSheet(onSave: (LugarGuardado) -> Unit, onDismiss: () -> Unit
     val puedeGuardar = nombre.isNotBlank() && direccion.isNotBlank() && coordenada != null
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column(modifier = Modifier.fillMaxHeight(0.9f).verticalScroll(rememberScrollState()).padding(20.dp)) {
             Text(L.t("Guardar lugar", "Save place"), style = HeadlineMd, color = OnSurface)
             Spacer(Modifier.height(16.dp))
             Text(L.t("NOMBRE", "NAME"), style = LabelCapsMd, color = OnSurfaceVariant)
@@ -537,6 +553,25 @@ private fun AddLugarSheet(onSave: (LugarGuardado) -> Unit, onDismiss: () -> Unit
                 shape = RoundedCornerShape(12.dp)
             )
 
+            Text(L.t("Categoría", "Category"), style = BodyMdMedium, modifier = Modifier.padding(top = 12.dp))
+            CategoriaLugar.entries.chunked(3).forEach { fila ->
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    fila.forEach { valor -> FilterChip(categoria == valor, { categoria = valor }, label = { Text(L.t(valor.label, valor.name.lowercase().replace('_', ' ')), maxLines = 1) }) }
+                }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(frecuente, { frecuente = it }); Text(L.t("Lugar frecuente", "Frequent place"))
+            }
+            Text(L.t("Icono personalizado", "Custom icon"), style = BodyMdMedium)
+            val iconos = listOf("favorite", "flag", "people", "pets", "local_pharmacy", "sports_soccer", "movie", "music_note", "star")
+            iconos.chunked(5).forEach { fila -> Row {
+                fila.forEach { valor ->
+                    IconButton(onClick = { icono = if (icono == valor) null else valor }) {
+                        Icon(com.example.rutautpnative.ui.components.iconoParaLugar(LugarGuardado(nombre = "", direccion = "", categoria = categoria, iconoPersonalizado = valor)), valor,
+                            tint = if (icono == valor) AppPrimary else OnSurfaceVariant)
+                    }
+                }
+            } }
             // Estado de la geocodificación (con coordenada visible).
             Spacer(Modifier.height(6.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -583,6 +618,11 @@ private fun AddLugarSheet(onSave: (LugarGuardado) -> Unit, onDismiss: () -> Unit
                     com.example.rutautpnative.data.senias.SeniasOverlay.ejecutarTrasVerSenia("guardado.guardar_lugar") {
                         val p = coordenada ?: return@ejecutarTrasVerSenia
                         onSave(LugarGuardado(
+                            id = inicial?.id ?: java.util.UUID.randomUUID().toString(),
+                            esFijo = inicial?.esFijo ?: false,
+                            paraderoID = inicial?.paraderoID,
+                            iconoPersonalizado = icono,
+                            esFrecuente = frecuente,
                             nombre = nombre.ifBlank { "Nuevo lugar" },
                             direccion = direccion.ifBlank { "Sin dirección" },
                             categoria = categoria,

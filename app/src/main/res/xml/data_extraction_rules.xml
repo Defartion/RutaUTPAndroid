@@ -9,11 +9,11 @@
         <include .../>
         <exclude .../>
         -->
+        <exclude domain="sharedpref" path="rutautp_tarjetas.xml" />
+        <exclude domain="sharedpref" path="rutautp.push.xml" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <exclude domain="sharedpref" path="rutautp_tarjetas.xml" />
+        <exclude domain="sharedpref" path="rutautp.push.xml" />
     </device-transfer>
-    -->
 </data-extraction-rules>

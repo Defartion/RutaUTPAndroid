@@ -36,35 +36,35 @@ class GuardadoViewModel : ViewModel() {
 
     init {
         viewModelScope.launch {
-            refsLineas = LineasGuardadasStore.cargar()
             _catalogo.value = GTFSRepository.rutas()
-            _lineas.value = resolver()
+            LineasGuardadasStore.observar().collect { refs ->
+                refsLineas = refs
+                _lineas.value = resolver()
+            }
         }
     }
 
     // --- Lugares ---
     fun agregar(lugar: LugarGuardado) {
-        val nueva = lugares.value + listOf(lugar)
-        viewModelScope.launch { LugaresStore.guardar(nueva) }
+        viewModelScope.launch { LugaresStore.modificar { it + lugar } }
     }
 
     fun eliminar(lugar: LugarGuardado) {
         if (lugar.esFijo) return // UTP es fijo; nunca se elimina.
-        val nueva = lugares.value.filter { it.id != lugar.id }
-        viewModelScope.launch { LugaresStore.guardar(nueva) }
+        viewModelScope.launch { LugaresStore.modificar { lista -> lista.filter { it.id != lugar.id || it.esFijo } } }
+    }
+
+    fun actualizar(lugar: LugarGuardado) {
+        viewModelScope.launch { LugaresStore.modificar { lista -> lista.map { if (it.id == lugar.id) lugar.copy(esFijo = it.esFijo) else it } } }
     }
 
     // --- Líneas ---
     fun agregarLinea(ruta: RutaGTFS) {
-        refsLineas = refsLineas + LineaGuardadaRef(ruta.id)
-        _lineas.value = resolver()
-        viewModelScope.launch { LineasGuardadasStore.guardar(refsLineas) }
+        viewModelScope.launch { LineasGuardadasStore.modificar { it + LineaGuardadaRef(ruta.id) } }
     }
 
     fun quitarLinea(routeId: String) {
-        refsLineas = refsLineas.filter { it.routeId != routeId }
-        _lineas.value = resolver()
-        viewModelScope.launch { LineasGuardadasStore.guardar(refsLineas) }
+        viewModelScope.launch { LineasGuardadasStore.modificar { refs -> refs.filter { it.routeId != routeId } } }
     }
 
     // Resuelve cada referencia contra el catálogo; las que ya no existen se descartan.

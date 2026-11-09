@@ -76,6 +76,7 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
     var mostrarCambiosRuta by remember { mutableStateOf(false) }
     var showLlamarDialog by remember { mutableStateOf(false) }
     var mostrarParaderos by remember { mutableStateOf(false) }
+    var mostrarContacto by remember { mutableStateOf(false) }
     var showPublicarComunidad by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -153,6 +154,8 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
             // Scrollable content
             Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
                 Spacer(Modifier.height(4.dp))
+                ContactoEmergenciaCard { mostrarContacto = true }
+                Spacer(Modifier.height(16.dp))
                 GreetingCard()
                 Spacer(Modifier.height(28.dp))
                 LugaresSection(router, viewModel)
@@ -167,6 +170,8 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
                 Spacer(Modifier.height(28.dp))
                 ZonasReferenciaSection(onZona = { zona -> viewModel.buscarZona(zona.nombre) })
                 Spacer(Modifier.height(28.dp))
+                ParaderosGuardadosSeguridad(router, rutas)
+                Spacer(Modifier.height(20.dp))
                 ComunidadSection(
                     viewModel = viewModel,
                     onAnadir = { showPublicarComunidad = true }
@@ -185,6 +190,8 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp)
         )
     }
+
+    if (mostrarContacto) ContactoEmergenciaSheet { mostrarContacto = false }
 
     // Dialogs & sheets
     if (showLlamarDialog) {
@@ -391,7 +398,7 @@ private fun LugarTile(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    iconoParaCategoria(lugar.categoria), null,
+                    com.example.rutautpnative.ui.components.iconoParaLugar(lugar), null,
                     tint = if (lugar.esFijo) Color.White else AppPrimary,
                     modifier = Modifier.size(24.dp)
                 )
@@ -534,7 +541,7 @@ private fun ElegirLugaresSheet(
                             modifier = Modifier.size(36.dp).clip(CircleShape).background(PrimaryContainer.copy(alpha = 0.12f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(iconoParaCategoria(lugar.categoria), null, tint = AppPrimary, modifier = Modifier.size(18.dp))
+                            Icon(com.example.rutautpnative.ui.components.iconoParaLugar(lugar), null, tint = AppPrimary, modifier = Modifier.size(18.dp))
                         }
                         Spacer(Modifier.width(10.dp))
                         Text(lugar.nombre, style = BodyMd, color = OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)

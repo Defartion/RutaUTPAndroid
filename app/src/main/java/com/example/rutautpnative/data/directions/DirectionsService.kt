@@ -5,6 +5,11 @@ import android.content.pm.PackageManager
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlin.coroutines.resume
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -29,7 +34,16 @@ object DirectionsService {
         appContext = context.applicationContext
     }
 
-    suspend fun rutaPeatonal(origen: LatLng, destino: LatLng): Resultado = withContext(Dispatchers.IO) {
+    private data class Key(val origen: LatLng, val destino: LatLng)
+    private val cache = RouteCalculationCache<Key, Resultado>({ it is Resultado.Exito })
+    private val workers = java.util.concurrent.Executors.newFixedThreadPool(4) { task -> Thread(task, "rutautp-directions").apply { isDaemon = true } }
+    suspend fun rutaPeatonal(origen: LatLng, destino: LatLng): Resultado = try {
+        cache.get(Key(origen, destino)) { withTimeout(4_000) { pedir(origen, destino) } }
+    } catch (_: TimeoutCancellationException) { Resultado.Error }
+      catch (e: CancellationException) { throw e }
+      catch (_: Exception) { Resultado.Error }
+
+    private suspend fun pedir(origen: LatLng, destino: LatLng): Resultado = withContext(Dispatchers.IO) {
         val apiKey = leerApiKey() ?: return@withContext Resultado.Error
         val url = "https://maps.googleapis.com/maps/api/directions/json" +
             "?origin=${origen.latitude},${origen.longitude}" +
@@ -39,12 +53,18 @@ object DirectionsService {
 
         try {
             val con = URL(url).openConnection() as HttpURLConnection
-            con.connectTimeout = 10_000
-            con.readTimeout = 10_000
-            val texto = try {
-                con.inputStream.bufferedReader().use { it.readText() }
-            } finally {
-                con.disconnect()
+            con.connectTimeout = 4_000
+            con.readTimeout = 4_000
+            val texto = suspendCancellableCoroutine<String> { continuation ->
+                val future = workers.submit {
+                    try {
+                        val value = con.inputStream.bufferedReader().use { it.readText() }
+                        if (continuation.isActive) continuation.resume(value)
+                    } catch (e: Exception) {
+                        if (continuation.isActive) continuation.resumeWith(Result.failure(e))
+                    } finally { con.disconnect() }
+                }
+                continuation.invokeOnCancellation { con.disconnect(); future.cancel(true) }
             }
 
             val raiz = Json.parseToJsonElement(texto).jsonObject
@@ -65,9 +85,8 @@ object DirectionsService {
                 ?.jsonPrimitive?.longOrNull?.toInt() ?: 0
 
             Resultado.Exito(puntos = puntos, distanciaMetros = distancia)
-        } catch (e: Exception) {
-            Resultado.Error
-        }
+        } catch (e: CancellationException) { throw e }
+        catch (e: Exception) { Resultado.Error }
     }
 
     // No confiamos el API key en el código fuente directo;

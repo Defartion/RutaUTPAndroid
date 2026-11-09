@@ -23,8 +23,11 @@ private val Context.lugaresDataStore by preferencesDataStore(name = "lugares_gua
 
 object LugaresStore {
 
+    private val _datosInvalidos = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val datosInvalidos: kotlinx.coroutines.flow.StateFlow<Boolean> = _datosInvalidos
+
     private val KEY = stringPreferencesKey("lugares_json")
-    private val json = Json { ignoreUnknownKeys = true }
+    private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
     private var appContext: Context? = null
 
@@ -34,15 +37,18 @@ object LugaresStore {
 
     //----Lugar fijo (UTP), con la coordenada real del campus----
     private val lugarUTP = LugarGuardado(
+        id = "utp-trujillo",
         nombre = "UTP",
         direccion = "Av. Nicolás de Piérola 1221, Trujillo",
         categoria = CategoriaLugar.UNIVERSIDAD,
         esFrecuente = true,
+        esFijo = true,
         lat = GTFSRepository.coordenadaUTP.latitude,
         lon = GTFSRepository.coordenadaUTP.longitude
     )
 
     private val lugarPlaza = LugarGuardado(
+        id = "plaza-armas-trujillo",
         nombre = "Plaza de Armas",
         direccion = "Centro Histórico de Trujillo",
         categoria = CategoriaLugar.PLAZA,
@@ -74,8 +80,31 @@ object LugaresStore {
     suspend fun guardar(lugares: List<LugarGuardado>) {
         val ctx = appContext ?: return
         ctx.lugaresDataStore.edit { prefs ->
+            val anterior = prefs[KEY]
+            if (!anterior.isNullOrBlank()) { deserializar(anterior); if (_datosInvalidos.value) return@edit }
             prefs[KEY] = json.encodeToString(lugares)
         }
+        com.example.rutautpnative.data.notificaciones.NotificacionesService.refrescar()
+    }
+
+    suspend fun modificar(transformar: (List<LugarGuardado>) -> List<LugarGuardado>) {
+        val ctx = appContext ?: return
+        ctx.lugaresDataStore.edit { prefs ->
+            val raw = prefs[KEY].orEmpty()
+            val actual = reordenarUTP(if (raw.isBlank()) semilla() else deserializar(raw))
+            if (_datosInvalidos.value) return@edit
+            prefs[KEY] = json.encodeToString(reordenarUTP(transformar(actual)))
+        }
+        com.example.rutautpnative.data.notificaciones.NotificacionesService.refrescar()
+    }
+
+    suspend fun reiniciarConRespaldo() {
+        val ctx = checkNotNull(appContext)
+        ctx.lugaresDataStore.edit { prefs ->
+            RecuperacionPreferencias.archivar(ctx, "lugares", prefs.asMap().mapKeys { it.key.name })
+            prefs[KEY] = json.encodeToString(semilla())
+        }
+        _datosInvalidos.value = false
     }
 
     private fun semilla(): List<LugarGuardado> = listOf(lugarUTP, lugarPlaza)
@@ -88,8 +117,15 @@ object LugaresStore {
     }
 
     private fun deserializar(raw: String): List<LugarGuardado> = try {
-        json.decodeFromString<List<LugarGuardado>>(raw)
+        json.decodeFromString<List<LugarGuardado>>(raw).also { _datosInvalidos.value = false }.let { lugares ->
+            // Los registros anteriores carecían de esFijo: migrar solo esos registros.
+            val originales = Json.parseToJsonElement(raw) as kotlinx.serialization.json.JsonArray
+            lugares.mapIndexed { i, lugar ->
+                if ((originales.getOrNull(i) as? kotlinx.serialization.json.JsonObject)?.containsKey("esFijo") != true && lugar.nombre.equals("UTP", true)) lugar.copy(esFijo = true) else lugar
+            }
+        }
     } catch (e: Exception) {
+        _datosInvalidos.value = true
         // Si el JSON guardado quedó corrupto, se cae a la semilla antes que romper.
         semilla()
     }

@@ -7,7 +7,8 @@
 -->
 <full-backup-content>
     <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
+   Las claves de cifrado y la identidad FCM pertenecen a esta instalación.
 -->
+    <exclude domain="sharedpref" path="rutautp_tarjetas.xml" />
+    <exclude domain="sharedpref" path="rutautp.push.xml" />
 </full-backup-content>

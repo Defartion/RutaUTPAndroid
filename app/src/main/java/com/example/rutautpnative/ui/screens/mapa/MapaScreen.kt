@@ -104,9 +104,13 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
         vm.actualizarSedeTrabajo()
     }
 
+    LaunchedEffect(router.cambioRutaPendiente) {
+        if (router.cambioRutaPendiente != null) mostrarCambiosRuta = true
+    }
     // "Elegir en el mapa": picker a pantalla completa + geocodificación inversa.
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    var mostrarAlternativas by remember { mutableStateOf(false) }
     var mostrarElegirDestino by remember { mutableStateOf(false) }
 
     //----Colocación de marcador estilo Uber (Fase 5)----
@@ -289,10 +293,12 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
         val observador = LifecycleEventObserver { _, evento ->
             when (evento) {
                 Lifecycle.Event.ON_STOP -> {
+                    vm.pausarFlota()
                     tareaPregunta?.cancel()
                     tareaPregunta = null
                 }
                 Lifecycle.Event.ON_START -> {
+                    vm.reanudarFlota()
                     if (fechaRecordatorio != null) iniciarEsperaPregunta(3)
                 }
                 else -> {}
@@ -329,6 +335,8 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
         router.destinoPendiente = null
         vm.seleccionarLugarExterno(pendiente.titulo, pendiente.lat, pendiente.lon)
     }
+
+    if (mostrarAlternativas) AlternativasRutaSheet(vm) { mostrarAlternativas = false }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Mapa
@@ -381,8 +389,8 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             // Buses animados sobre shapes GTFS REALES. Tope de 8 marcadores
             // en el mapa por rendimiento; con viaje activo la flota se retira
             // y manda el recorrido DECLARADO (TransitMapCanvas iOS idem).
-            val topeBuses = if (viajeActivo) 0 else 8
-            vm.busesAnimados.take(topeBuses).forEach { bus ->
+            val visibles = if (viajeActivo) emptyList() else com.example.rutautpnative.data.tracking.MapVehiclePreferences.visibles(vm.busesAnimados, vm.busSeleccionado?.id) { it.id }
+            visibles.forEach { bus ->
                 val seleccionado = vm.busSeleccionado?.id == bus.id
                 MarkerComposable(
                     // IMPORTANTE (maps-compose): el contenido de un
@@ -553,6 +561,7 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                         itinerario = vm.itinerario,
                         mensaje = vm.mensajeRuta,
                         onQuitar = { vm.limpiar() },
+                        onAlternativas = { mostrarAlternativas = true },
                         onConfirmarAbordo = {
                             cancelarPreguntaViaje()
                             mostrarConfirmacionAbordo = true
@@ -857,7 +866,7 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
     // Cambios de ruta (Fase 8): obras/cierre/desvio confirmados por la
     // comunidad via MQTT (dos cuentas, 15 min de vigencia).
     if (mostrarCambiosRuta) {
-        RouteChangesSheet(onDismiss = { mostrarCambiosRuta = false })
+        RouteChangesSheet(rutaInicial = router.cambioRutaPendiente, onDismiss = { mostrarCambiosRuta = false; router.cambioRutaPendiente = null })
     }
 
     //----"Elegir en el mapa" (Fase 4): picker a pantalla completa +----
@@ -934,7 +943,7 @@ private fun chipsDesde(lugares: List<LugarGuardado>, sede: SedeTrabajo?): List<D
             DestinoChip(
                 id = "lug|${lugar.nombre}".hashCode(),
                 label = lugar.nombre,
-                icon = iconoParaCategoria(lugar.categoria),
+                icon = com.example.rutautpnative.ui.components.iconoParaLugar(lugar),
                 lat = lat,
                 lon = lon
             )
@@ -1317,7 +1326,7 @@ private fun BottomPanel(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Box(modifier = Modifier.size(7.dp).clip(CircleShape).background(AppPrimary))
-                        Text(L.t("En vivo", "Live"), style = LabelCapsSm, color = AppPrimary)
+                        Text(if (buses.any { it.dataOrigin == com.example.rutautpnative.data.tracking.VehicleDataOrigin.SIMULATED }) L.t("Simulación", "Simulation") else if (buses.isEmpty()) L.t("Sin datos", "No data") else L.t("En vivo", "Live"), style = LabelCapsSm, color = AppPrimary)
                     }
                 }
             }
@@ -1380,6 +1389,7 @@ private fun ResumenItinerario(
     mensaje: String?,
     onQuitar: () -> Unit,
     onConfirmarAbordo: (() -> Unit)? = null,
+    onAlternativas: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -1486,7 +1496,7 @@ private fun ResumenItinerario(
                     ) {
                         Text(L.t("··· A pie", "··· Walking"), style = BodyXs, color = OnSurfaceVariant)
                         Text(L.t("━━ En bus", "━━ By bus"), style = BodyXs, color = plan.ruta.color)
-                        Text("· ~${plan.etaMinutos} min", style = BodyXs, color = OnSurface)
+                        Text("· ~${kotlin.math.ceil(plan.viajeEstimadoSeg / 60).toInt()} min", style = BodyXs, color = OnSurface)
                     }
                     if (plan.caminataAproximada) {
                         Spacer(Modifier.height(6.dp))
@@ -1502,6 +1512,8 @@ private fun ResumenItinerario(
                         }
                     }
 
+                    Text(L.f("Espera de referencia: ~{0} min", "Reference wait: ~{0} min", "${(plan.esperaSubidaSeg / 60).roundToInt()}"), style = BodyXs, color = OnSurfaceVariant)
+                    onAlternativas?.let { abrir -> TextButton(onClick = abrir) { Text(L.t("Ver otras rutas", "See other routes")) } }
                     // Invitacion permanente "¿Ya subiste?" (iOS: visible
                     // mientras no haya viaje activo; abre la hoja y cancela
                     // el recordatorio automatico).
@@ -1602,7 +1614,13 @@ private fun BusDetailPopup(
         // Panel de ocupacion (Fase 7): SOLO vehiculos reales; los de demo
         // no reciben reportes (la identidad es el vehicleID del backend,
         // nunca el numero de linea).
-        if (bus.fuente == FuenteFlota.REAL) {
+        if (bus.dataOrigin == com.example.rutautpnative.data.tracking.VehicleDataOrigin.SIMULATED && bus.scenarioOccupancy != null) {
+            Text(L.t("Ocupación simulada", "Simulated occupancy") + ": " + when (bus.scenarioOccupancy) {
+                "empty" -> L.t("Vacío", "Empty")
+                "space" -> L.t("Con espacio", "Space available")
+                else -> L.t("Lleno", "Full")
+            }, style = BodySm, color = OnSurfaceVariant)
+        } else if (bus.fuente == FuenteFlota.REAL && bus.dataOrigin == com.example.rutautpnative.data.tracking.VehicleDataOrigin.OBSERVED && !bus.id.removePrefix("real-").startsWith("sim:", true)) {
             Spacer(Modifier.height(12.dp))
             BusOccupancyPanel(vehicleId = bus.id.removePrefix("real-"))
         } else {
@@ -1616,6 +1634,9 @@ private fun BusDetailPopup(
             )
         }
 
+        if (bus.dataOrigin == com.example.rutautpnative.data.tracking.VehicleDataOrigin.SIMULATED) {
+            Text(L.t("SIMULACIÓN · posición de demostración", "SIMULATION · demonstration position"), style = BodyXs, color = OnSurfaceVariant)
+        }
         Spacer(Modifier.height(14.dp))
         // CTA con el color del bus: abre el detalle de ESA línea en Rutas.
         Box(
@@ -1638,7 +1659,8 @@ private fun BusOccupancyPanel(vehicleId: String) {
     // El servicio vive y muere con el panel (onAppear/onDisappear del iOS):
     // una conexion MQTT propia, apagada al cerrar el popup.
     val config = remember { MQTTConfiguration.desdeBuildConfig() }
-    val servicio = remember(config) { config?.let { OccupancyService(it) } }
+    val contexto = LocalContext.current.applicationContext
+    val servicio = remember(config, contexto) { config?.let { OccupancyService(it, contexto) } }
 
     DisposableEffect(servicio) {
         servicio?.start()

@@ -43,6 +43,9 @@ class AppRouter : ViewModel() {
     // filtra las líneas con paradero a menos de 300 m del punto.
     var lugarCercanoPendiente: DestinoPendiente? by mutableStateOf(null)
 
+    var cambioRutaPendiente: String? by mutableStateOf(null)
+    var lugarGuardadoPendiente: String? by mutableStateOf(null)
+
     fun navigate(to: AppScreen) {
         currentScreen = to
     }

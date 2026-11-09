@@ -144,7 +144,8 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
             existente == null -> actuales + LugarGuardado(
                 nombre = paradero.nombre,
                 direccion = "Trujillo",
-                categoria = CategoriaLugar.OTRO,
+                categoria = CategoriaLugar.PARADERO,
+                paraderoID = paradero.id,
                 lat = paradero.lat,
                 lon = paradero.lon
             )
