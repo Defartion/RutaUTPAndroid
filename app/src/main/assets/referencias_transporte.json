@@ -1,0 +1,2409 @@
+[
+  {
+    "routeId": "17522670",
+    "linea": "M-01",
+    "letra": "A",
+    "empresa": "California",
+    "colores": [
+      {
+        "hex": "#5AAFA0",
+        "nombre": "Verde agua",
+        "ingles": "Mint green"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122155313780117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17527405",
+    "linea": "M-02",
+    "letra": "C",
+    "empresa": "California",
+    "colores": [
+      {
+        "hex": "#5AAFA0",
+        "nombre": "Verde agua",
+        "ingles": "Mint green"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      }
+    ],
+    "fuente": "https://www.facebook.com/bcurbanofficial/posts/617378354147208/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17550302",
+    "linea": "M-05",
+    "letra": "H ♥",
+    "empresa": "Huanchaco",
+    "colores": [
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      },
+      {
+        "hex": "#F5C928",
+        "nombre": "Amarillo",
+        "ingles": "Yellow"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122158210784117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17551463",
+    "linea": "M-06",
+    "letra": "B",
+    "empresa": "Huanchaco",
+    "colores": [
+      {
+        "hex": "#F5C928",
+        "nombre": "Amarillo",
+        "ingles": "Yellow"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://www.facebook.com/bcurbanofficial/posts/858004373417937/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17554401",
+    "linea": "M-08",
+    "letra": "A",
+    "empresa": "Nuevo California",
+    "colores": [
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122153598188117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17554410",
+    "linea": "M-09",
+    "letra": "BC",
+    "empresa": "Nuevo California",
+    "colores": [
+      {
+        "hex": "#5AAFA0",
+        "nombre": "Verde agua",
+        "ingles": "Mint green"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122155274684117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17554571",
+    "linea": "M-10",
+    "letra": "B1",
+    "empresa": "Nuevo California",
+    "colores": [
+      {
+        "hex": "#5AAFA0",
+        "nombre": "Verde agua",
+        "ingles": "Mint green"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      }
+    ],
+    "fuente": "https://www.facebook.com/bcurbanofficial/posts/769200352298340/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17554576",
+    "linea": "M-13",
+    "letra": "C1",
+    "empresa": "El Cortijo",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#F5C928",
+        "nombre": "Amarillo",
+        "ingles": "Yellow"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://www.facebook.com/bcurbanofficial/posts/1086688363882869/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17554620",
+    "linea": "M-15",
+    "letra": "C2",
+    "empresa": "El Cortijo",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#F5C928",
+        "nombre": "Amarillo",
+        "ingles": "Yellow"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://www.facebook.com/bcurbanofficial/posts/734366072448435/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17554634",
+    "linea": "M-15",
+    "letra": "C2VR",
+    "empresa": "El Cortijo",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#F5C928",
+        "nombre": "Amarillo",
+        "ingles": "Yellow"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://www.facebook.com/photo/?fbid=122163725132117228&set=a.122103536606117228",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17554640",
+    "linea": "M-17",
+    "letra": "C2",
+    "empresa": "La Libertad",
+    "colores": [
+      {
+        "hex": "#4DB5B0",
+        "nombre": "Turquesa",
+        "ingles": "Turquoise"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#195A52",
+        "nombre": "Verde oscuro",
+        "ingles": "Dark green"
+      }
+    ],
+    "fuente": "https://www.facebook.com/bcurbanofficial/posts/858002120084829/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17554644",
+    "linea": "M-18",
+    "letra": "C1",
+    "empresa": "La Libertad",
+    "colores": [
+      {
+        "hex": "#4DB5B0",
+        "nombre": "Turquesa",
+        "ingles": "Turquoise"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#195A52",
+        "nombre": "Verde oscuro",
+        "ingles": "Dark green"
+      }
+    ],
+    "fuente": "https://www.facebook.com/bcurbanofficial/photos/per%C3%BA-trujillo-trujillo-en-ruta-por-la-av-espa%C3%B1a-se-visualiza-uno-de-los-dos-nuev/958140823404291/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17554645",
+    "linea": "M-19",
+    "letra": "A",
+    "empresa": "La Libertad",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#4DB5B0",
+        "nombre": "Turquesa",
+        "ingles": "Turquoise"
+      },
+      {
+        "hex": "#195A52",
+        "nombre": "Verde oscuro",
+        "ingles": "Dark green"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122167443062117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17463462",
+    "linea": "M-23",
+    "letra": "B",
+    "empresa": "Virgen de la Puerta",
+    "colores": [
+      {
+        "hex": "#2D4FAA",
+        "nombre": "Azul rey",
+        "ingles": "Royal blue"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#6DC9E0",
+        "nombre": "Celeste",
+        "ingles": "Light blue"
+      }
+    ],
+    "fuente": null,
+    "modelo": "micro",
+    "orientativa": true
+  },
+  {
+    "routeId": "17463445",
+    "linea": "M-23",
+    "letra": "B ♥",
+    "empresa": "Virgen de la Puerta",
+    "colores": [
+      {
+        "hex": "#2D4FAA",
+        "nombre": "Azul rey",
+        "ingles": "Royal blue"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#6DC9E0",
+        "nombre": "Celeste",
+        "ingles": "Light blue"
+      }
+    ],
+    "fuente": null,
+    "modelo": "micro",
+    "orientativa": true
+  },
+  {
+    "routeId": "17554649",
+    "linea": "M-31",
+    "letra": "A",
+    "empresa": "Señor de los Milagros",
+    "colores": [
+      {
+        "hex": "#C13E83",
+        "nombre": "Fucsia",
+        "ingles": "Fuchsia"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#7E304A",
+        "nombre": "Guinda",
+        "ingles": "Burgundy"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122178411368117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17554667",
+    "linea": "M-32",
+    "letra": "A1",
+    "empresa": "Señor de los Milagros",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#C13E83",
+        "nombre": "Fucsia",
+        "ingles": "Fuchsia"
+      },
+      {
+        "hex": "#7E304A",
+        "nombre": "Guinda",
+        "ingles": "Burgundy"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122154363692117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17554683",
+    "linea": "M-33",
+    "letra": "B",
+    "empresa": "Esperanza Express",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122154365306117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17521284",
+    "linea": "M-33",
+    "letra": "B ♥",
+    "empresa": "Esperanza Express",
+    "colores": [
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#1E304D",
+        "nombre": "Azul oscuro",
+        "ingles": "Dark blue"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122175218060117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17434457",
+    "linea": "M-34",
+    "letra": "A",
+    "empresa": "Esperanza Express",
+    "colores": [
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#1E304D",
+        "nombre": "Azul oscuro",
+        "ingles": "Dark blue"
+      }
+    ],
+    "fuente": "https://www.facebook.com/bcurbanofficial/posts/573321755219535/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17554691",
+    "linea": "M-34",
+    "letra": "A ♥",
+    "empresa": "Esperanza Express",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      },
+      {
+        "hex": "#1E304D",
+        "nombre": "Azul oscuro",
+        "ingles": "Dark blue"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122174545508117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17581560",
+    "linea": "M-35",
+    "letra": "D",
+    "empresa": "El Icaro",
+    "colores": [
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#E6A0B8",
+        "nombre": "Rosado",
+        "ingles": "Pink"
+      }
+    ],
+    "fuente": "https://www.facebook.com/bcurbanofficial/posts/483386054213106/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17612564",
+    "linea": "M-35",
+    "letra": "D ♥",
+    "empresa": "El Icaro",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      },
+      {
+        "hex": "#E6A0B8",
+        "nombre": "Rosado",
+        "ingles": "Pink"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122169372704117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17554694",
+    "linea": "M-36",
+    "letra": "LV",
+    "empresa": "Nuevo California",
+    "colores": [
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122159317292117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17492018",
+    "linea": "C-05",
+    "letra": "B1",
+    "empresa": "Moderno Girasoles",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#F5C928",
+        "nombre": "Amarillo",
+        "ingles": "Yellow"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://www.etmogesa.com/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17419574",
+    "linea": "C-06",
+    "letra": "K",
+    "empresa": "Titanic Express",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#2D4FAA",
+        "nombre": "Azul rey",
+        "ingles": "Royal blue"
+      }
+    ],
+    "fuente": null,
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17434307",
+    "linea": "C-07",
+    "letra": "Z1",
+    "empresa": "Titanic Express",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#2D4FAA",
+        "nombre": "Azul rey",
+        "ingles": "Royal blue"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122142345380117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17434313",
+    "linea": "C-09",
+    "letra": "E",
+    "empresa": "Arco Iris Express",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#1E304D",
+        "nombre": "Azul oscuro",
+        "ingles": "Dark blue"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122158205408117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17508499",
+    "linea": "C-11",
+    "letra": "T1",
+    "empresa": "San Isidro Labrador",
+    "colores": [
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      },
+      {
+        "hex": "#F5C928",
+        "nombre": "Amarillo",
+        "ingles": "Yellow"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122164671182117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17508505",
+    "linea": "C-13",
+    "letra": "D",
+    "empresa": "Nuevo Diamante",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122161248152117228/",
+    "modelo": "combi",
+    "orientativa": true
+  },
+  {
+    "routeId": "17463348",
+    "linea": "C-14",
+    "letra": "S",
+    "empresa": "Sol y Luna",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#D3913E",
+        "nombre": "Naranja",
+        "ingles": "Orange"
+      },
+      {
+        "hex": "#4D322F",
+        "nombre": "Marrón oscuro",
+        "ingles": "Dark brown"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122161072670117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17508507",
+    "linea": "C-16",
+    "letra": "I",
+    "empresa": "Virgen del Arco",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      },
+      {
+        "hex": "#F5C928",
+        "nombre": "Amarillo",
+        "ingles": "Yellow"
+      },
+      {
+        "hex": "#979795",
+        "nombre": "Gris",
+        "ingles": "Gray"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122156427338117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17520994",
+    "linea": "C-18",
+    "letra": "P",
+    "empresa": "Virgen del Arco",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      },
+      {
+        "hex": "#F5C928",
+        "nombre": "Amarillo",
+        "ingles": "Yellow"
+      },
+      {
+        "hex": "#979795",
+        "nombre": "Gris",
+        "ingles": "Gray"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122156427338117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17434332",
+    "linea": "C-20",
+    "letra": "UI",
+    "empresa": "Luz Divina",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#195A52",
+        "nombre": "Verde oscuro",
+        "ingles": "Dark green"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#86BE39",
+        "nombre": "Verde lima",
+        "ingles": "Lime green"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122164350842117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17463362",
+    "linea": "C-20",
+    "letra": "UI",
+    "empresa": "Luz Divina",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#195A52",
+        "nombre": "Verde oscuro",
+        "ingles": "Dark green"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#86BE39",
+        "nombre": "Verde lima",
+        "ingles": "Lime green"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122164350842117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17463369",
+    "linea": "C-21",
+    "letra": "R",
+    "empresa": "Luz Divina",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#195A52",
+        "nombre": "Verde oscuro",
+        "ingles": "Dark green"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#86BE39",
+        "nombre": "Verde lima",
+        "ingles": "Lime green"
+      }
+    ],
+    "fuente": null,
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17521119",
+    "linea": "C-22",
+    "letra": "M",
+    "empresa": "Luz Divina",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#195A52",
+        "nombre": "Verde oscuro",
+        "ingles": "Dark green"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#86BE39",
+        "nombre": "Verde lima",
+        "ingles": "Lime green"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122164350842117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17520880",
+    "linea": "C-23",
+    "letra": "S1",
+    "empresa": "Santa Catalina",
+    "colores": [
+      {
+        "hex": "#1E304D",
+        "nombre": "Azul oscuro",
+        "ingles": "Dark blue"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#F5C928",
+        "nombre": "Amarillo",
+        "ingles": "Yellow"
+      }
+    ],
+    "fuente": null,
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17521008",
+    "linea": "C-24",
+    "letra": "H1",
+    "empresa": "Santa Catalina",
+    "colores": [
+      {
+        "hex": "#1E304D",
+        "nombre": "Azul oscuro",
+        "ingles": "Dark blue"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#F5C928",
+        "nombre": "Amarillo",
+        "ingles": "Yellow"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122140662668117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17521004",
+    "linea": "C-24",
+    "letra": "H2",
+    "empresa": "Santa Catalina",
+    "colores": [
+      {
+        "hex": "#1E304D",
+        "nombre": "Azul oscuro",
+        "ingles": "Dark blue"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#F5C928",
+        "nombre": "Amarillo",
+        "ingles": "Yellow"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122140662668117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17521112",
+    "linea": "C-27",
+    "letra": "B",
+    "empresa": "Caballito de Totora",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#1C1F21",
+        "nombre": "Negro",
+        "ingles": "Black"
+      }
+    ],
+    "fuente": null,
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17521114",
+    "linea": "C-28",
+    "letra": "C",
+    "empresa": "Caballito de Totora",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      },
+      {
+        "hex": "#6DC9E0",
+        "nombre": "Celeste",
+        "ingles": "Light blue"
+      },
+      {
+        "hex": "#1E304D",
+        "nombre": "Azul oscuro",
+        "ingles": "Dark blue"
+      }
+    ],
+    "fuente": "https://www.facebook.com/bcurbanofficial/posts/1003574282194278/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17521145",
+    "linea": "C-35",
+    "letra": "S3",
+    "empresa": "Señor de la Misericordia",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#884680",
+        "nombre": "Morado",
+        "ingles": "Purple"
+      }
+    ],
+    "fuente": null,
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17521283",
+    "linea": "C-38",
+    "letra": "S4",
+    "empresa": "Corazon de Jesus",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      },
+      {
+        "hex": "#1C1F21",
+        "nombre": "Negro",
+        "ingles": "Black"
+      }
+    ],
+    "fuente": null,
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17612352",
+    "linea": "C-41",
+    "letra": "Z2",
+    "empresa": "Arco Iris Express",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#1E304D",
+        "nombre": "Azul oscuro",
+        "ingles": "Dark blue"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122160449456117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17522621",
+    "linea": "C-42",
+    "letra": "B2",
+    "empresa": "Los Girasoles",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#F5C928",
+        "nombre": "Amarillo",
+        "ingles": "Yellow"
+      },
+      {
+        "hex": "#D3913E",
+        "nombre": "Naranja",
+        "ingles": "Orange"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122161714856117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17612420",
+    "linea": "C-43",
+    "letra": "A",
+    "empresa": "Los Diamantes",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#195A52",
+        "nombre": "Verde oscuro",
+        "ingles": "Dark green"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      },
+      {
+        "hex": "#C13E83",
+        "nombre": "Fucsia",
+        "ingles": "Fuchsia"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122160482732117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17522705",
+    "linea": "C-44",
+    "letra": "T2",
+    "empresa": "Miramar",
+    "colores": [
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://www.facebook.com/bcurbanofficial/posts/638387222046321/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17522730",
+    "linea": "C-44",
+    "letra": "T2",
+    "empresa": "Miramar",
+    "colores": [
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122163245618117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17569670",
+    "linea": "CT-01",
+    "letra": "A",
+    "empresa": "Expreso Buenos Aires S.A.C.",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      }
+    ],
+    "fuente": null,
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17581737",
+    "linea": "CT-03",
+    "letra": "A",
+    "empresa": "Victor Larco S.A.",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      }
+    ],
+    "fuente": null,
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17581738",
+    "linea": "CT-04",
+    "letra": "A",
+    "empresa": "Reyna Larco S.A.",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      }
+    ],
+    "fuente": null,
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17573616",
+    "linea": "CT-02",
+    "letra": "A",
+    "empresa": "Larco Express S.A.",
+    "colores": [
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      }
+    ],
+    "fuente": "https://seguridadciudadanadetrujillo.blogspot.com/2016/03/",
+    "modelo": "colectivo",
+    "orientativa": false
+  },
+  {
+    "routeId": "17581709",
+    "linea": "CT-05",
+    "letra": "V-A",
+    "empresa": "COVISA S.A.C.",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      }
+    ],
+    "fuente": null,
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17669816",
+    "linea": "CT-06",
+    "letra": "V-A",
+    "empresa": "Nuestra Señora de Guadalupe S.A.",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      }
+    ],
+    "fuente": null,
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17669832",
+    "linea": "CT-07",
+    "letra": "V-A",
+    "empresa": "Serv. e industria Vista Alegre S.A.",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      }
+    ],
+    "fuente": null,
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17595670",
+    "linea": "CT-08",
+    "letra": "AM",
+    "empresa": "Turismo Dios es mi guia S.R.L.",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      }
+    ],
+    "fuente": null,
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17581512",
+    "linea": "CT-09",
+    "letra": "A",
+    "empresa": "Serv. Generales nuevo Gran Chimu",
+    "colores": [
+      {
+        "hex": "#1C1F21",
+        "nombre": "Negro",
+        "ingles": "Black"
+      }
+    ],
+    "fuente": "https://diaadiatrujillo.pe/2025/07/19/extorsionadores-balean-colectivo-y-dejan-herido-a-chofer-en-el-porvenir/",
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17581515",
+    "linea": "CT-10",
+    "letra": "A",
+    "empresa": "Huracan S.A.C.",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": null,
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17595839",
+    "linea": "CT-10",
+    "letra": "B",
+    "empresa": "Huracan S.A.C.",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": null,
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17595870",
+    "linea": "CT-11",
+    "letra": "E",
+    "empresa": "Rio Seco S.A.",
+    "colores": [
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      },
+      {
+        "hex": "#F0E4C2",
+        "nombre": "Marfil",
+        "ingles": "Ivory"
+      }
+    ],
+    "fuente": "https://es.scribd.com/document/920471306/CONTRATO-DE-USO-Y-AFECTACION-DE-SERVICIOS-DE-RECORRIDO",
+    "modelo": "colectivo",
+    "orientativa": false
+  },
+  {
+    "routeId": "17595748",
+    "linea": "CT-12",
+    "letra": "SL",
+    "empresa": "Los Halcones S.A.",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#D3913E",
+        "nombre": "Naranja",
+        "ingles": "Orange"
+      },
+      {
+        "hex": "#1C1F21",
+        "nombre": "Negro",
+        "ingles": "Black"
+      }
+    ],
+    "fuente": null,
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17595746",
+    "linea": "CT-14",
+    "letra": "SL",
+    "empresa": "Turismo y serv. Los Pinos S.A.C.",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#91CB7C",
+        "nombre": "Verde claro",
+        "ingles": "Light green"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      }
+    ],
+    "fuente": null,
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17580756",
+    "linea": "CT-15",
+    "letra": "A",
+    "empresa": "Alfa y Omega S.A.C.",
+    "colores": [
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://es.scribd.com/document/869305690/Acusacion-Grupo-04",
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17605269",
+    "linea": "CT-16",
+    "letra": "F",
+    "empresa": "Hermelinda Express S.R.L.",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#91CB7C",
+        "nombre": "Verde claro",
+        "ingles": "Light green"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      }
+    ],
+    "fuente": null,
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17670295",
+    "linea": "CT-17",
+    "letra": "H",
+    "empresa": "Nueva Hermelinda S.A.C.",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#91CB7C",
+        "nombre": "Verde claro",
+        "ingles": "Light green"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      }
+    ],
+    "fuente": null,
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17580790",
+    "linea": "CT-19",
+    "letra": "H",
+    "empresa": "Serv. Generales Lider Express S.A.",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#F5C928",
+        "nombre": "Amarillo",
+        "ingles": "Yellow"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      }
+    ],
+    "fuente": null,
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17581631",
+    "linea": "CT-21",
+    "letra": "F",
+    "empresa": "N° 1 Florencia Express S.A.",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#956B4B",
+        "nombre": "Marrón",
+        "ingles": "Brown"
+      },
+      {
+        "hex": "#EADDBB",
+        "nombre": "Crema",
+        "ingles": "Cream"
+      }
+    ],
+    "fuente": null,
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17669993",
+    "linea": "CT-22",
+    "letra": "A",
+    "empresa": "San Pedro del Amor S.A.",
+    "colores": [
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://seguridadciudadanadetrujillo.blogspot.com/2016/05/auxiliado-un-motociclista-lesionado-en.html",
+    "modelo": "colectivo",
+    "orientativa": false
+  },
+  {
+    "routeId": "17581635",
+    "linea": "CT-22",
+    "letra": "B",
+    "empresa": "San Pedro del Amor S.A.",
+    "colores": [
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://seguridadciudadanadetrujillo.blogspot.com/2016/05/auxiliado-un-motociclista-lesionado-en.html",
+    "modelo": "colectivo",
+    "orientativa": false
+  },
+  {
+    "routeId": "17581639",
+    "linea": "CT-22",
+    "letra": "C",
+    "empresa": "San Pedro del Amor S.A.",
+    "colores": [
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://seguridadciudadanadetrujillo.blogspot.com/2016/05/auxiliado-un-motociclista-lesionado-en.html",
+    "modelo": "colectivo",
+    "orientativa": false
+  },
+  {
+    "routeId": "17581646",
+    "linea": "CT-22",
+    "letra": "D",
+    "empresa": "San Pedro del Amor S.A.",
+    "colores": [
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://seguridadciudadanadetrujillo.blogspot.com/2016/05/auxiliado-un-motociclista-lesionado-en.html",
+    "modelo": "colectivo",
+    "orientativa": false
+  },
+  {
+    "routeId": "17549691",
+    "linea": "CT-23",
+    "letra": "A",
+    "empresa": "Serv. Multiples Moderno Express S.A.",
+    "colores": [
+      {
+        "hex": "#6F7477",
+        "nombre": "Plomo",
+        "ingles": "Lead gray"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      }
+    ],
+    "fuente": "https://enfoquesperu.com/un-hombre-que-habia-sufrido-un-infarto-fallecio-pese-al-auxilio-de-los-agentes-de-seguridad-ciudadana-de-trujillo/",
+    "modelo": "colectivo",
+    "orientativa": false
+  },
+  {
+    "routeId": "17527168",
+    "linea": "CT-23",
+    "letra": "AC",
+    "empresa": "Serv. Multiples Moderno Express S.A.",
+    "colores": [
+      {
+        "hex": "#6F7477",
+        "nombre": "Plomo",
+        "ingles": "Lead gray"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      }
+    ],
+    "fuente": "https://enfoquesperu.com/un-hombre-que-habia-sufrido-un-infarto-fallecio-pese-al-auxilio-de-los-agentes-de-seguridad-ciudadana-de-trujillo/",
+    "modelo": "colectivo",
+    "orientativa": false
+  },
+  {
+    "routeId": "17549744",
+    "linea": "CT-23",
+    "letra": "B",
+    "empresa": "Serv. Multiples Moderno Express S.A.",
+    "colores": [
+      {
+        "hex": "#6F7477",
+        "nombre": "Plomo",
+        "ingles": "Lead gray"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      }
+    ],
+    "fuente": "https://enfoquesperu.com/un-hombre-que-habia-sufrido-un-infarto-fallecio-pese-al-auxilio-de-los-agentes-de-seguridad-ciudadana-de-trujillo/",
+    "modelo": "colectivo",
+    "orientativa": false
+  },
+  {
+    "routeId": "17527200",
+    "linea": "CT-23",
+    "letra": "BC",
+    "empresa": "Serv. Multiples Moderno Express S.A.",
+    "colores": [
+      {
+        "hex": "#6F7477",
+        "nombre": "Plomo",
+        "ingles": "Lead gray"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      }
+    ],
+    "fuente": "https://enfoquesperu.com/un-hombre-que-habia-sufrido-un-infarto-fallecio-pese-al-auxilio-de-los-agentes-de-seguridad-ciudadana-de-trujillo/",
+    "modelo": "colectivo",
+    "orientativa": false
+  },
+  {
+    "routeId": "17527270",
+    "linea": "CT-24",
+    "letra": "A",
+    "empresa": "Esperanza Tours S.R.L.",
+    "colores": [
+      {
+        "hex": "#1C1F21",
+        "nombre": "Negro",
+        "ingles": "Black"
+      }
+    ],
+    "fuente": "https://seguridadciudadanadetrujillo.blogspot.com/2017/12/socorrida-mujer-lesionada-tras-ser.html",
+    "modelo": "colectivo",
+    "orientativa": false
+  },
+  {
+    "routeId": "17670129",
+    "linea": "CT-24",
+    "letra": "AU",
+    "empresa": "Esperanza Tours S.R.L.",
+    "colores": [
+      {
+        "hex": "#1C1F21",
+        "nombre": "Negro",
+        "ingles": "Black"
+      }
+    ],
+    "fuente": "https://seguridadciudadanadetrujillo.blogspot.com/2017/12/socorrida-mujer-lesionada-tras-ser.html",
+    "modelo": "colectivo",
+    "orientativa": false
+  },
+  {
+    "routeId": "17527397",
+    "linea": "CT-24",
+    "letra": "B",
+    "empresa": "Esperanza Tours S.R.L.",
+    "colores": [
+      {
+        "hex": "#1C1F21",
+        "nombre": "Negro",
+        "ingles": "Black"
+      }
+    ],
+    "fuente": "https://seguridadciudadanadetrujillo.blogspot.com/2017/12/socorrida-mujer-lesionada-tras-ser.html",
+    "modelo": "colectivo",
+    "orientativa": false
+  },
+  {
+    "routeId": "17670001",
+    "linea": "CT-25",
+    "letra": "A",
+    "empresa": "Emp. Transp. Wichanzao S.A.",
+    "colores": [
+      {
+        "hex": "#1C1F21",
+        "nombre": "Negro",
+        "ingles": "Black"
+      }
+    ],
+    "fuente": "https://mundosocialtrujillo.blogspot.com/2011/06/cuatro-heridos-dejo-accidente.html?m=0",
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17670087",
+    "linea": "CT-25",
+    "letra": "B",
+    "empresa": "Emp. Transp. Wichanzao S.A.",
+    "colores": [
+      {
+        "hex": "#1C1F21",
+        "nombre": "Negro",
+        "ingles": "Black"
+      }
+    ],
+    "fuente": "https://mundosocialtrujillo.blogspot.com/2011/06/cuatro-heridos-dejo-accidente.html?m=0",
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17670006",
+    "linea": "CT-26",
+    "letra": "A",
+    "empresa": "Empresa de Transportes Horizonte Ecologico S.A.",
+    "colores": [
+      {
+        "hex": "#1C1F21",
+        "nombre": "Negro",
+        "ingles": "Black"
+      }
+    ],
+    "fuente": "https://es.scribd.com/document/797659950/1library-co-el-principio-de-proporcionalidad-en-el-delito-de-robo-con-muerte-o-lesiones-graves-subsecuentes-prev",
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17581730",
+    "linea": "CT-26",
+    "letra": "AU",
+    "empresa": "Empresa de Transportes Horizonte Ecologico S.A.",
+    "colores": [
+      {
+        "hex": "#1C1F21",
+        "nombre": "Negro",
+        "ingles": "Black"
+      }
+    ],
+    "fuente": "https://es.scribd.com/document/797659950/1library-co-el-principio-de-proporcionalidad-en-el-delito-de-robo-con-muerte-o-lesiones-graves-subsecuentes-prev",
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17670089",
+    "linea": "CT-26",
+    "letra": "B",
+    "empresa": "Empresa de Transportes Horizonte Ecologico S.A.",
+    "colores": [
+      {
+        "hex": "#1C1F21",
+        "nombre": "Negro",
+        "ingles": "Black"
+      }
+    ],
+    "fuente": "https://es.scribd.com/document/797659950/1library-co-el-principio-de-proporcionalidad-en-el-delito-de-robo-con-muerte-o-lesiones-graves-subsecuentes-prev",
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17581473",
+    "linea": "CT-26",
+    "letra": "BU",
+    "empresa": "Empresa de Transportes Horizonte Ecologico S.A.",
+    "colores": [
+      {
+        "hex": "#1C1F21",
+        "nombre": "Negro",
+        "ingles": "Black"
+      }
+    ],
+    "fuente": "https://larepublica.pe/sociedad/2020/05/15/alcalde-tambien-esta-en-contra-de-taxis-colectivos-lrnd",
+    "modelo": "colectivo",
+    "orientativa": false
+  },
+  {
+    "routeId": "17581475",
+    "linea": "CT-27",
+    "letra": "L",
+    "empresa": "Jose Emilio Lefebvre S.A.",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#91CB7C",
+        "nombre": "Verde claro",
+        "ingles": "Light green"
+      },
+      {
+        "hex": "#D3913E",
+        "nombre": "Naranja",
+        "ingles": "Orange"
+      }
+    ],
+    "fuente": null,
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17581474",
+    "linea": "CT-28",
+    "letra": "T.S.",
+    "empresa": "Serv. Generales Salaverry S.R.L.",
+    "colores": [
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      }
+    ],
+    "fuente": "https://es.scribd.com/document/842756885/CONTRATO-EMPRESA-SALAVERRY",
+    "modelo": "colectivo",
+    "orientativa": false
+  },
+  {
+    "routeId": "17581510",
+    "linea": "CT-29",
+    "letra": "TA",
+    "empresa": "Amigos Unidos S.A.C.",
+    "colores": [
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://diariocorreo.pe/edicion/la-libertad/linea-roja-la-ruta-que-lleva-a-los-varones-a-el-milagro-568705/?outputType=amp",
+    "modelo": "colectivo",
+    "orientativa": true
+  },
+  {
+    "routeId": "17434299",
+    "linea": "M-07",
+    "letra": "V",
+    "empresa": "Nuevo California",
+    "colores": [
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      }
+    ],
+    "fuente": "https://onibusbrasil.com/MiguelBusologoTrujillo/14432887",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17522721",
+    "linea": "M-05",
+    "letra": "H",
+    "empresa": "Huanchaco",
+    "colores": [
+      {
+        "hex": "#F5C928",
+        "nombre": "Amarillo",
+        "ingles": "Yellow"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      }
+    ],
+    "fuente": "https://onibusbrasil.com/MiguelBusologoTrujillo/14487628",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17554572",
+    "linea": "M-12",
+    "letra": "C",
+    "empresa": "Nuevo California",
+    "colores": [
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      }
+    ],
+    "fuente": null,
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17434314",
+    "linea": "M-21",
+    "letra": "A",
+    "empresa": "Salaverry Express",
+    "colores": [
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      }
+    ],
+    "fuente": "https://trujilloexperiencefreewt.blogspot.com/p/como-llegar-puerto-salaverry.html",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17434472",
+    "linea": "M-20",
+    "letra": "C",
+    "empresa": "Salaverry Express",
+    "colores": [
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      }
+    ],
+    "fuente": "https://trujilloexperiencefreewt.blogspot.com/p/como-llegar-puerto-salaverry.html",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17434330",
+    "linea": "M-22",
+    "letra": "F",
+    "empresa": "Salaverry Express",
+    "colores": [
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      }
+    ],
+    "fuente": "https://trujilloexperiencefreewt.blogspot.com/p/como-llegar-puerto-salaverry.html",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17350695",
+    "linea": "C-01",
+    "letra": "B",
+    "empresa": "Nuevos Girasoles",
+    "colores": [
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122142360590117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17491518",
+    "linea": "C-03",
+    "letra": "JJ",
+    "empresa": "Nuevos Girasoles",
+    "colores": [
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122140658732117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17434339",
+    "linea": "C-11",
+    "letra": "T1",
+    "empresa": "San Isidro Labrador",
+    "colores": [
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      },
+      {
+        "hex": "#F5C928",
+        "nombre": "Amarillo",
+        "ingles": "Yellow"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122166200408117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17463346",
+    "linea": "C-10",
+    "letra": "M",
+    "empresa": "Mochica Chimu",
+    "colores": [
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      },
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#F5C928",
+        "nombre": "Amarillo",
+        "ingles": "Yellow"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122161071242117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17463385",
+    "linea": "C-22",
+    "letra": "M",
+    "empresa": "Luz Divina",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122161713404117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17508289",
+    "linea": "C-12",
+    "letra": "B",
+    "empresa": "Santa Lucia de Moche",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122156437472117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17508501",
+    "linea": "C-13",
+    "letra": "D",
+    "empresa": "Mochica",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#DE3039",
+        "nombre": "Rojo",
+        "ingles": "Red"
+      },
+      {
+        "hex": "#27B579",
+        "nombre": "Verde",
+        "ingles": "Green"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      }
+    ],
+    "fuente": "https://www.facebook.com/61553516860919/posts/122160478976117228/",
+    "modelo": null,
+    "orientativa": false
+  },
+  {
+    "routeId": "17521009",
+    "linea": "C-25",
+    "letra": "S2",
+    "empresa": "El Aguila",
+    "colores": [
+      {
+        "hex": "#F4F4F4",
+        "nombre": "Blanco",
+        "ingles": "White"
+      },
+      {
+        "hex": "#187FB8",
+        "nombre": "Azul",
+        "ingles": "Blue"
+      }
+    ],
+    "fuente": null,
+    "modelo": null,
+    "orientativa": false
+  }
+]

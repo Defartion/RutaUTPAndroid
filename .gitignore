@@ -16,3 +16,7 @@ local.properties
 
 # Configuración Firebase de cada instalación (se aporta desde su consola)
 /app/google-services.json
+
+# Cachés locales de las herramientas Python
+__pycache__/
+*.py[cod]

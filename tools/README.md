@@ -1,0 +1,30 @@
+# Herramientas de desarrollo
+
+## Comprobar el APK generado
+
+Después de assembleDebug, ejecutar `python tools/verificar_apk.py`. Verifica las
+mallas y catálogos dentro del APK y la presencia de las pantallas nuevas. AAPT
+descomprime los assets con sufijo `.gz`: los modelos se abren como `.mesh` en
+el dispositivo. Las pruebas sobre los archivos fuente no detectan por sí solas
+una diferencia entre esas rutas de empaquetado y las que abre el visor.
+
+## Recursos 3D
+
+convertir_transportes_ios.py convierte los seis modelos USDZ de la referencia
+iOS a las mallas locales usadas por el visor OpenGL ES de Android. No requiere
+USD en la aplicación. La herramienta necesita Python, NumPy y usd-core en el
+equipo que realice la conversión; ver su ayuda y ThirdPartyNotices/Transportes3D.md.
+
+## Scripts de demostración anteriores
+
+simular_vehiculos.py y agregador_vehiculos.py son herramientas heredadas que ya
+estaban en este checkout. Publican posiciones con el formato antiguo, sin
+procedencia y sin autorización de simulación. La app actual no muestra esas
+posiciones como flota observada. Sus comentarios originales sobre anonimato y
+vehículos reales no describen el contrato actual.
+
+Para probar la flota compartida se debe usar el backend y el simulador actuales
+[del repositorio iOS](https://github.com/JDiazD33/RutaUTP/tree/138900d06bf57a8835ad6c4261f3b608cf6b66b5/backend),
+con MQTT v2/v3, sus cuentas y ACL, y el control vigente de simulación. No ejecutar
+los scripts heredados contra un servicio compartido para comprobar paridad.
+La demostración local dentro de la app continúa separada y rotulada como simulación.
