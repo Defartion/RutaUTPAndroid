@@ -14,6 +14,11 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
+REFERENCE_EXECUTORS = {
+    "eta": ("ETA-", "com.example.rutautpnative.IosEtaReferenceTest"),
+    "route-comparison": ("ROUTE-", "com.example.rutautpnative.IosRouteComparisonReferenceTest"),
+}
+
 
 def load_json(path):
     def unique(pairs):
@@ -81,7 +86,7 @@ def validate_fixtures(root, reference):
                 if case["finding"] not in findings or case["phase"] not in findings[case["finding"]]["phases"]:
                     raise ValueError("Caso sin hallazgo/fase válida: " + identifier)
             else:
-                if name != "eta":
+                if name not in REFERENCE_EXECUTORS:
                     raise ValueError("Falta un ejecutor para activar este caso: " + identifier)
                 baseline_ids.append(identifier)
             if name == "eta":
@@ -109,21 +114,23 @@ def verify_results(root, minimum, baseline_ids):
     if not files:
         raise ValueError("Faltan los resultados JUnit; ejecutar testDebugUnitTest")
     totals = {key: 0 for key in ("tests", "failures", "errors", "skipped")}
-    reference_names = []
+    reference_names = {suite: [] for _, suite in REFERENCE_EXECUTORS.values()}
     for file in files:
         suite = ET.parse(file).getroot()
         if int(suite.attrib["tests"]) != len(suite.findall("testcase")):
             raise ValueError("El conteo JUnit no coincide con sus casos: " + file.name)
         for key in totals:
             totals[key] += int(suite.attrib[key])
-        if suite.get("name") == "com.example.rutautpnative.IosEtaReferenceTest":
-            reference_names.extend(case.get("name", "") for case in suite.findall("testcase"))
+        if suite.get("name") in reference_names:
+            reference_names[suite.get("name")].extend(case.get("name", "") for case in suite.findall("testcase"))
     if totals["failures"] or totals["errors"] or totals["skipped"]:
         raise ValueError("Hay pruebas fallidas, con error u omitidas: " + str(totals))
     if totals["tests"] < minimum:
         raise ValueError("La ejecución contiene menos de " + str(minimum) + " pruebas")
     for identifier in baseline_ids:
-        if not any(name.endswith("[" + identifier + "]") for name in reference_names):
+        names = next((reference_names[suite] for prefix, suite in REFERENCE_EXECUTORS.values()
+                      if identifier.startswith(prefix)), [])
+        if not any(name.endswith("[" + identifier + "]") for name in names):
             raise ValueError("No se ejecutó el caso de referencia " + identifier)
     lint = root / "app/build/reports/lint-results-debug.xml"
     if not lint.is_file():
@@ -131,7 +138,9 @@ def verify_results(root, minimum, baseline_ids):
     issues = ET.parse(lint).getroot().findall("issue")
     if any(issue.get("severity") in {"Error", "Fatal"} for issue in issues):
         raise ValueError("El análisis de Android contiene errores")
-    return {"unitTests": totals, "referenceEtaCasesExecuted": len(reference_names),
+    return {"unitTests": totals,
+            "referenceEtaCasesExecuted": len(reference_names[REFERENCE_EXECUTORS["eta"][1]]),
+            "referenceRouteCasesExecuted": len(reference_names[REFERENCE_EXECUTORS["route-comparison"][1]]),
             "lintWarnings": sum(issue.get("severity") == "Warning" for issue in issues),
             "lintHints": sum(issue.get("severity") == "Hint" for issue in issues)}
 

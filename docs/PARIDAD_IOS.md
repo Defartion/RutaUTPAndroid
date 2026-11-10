@@ -4,9 +4,10 @@ La [auditoría del 10 de noviembre](auditoria-main-2026-11-10/INFORME.md) detall
 las brechas que permanecen sobre esta referencia. El
 [plan por fases](PLAN_PARIDAD_IOS_ANDROID.md) establece el orden de corrección
 y los criterios para verificar la fidelidad a iOS.
-La [fase 1](FASE_1_REFERENCIA_Y_VALIDACION.md) ya prepara la referencia fija,
-los casos comparables y el workflow Android; las brechas funcionales de la
-auditoría siguen pendientes de corrección en las fases siguientes.
+La [fase 1](FASE_1_REFERENCIA_Y_VALIDACION.md) prepara la referencia fija,
+los casos comparables y el workflow Android. La
+[fase 2](FASE_2_RUTAS_Y_LLEGADAS.md) corrige las reglas de ETA y comparación
+de transbordos de F01/F02; el plan registra los pendientes restantes.
 
 Referencia consultada: [RutaUTP main, commit 8145276](https://github.com/JDiazD33/RutaUTP/tree/8145276bb6fc72a168cc78119def2727578ec0bb),
 del 9 de noviembre de 2026. Comparación realizada el 9 de noviembre de 2026.

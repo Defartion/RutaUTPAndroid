@@ -2,8 +2,9 @@
 
 Fecha: 10 de noviembre de 2026.
 
-Estado: **fase 1 implementada y verificada localmente; fases 2–8 pendientes**.
+Estado: **fases 1 y 2 implementadas y verificadas localmente; fases 3–8 pendientes**.
 Ver [resultado y reproducción de fase 1](FASE_1_REFERENCIA_Y_VALIDACION.md).
+Ver [correcciones y pruebas de fase 2](FASE_2_RUTAS_Y_LLEGADAS.md).
 La primera ejecución del workflow en GitHub queda pendiente de publicar los cambios.
 
 ## Objetivo y referencia
@@ -278,7 +279,7 @@ Una fase que requiera dispositivo o infraestructura no se marcará completa solo
 | Fase | Implementación | Validación |
 |---|---|---|
 | 1 | Implementada | 125 pruebas Android y 15 del verificador; compilación, análisis, referencia y APK correctos. Workflow preparado; primera ejecución GitHub pendiente de publicación. |
-| 2 | Pendiente | Pendiente |
+| 2 | Implementada | 146 pruebas Android aprobadas; 19 casos de referencia activos. Comprobación GPS y visual en dispositivo pendiente. |
 | 3 | Pendiente | Pendiente |
 | 4 | Pendiente | Pendiente de configuración y ensayo con dos instalaciones. |
 | 5 | Pendiente | Pendiente |

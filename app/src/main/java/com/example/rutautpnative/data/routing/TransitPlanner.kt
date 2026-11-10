@@ -41,6 +41,7 @@ object TransitPlanner {
     const val VELOCIDAD_PIE_MS = 1.4
     private const val VELOCIDAD_BUS_FALLBACK_MS = 7.0
     private const val DISTANCIA_MIN_TRAMO_BUS = 50.0
+    private const val DISTANCIA_MIN_BUS_COMPARACION = 800.0
     private const val CANDIDATOS_A_PROBAR = 4
     private const val CANDIDATOS_A_MATERIALIZAR = 32
     private const val ESPERA_TRANSBORDO_BASE_S = 120.0
@@ -198,7 +199,16 @@ object TransitPlanner {
         val rapida = todas.minWithOrNull(compareBy({ it.viajeEstimadoSeg }, { it.optionID }))
         val ganadoras = listOfNotNull(cercana?.let { it to Categoria.RECOMENDADA }, rapida?.let { it to Categoria.MAS_RAPIDA }, cercana?.let { it to Categoria.SUBIDA_CERCANA })
         val destacadas = ganadoras.groupBy { it.first.optionID }.values.map { pares -> Destacada(pares.first().first, pares.map { it.second }.toSet()) }
-        return Opciones(todas.sortedWith(compareBy({ it.viajeEstimadoSeg }, { it.optionID })), destacadas)
+        return Opciones(todas, destacadas)
+    }
+
+    /** Política de iOS para comparar un transbordo con la mejor línea directa.
+     * La búsqueda de candidatos de tracking conserva su política independiente.
+     */
+    internal fun transbordoUtilParaComparar(directoMasRapidoSeg: Double?, transbordoSeg: Double): Boolean {
+        if (directoMasRapidoSeg == null) return true
+        val ahorro = directoMasRapidoSeg - transbordoSeg
+        return directoMasRapidoSeg >= 45 * 60 && ahorro >= max(15 * 60.0, directoMasRapidoSeg * 0.25)
     }
 
     //----Candidatos puros sobre el feed (sin red)----
@@ -240,12 +250,14 @@ object TransitPlanner {
         // con MKMapPointsPerMeterAtLatitude; aqui la proyeccion es planar en
         // metros, misma garantia a la latitud de Trujillo).
         val tamanioCelda = CAMINATA_MAX_TRANSBORDO * 1.02
-        val salidas = preparadas.map { (it.mejoresSalidas() + if (comparar) it.salidasCercanas() else emptyList()).distinct() }
+        val minimoBus = if (comparar) DISTANCIA_MIN_BUS_COMPARACION else DISTANCIA_MIN_TRAMO_BUS
+        val salidas = preparadas.map { (it.mejoresSalidas(minimoBus) + if (comparar) it.salidasCercanas(minimoBus) else emptyList()).distinct() }
         val llegadas = preparadas.map { ruta ->
-            ruta.mejoresLlegadas().groupBy { celdaDe(ruta.puntos[it.first], tamanioCelda) }
+            ruta.mejoresLlegadas(minimoBus).groupBy { celdaDe(ruta.puntos[it.first], tamanioCelda) }
         }
 
         val elecciones = ArrayList<Eleccion>()
+        val eleccionesCercanas = ArrayList<Eleccion>()
         for ((firstIndex, first) in preparadas.withIndex()) {
             currentCoroutineContext().ensureActive()
             // Directos: enumeracion completa de subidas x bajadas validas.
@@ -279,7 +291,6 @@ object TransitPlanner {
                             for ((enter, alight) in entradas) {
                                 val cotaInferior = costoPrimero + second.costoFin(enter, alight)
                                 if (!comparar && hayMejor && cotaInferior >= mejorScore) continue
-                                if (comparar && (first.distancias[first.indices[exit]] - first.distancias[first.indices[board]] < 800 || second.distancias[second.indices[alight]] - second.distancias[second.indices[enter]] < 800)) continue
                                 val caminata = GTFSRepository.distanciaMetros(
                                     first.ruta.paraderos[exit].coordinate,
                                     second.ruta.paraderos[enter].coordinate
@@ -302,7 +313,7 @@ object TransitPlanner {
                 }
                 cercana?.let { opcion ->
                     val espera = max(0, second.ruta.headwayMin) * 30.0 + ESPERA_TRANSBORDO_BASE_S
-                    elecciones.add(opcion.copy(score = opcion.score + espera + PENALIZACION_TRANSBORDO_S))
+                    eleccionesCercanas.add(opcion.copy(score = opcion.score + espera + PENALIZACION_TRANSBORDO_S))
                 }
                 if (hayMejor) {
                     // Espera media del segundo micro + penalizacion fija.
@@ -323,15 +334,25 @@ object TransitPlanner {
         // Solo se materializan 32 opciones; los consumidores prueban hasta 4.
         val ordenadas = elecciones.sortedWith(compareBy({ it.score }, { it.order }, { it.tie }))
         if (!comparar) return@withContext ordenadas.take(CANDIDATOS_A_MATERIALIZAR).map { materializar(it, preparadas, origen, destino) }
-        fun util(e: Eleccion): Boolean = e.second == null || (
-            preparadas[e.first].let { it.distancias[it.indices[e.exit]] - it.distancias[it.indices[e.board]] } >= 800 &&
-            preparadas[e.second].let { it.distancias[it.indices[e.alight]] - it.distancias[it.indices[e.enter]] } >= 800)
+        // El score incluye 180 s para ordenar transbordos. Ese margen no es
+        // tiempo de viaje; la espera inicial sí lo es, igual que journeyTime en iOS.
+        fun tiempoViaje(e: Eleccion): Double = e.score -
+            (if (e.second == null) 0.0 else PENALIZACION_TRANSBORDO_S) +
+            max(0, preparadas[e.first].ruta.headwayMin) * 30.0
+        val directoMasRapido = ordenadas.filter { it.second == null }.minOfOrNull(::tiempoViaje)
+        fun util(e: Eleccion): Boolean = e.second == null || transbordoUtilParaComparar(directoMasRapido, tiempoViaje(e))
         val elegibles = ordenadas.filter(::util)
         fun combinacion(e: Eleccion) = e.first to e.second
         val porLinea = elegibles.groupBy(::combinacion)
         val mejores = porLinea.values.map { grupo -> grupo.minBy { it.score + preparadas[it.first].ruta.headwayMin.coerceAtLeast(0) * 30.0 } }
-        val subidas = porLinea.values.map { grupo -> grupo.minWith(compareBy({ preparadas[it.first].startWalk[it.board] + preparadas[it.first].conectores[it.board] }, { it.score })) }
-        (mejores.filter { it.second == null } + mejores.filter { it.second != null }.take(32) + subidas)
+        // Mantener cada línea directa y hasta 32 combinaciones con transbordo.
+        // Añadir solo la subida global más cercana como destacado adicional.
+        val seleccionadas = (mejores.filter { it.second == null } + mejores.filter { it.second != null }.take(32))
+            .sortedWith(compareBy({ it.score }, { it.order }, { it.tie }))
+        val cercana = (elegibles + eleccionesCercanas.filter(::util)).minWithOrNull(compareBy(
+            { preparadas[it.first].startWalk[it.board] + preparadas[it.first].conectores[it.board] },
+            { tiempoViaje(it) }, { it.order }, { it.tie }))
+        (seleccionadas + listOfNotNull(cercana))
             .distinctBy { listOf(it.first, it.board, it.exit, it.second, it.enter, it.alight) }
             .map { materializar(it, preparadas, origen, destino) }
     }
@@ -558,7 +579,7 @@ object TransitPlanner {
         /// Barrido ordenado: mantener la mejor subida anterior evita volver a
         /// comparar todas las subidas en cada paradero y en cada pareja de
         /// lineas. Devuelve pares (mejor subida, bajada).
-        fun mejoresSalidas(): List<Pair<Int, Int>> {
+        fun mejoresSalidas(minimoMetros: Double = DISTANCIA_MIN_TRAMO_BUS): List<Pair<Int, Int>> {
             val elegibles = boarding.filter { conectores[it] < DISTANCIA_MAX_PARADERO_SHAPE }
             var cursor = 0
             var mejorParada = -1
@@ -567,7 +588,7 @@ object TransitPlanner {
             for (exit in ruta.paraderos.indices) {
                 while (cursor < elegibles.size) {
                     val board = elegibles[cursor]
-                    if (!(board < exit && distancias[indices[exit]] - distancias[indices[board]] > DISTANCIA_MIN_TRAMO_BUS)) break
+                    if (!(board < exit && distancias[indices[exit]] - distancias[indices[board]] > minimoMetros)) break
                     val costo = (startWalk[board] + conectores[board]) / VELOCIDAD_PIE_MS - distancias[indices[board]] / velocidad
                     if (mejorParada < 0 || costo < mejorCosto) {
                         mejorParada = board
@@ -582,18 +603,19 @@ object TransitPlanner {
             return resultado
         }
 
-        fun salidasCercanas(): List<Pair<Int, Int>> {
+        fun salidasCercanas(minimoMetros: Double = DISTANCIA_MIN_TRAMO_BUS): List<Pair<Int, Int>> {
             val resultado = ArrayList<Pair<Int, Int>>()
             for (exit in ruta.paraderos.indices) {
                 if (conectores[exit] >= DISTANCIA_MAX_PARADERO_SHAPE) continue
-                val board = boarding.filter { tramoValido(it, exit) }.minWithOrNull(compareBy({ startWalk[it] + conectores[it] }, { costoInicio(it, exit) }))
+                val board = boarding.filter { tramoValido(it, exit) && distancias[indices[exit]] - distancias[indices[it]] > minimoMetros }
+                    .minWithOrNull(compareBy({ startWalk[it] + conectores[it] }, { costoInicio(it, exit) }))
                 if (board != null) resultado.add(board to exit)
             }
             return resultado
         }
 
         /// Espejo de mejoresSalidas hacia atras: pares (subida, mejor bajada).
-        fun mejoresLlegadas(): List<Pair<Int, Int>> {
+        fun mejoresLlegadas(minimoMetros: Double = DISTANCIA_MIN_TRAMO_BUS): List<Pair<Int, Int>> {
             val elegibles = arriving.filter { conectores[it] < DISTANCIA_MAX_PARADERO_SHAPE }.reversed()
             var cursor = 0
             var mejorParada = -1
@@ -602,7 +624,7 @@ object TransitPlanner {
             for (enter in ruta.paraderos.indices.reversed()) {
                 while (cursor < elegibles.size) {
                     val alight = elegibles[cursor]
-                    if (!(alight > enter && distancias[indices[alight]] - distancias[indices[enter]] > DISTANCIA_MIN_TRAMO_BUS)) break
+                    if (!(alight > enter && distancias[indices[alight]] - distancias[indices[enter]] > minimoMetros)) break
                     val costo = (endWalk[alight] + conectores[alight]) / VELOCIDAD_PIE_MS + distancias[indices[alight]] / velocidad
                     if (mejorParada < 0 || costo <= mejorCosto) {
                         mejorParada = alight

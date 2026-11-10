@@ -240,6 +240,7 @@ class MapaViewModel : ViewModel() {
         if (sedeTrabajo?.id == nueva?.id && utpComoReferencia == campus) return
         sedeTrabajo = nueva
         utpComoReferencia = campus
+        refrescarLlegadas()
         viewModelScope.launch {
             cameraPositionState.animate(
                 CameraUpdateFactory.newLatLngZoom(coordenadaInicio, 14f)
@@ -379,9 +380,9 @@ class MapaViewModel : ViewModel() {
     }
 
     private fun aplicarFlotaReal(posiciones: List<VehiclePosition>) {
-        // El ancla de las lineas/ETA: destino seleccionado o campus UTP.
+        // El ETA se refiere al destino o al inicio vigente (campus/sede/ubicación).
         val ancla = destinoSeleccionado?.let { LatLng(it.lat, it.lon) }
-            ?: GTFSRepository.coordenadaUTP
+            ?: coordenadaInicio
 
         flotaBuses = posiciones.map { p ->
             val ruta = catalogoPorId[p.routeId]
@@ -425,6 +426,9 @@ class MapaViewModel : ViewModel() {
                 it.simulationRunId == selected.simulationRunId && it.controlRevision == selected.controlRevision
         } }
     }
+    private fun refrescarLlegadas() {
+        providerReal?.let { aplicarFlotaReal(it.posicionesParaPresentar()) }
+    }
     fun pausarFlota() { providerReal?.pausar() }
     fun reanudarFlota() { providerReal?.reanudar() }
 
@@ -433,6 +437,7 @@ class MapaViewModel : ViewModel() {
         if (destinoSeleccionado?.id == destino.id) return
         destinoSeleccionado = destino
         textoBusqueda = destino.label
+        refrescarLlegadas()
         viewModelScope.launch {
             cameraPositionState.animate(
                 com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
@@ -564,6 +569,7 @@ class MapaViewModel : ViewModel() {
         itinerario = null
         mensajeRuta = null
         calculandoItinerario = false
+        refrescarLlegadas()
         // Sin destino: volver a la referencia vigente (campus o sede).
         viewModelScope.launch {
             actualizarRutasCercanas(coordenadaInicio)

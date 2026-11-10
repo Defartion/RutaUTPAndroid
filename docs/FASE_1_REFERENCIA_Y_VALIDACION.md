@@ -1,6 +1,8 @@
 # Fase 1 — Referencia y comprobaciones de regresión
 
 Estado: **implementada y verificada localmente el 10/11/2026**.
+Este documento conserva los resultados al cerrar la fase 1. La
+[fase 2](FASE_2_RUTAS_Y_LLEGADAS.md) amplía los casos activos y las comprobaciones.
 La primera ejecución del workflow en GitHub queda pendiente de publicar estos
 archivos en el repositorio. No se ha realizado un push ni configurado protección
 de rama.

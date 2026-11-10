@@ -4,83 +4,235 @@
   "source": "RutaUTPTests/VehiclePositionSanitizerTests.swift",
   "route": {
     "id": "route-10",
-    "shape": [[0.0, 0.0], [0.0, 0.01], [0.0, 0.02]],
+    "shape": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.01
+      ],
+      [
+        0.0,
+        0.02
+      ]
+    ],
     "durationMinutes": 8,
     "distanceKm": 2.2,
     "headwayMinutes": 10
   },
   "cases": [
     {
-      "id": "ETA-01", "name": "Vehículo que se acerca",
-      "iosTest": "testETAVehiculoRealQueSeAcerca", "status": "baseline",
-      "position": [0.0, 0.002], "heading": 90.0, "speed": 10.0,
-      "target": [0.0, 0.012], "expectedMinutes": 2
+      "id": "ETA-01",
+      "name": "Vehículo que se acerca",
+      "iosTest": "testETAVehiculoRealQueSeAcerca",
+      "status": "baseline",
+      "position": [
+        0.0,
+        0.002
+      ],
+      "heading": 90.0,
+      "speed": 10.0,
+      "target": [
+        0.0,
+        0.012
+      ],
+      "expectedMinutes": 2
     },
     {
-      "id": "ETA-02", "name": "Tráfico lento usa velocidad observada",
-      "iosTest": "testETATraficoLentoRespetaVelocidadObservada", "status": "baseline",
-      "position": [0.0, 0.002], "heading": 90.0, "speed": 1.0,
-      "target": [0.0, 0.012], "expectedMinutes": 19
+      "id": "ETA-02",
+      "name": "Tráfico lento usa velocidad observada",
+      "iosTest": "testETATraficoLentoRespetaVelocidadObservada",
+      "status": "baseline",
+      "position": [
+        0.0,
+        0.002
+      ],
+      "heading": 90.0,
+      "speed": 1.0,
+      "target": [
+        0.0,
+        0.012
+      ],
+      "expectedMinutes": 19
     },
     {
-      "id": "ETA-03", "name": "Sin rumbo no hay estimación",
-      "iosTest": "testETASinRumboNoInventaSentido", "status": "baseline",
-      "position": [0.0, 0.002], "heading": -1.0, "speed": 10.0,
-      "target": [0.0, 0.012], "expectedMinutes": null
+      "id": "ETA-03",
+      "name": "Sin rumbo no hay estimación",
+      "iosTest": "testETASinRumboNoInventaSentido",
+      "status": "baseline",
+      "position": [
+        0.0,
+        0.002
+      ],
+      "heading": -1.0,
+      "speed": 10.0,
+      "target": [
+        0.0,
+        0.012
+      ],
+      "expectedMinutes": null
     },
     {
-      "id": "ETA-04", "name": "Vehículo que se aleja",
-      "iosTest": "testETAVehiculoRealQueSeAlejaNoDisponible", "status": "baseline",
-      "position": [0.0, 0.002], "heading": 270.0, "speed": 10.0,
-      "target": [0.0, 0.012], "expectedMinutes": null
+      "id": "ETA-04",
+      "name": "Vehículo que se aleja",
+      "iosTest": "testETAVehiculoRealQueSeAlejaNoDisponible",
+      "status": "baseline",
+      "position": [
+        0.0,
+        0.002
+      ],
+      "heading": 270.0,
+      "speed": 10.0,
+      "target": [
+        0.0,
+        0.012
+      ],
+      "expectedMinutes": null
     },
     {
-      "id": "ETA-05", "name": "Destino fuera del corredor",
-      "iosTest": "testETADestinoFueraDeRutaNoDisponible", "status": "baseline",
-      "position": [0.0, 0.002], "heading": 90.0, "speed": 10.0,
-      "target": [0.02, 0.012], "expectedMinutes": null
+      "id": "ETA-05",
+      "name": "Destino fuera del corredor",
+      "iosTest": "testETADestinoFueraDeRutaNoDisponible",
+      "status": "baseline",
+      "position": [
+        0.0,
+        0.002
+      ],
+      "heading": 90.0,
+      "speed": 10.0,
+      "target": [
+        0.02,
+        0.012
+      ],
+      "expectedMinutes": null
     },
     {
-      "id": "ETA-06", "name": "Llegada mayor de dos horas",
-      "iosTest": "testETAMayorDeDosHorasNoSeTrunca", "status": "baseline",
-      "shape": [[0.0, 0.0], [0.0, 0.01], [0.0, 0.1]],
-      "position": [0.0, 0.002], "heading": 90.0, "speed": 0.5,
-      "target": [0.0, 0.08], "expectedMinutes": null
+      "id": "ETA-06",
+      "name": "Llegada mayor de dos horas",
+      "iosTest": "testETAMayorDeDosHorasNoSeTrunca",
+      "status": "baseline",
+      "shape": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.01
+        ],
+        [
+          0.0,
+          0.1
+        ]
+      ],
+      "position": [
+        0.0,
+        0.002
+      ],
+      "heading": 90.0,
+      "speed": 0.5,
+      "target": [
+        0.0,
+        0.08
+      ],
+      "expectedMinutes": null
     },
     {
-      "id": "ETA-07", "name": "Detenido no usa horario",
-      "iosTest": "testETADetenidoNoUsaVelocidadProgramada", "status": "pending",
-      "phase": 2, "finding": "F01",
-      "position": [0.0, 0.002], "heading": 90.0, "speed": 0.0,
-      "target": [0.0, 0.012], "expectedMinutes": null
+      "id": "ETA-07",
+      "name": "Detenido no usa horario",
+      "iosTest": "testETADetenidoNoUsaVelocidadProgramada",
+      "status": "baseline",
+      "phase": 2,
+      "finding": "F01",
+      "position": [
+        0.0,
+        0.002
+      ],
+      "heading": 90.0,
+      "speed": 0.0,
+      "target": [
+        0.0,
+        0.012
+      ],
+      "expectedMinutes": null
     },
     {
-      "id": "ETA-08", "name": "Ruido de velocidad de un vehículo detenido",
-      "iosTest": "testETADetenidoNoUsaVelocidadProgramada", "status": "pending",
-      "phase": 2, "finding": "F01",
-      "position": [0.0, 0.002], "heading": 90.0, "speed": 0.2,
-      "target": [0.0, 0.012], "expectedMinutes": null
+      "id": "ETA-08",
+      "name": "Ruido de velocidad de un vehículo detenido",
+      "iosTest": "testETADetenidoNoUsaVelocidadProgramada",
+      "status": "baseline",
+      "phase": 2,
+      "finding": "F01",
+      "position": [
+        0.0,
+        0.002
+      ],
+      "heading": 90.0,
+      "speed": 0.2,
+      "target": [
+        0.0,
+        0.012
+      ],
+      "expectedMinutes": null
     },
     {
-      "id": "ETA-09", "name": "Velocidad desconocida usa longitud original y horario",
-      "iosTest": "testETAVelocidadDesconocidaUsaHorario", "status": "pending",
-      "phase": 2, "finding": "F01",
-      "position": [0.0, 0.002], "heading": 90.0, "speed": -1.0,
-      "target": [0.0, 0.012], "expectedMinutes": 4
+      "id": "ETA-09",
+      "name": "Velocidad desconocida usa longitud original y horario",
+      "iosTest": "testETAVelocidadDesconocidaUsaHorario",
+      "status": "baseline",
+      "phase": 2,
+      "finding": "F01",
+      "position": [
+        0.0,
+        0.002
+      ],
+      "heading": 90.0,
+      "speed": -1.0,
+      "target": [
+        0.0,
+        0.012
+      ],
+      "expectedMinutes": 4
     },
     {
-      "id": "ETA-10", "name": "Recorrido inverso hacia el destino",
-      "iosTest": "testETARecorridoInversoHaciaDestino", "status": "pending",
-      "phase": 2, "finding": "F01",
-      "position": [0.0, 0.002], "heading": 270.0, "speed": 10.0,
-      "target": [0.0, 0.0], "expectedMinutes": 1
+      "id": "ETA-10",
+      "name": "Recorrido inverso hacia el destino",
+      "iosTest": "testETARecorridoInversoHaciaDestino",
+      "status": "baseline",
+      "phase": 2,
+      "finding": "F01",
+      "position": [
+        0.0,
+        0.002
+      ],
+      "heading": 270.0,
+      "speed": 10.0,
+      "target": [
+        0.0,
+        0.0
+      ],
+      "expectedMinutes": 1
     },
     {
-      "id": "ETA-11", "name": "Destino entre 800 y 1600 metros del corredor",
+      "id": "ETA-11",
+      "name": "Destino entre 800 y 1600 metros del corredor",
       "sourceRule": "RutaUTP/Services/Routing/VehicleETAEstimator.swift:PreparedTarget",
-      "status": "pending", "phase": 2, "finding": "F01",
-      "position": [0.0, 0.002], "heading": 90.0, "speed": 10.0,
-      "target": [0.01, 0.012], "expectedMinutes": 2
+      "status": "baseline",
+      "phase": 2,
+      "finding": "F01",
+      "position": [
+        0.0,
+        0.002
+      ],
+      "heading": 90.0,
+      "speed": 10.0,
+      "target": [
+        0.01,
+        0.012
+      ],
+      "expectedMinutes": 2
     }
   ]
 }

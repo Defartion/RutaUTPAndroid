@@ -13,8 +13,7 @@ import org.junit.runners.Parameterized
 
 /**
  * Casos compartidos con la referencia iOS que Android ya satisface.
- * Los casos pendientes conservan su resultado iOS en el JSON; se activarán
- * al corregir F01. No se convierten los defectos conocidos en valores esperados.
+ * Los once casos fijados se ejecutan con sus resultados iOS originales.
  */
 @RunWith(Parameterized::class)
 class IosEtaReferenceTest(private val id: String, private val case: JsonObject) {

@@ -4,13 +4,77 @@
   "source": "RutaUTP/Services/Routing/TransitPlanning.swift:usefulForComparison",
   "scope": "Solo comparación de alternativas; no elimina transbordos de la búsqueda sin directo.",
   "cases": [
-    {"id": "ROUTE-01", "status": "pending", "phase": 2, "finding": "F02", "directMinutes": 35, "transferMinutes": 31, "expectedIncludeTransfer": false},
-    {"id": "ROUTE-02", "status": "pending", "phase": 2, "finding": "F02", "directMinutes": 44.99, "transferMinutes": 20, "expectedIncludeTransfer": false},
-    {"id": "ROUTE-03", "status": "pending", "phase": 2, "finding": "F02", "directMinutes": 45, "transferMinutes": 30, "expectedIncludeTransfer": true},
-    {"id": "ROUTE-04", "status": "pending", "phase": 2, "finding": "F02", "directMinutes": 60, "transferMinutes": 46, "expectedIncludeTransfer": false},
-    {"id": "ROUTE-05", "status": "pending", "phase": 2, "finding": "F02", "directMinutes": 60, "transferMinutes": 45, "expectedIncludeTransfer": true},
-    {"id": "ROUTE-06", "status": "pending", "phase": 2, "finding": "F02", "directMinutes": 80, "transferMinutes": 64, "expectedIncludeTransfer": false},
-    {"id": "ROUTE-07", "status": "pending", "phase": 2, "finding": "F02", "directMinutes": 80, "transferMinutes": 60, "expectedIncludeTransfer": true},
-    {"id": "ROUTE-08", "status": "pending", "phase": 2, "finding": "F02", "directMinutes": null, "transferMinutes": 25, "expectedIncludeTransfer": true}
+    {
+      "id": "ROUTE-01",
+      "status": "baseline",
+      "phase": 2,
+      "finding": "F02",
+      "directMinutes": 35,
+      "transferMinutes": 31,
+      "expectedIncludeTransfer": false
+    },
+    {
+      "id": "ROUTE-02",
+      "status": "baseline",
+      "phase": 2,
+      "finding": "F02",
+      "directMinutes": 44.99,
+      "transferMinutes": 20,
+      "expectedIncludeTransfer": false
+    },
+    {
+      "id": "ROUTE-03",
+      "status": "baseline",
+      "phase": 2,
+      "finding": "F02",
+      "directMinutes": 45,
+      "transferMinutes": 30,
+      "expectedIncludeTransfer": true
+    },
+    {
+      "id": "ROUTE-04",
+      "status": "baseline",
+      "phase": 2,
+      "finding": "F02",
+      "directMinutes": 60,
+      "transferMinutes": 46,
+      "expectedIncludeTransfer": false
+    },
+    {
+      "id": "ROUTE-05",
+      "status": "baseline",
+      "phase": 2,
+      "finding": "F02",
+      "directMinutes": 60,
+      "transferMinutes": 45,
+      "expectedIncludeTransfer": true
+    },
+    {
+      "id": "ROUTE-06",
+      "status": "baseline",
+      "phase": 2,
+      "finding": "F02",
+      "directMinutes": 80,
+      "transferMinutes": 64,
+      "expectedIncludeTransfer": false
+    },
+    {
+      "id": "ROUTE-07",
+      "status": "baseline",
+      "phase": 2,
+      "finding": "F02",
+      "directMinutes": 80,
+      "transferMinutes": 60,
+      "expectedIncludeTransfer": true
+    },
+    {
+      "id": "ROUTE-08",
+      "status": "baseline",
+      "phase": 2,
+      "finding": "F02",
+      "directMinutes": null,
+      "transferMinutes": 25,
+      "expectedIncludeTransfer": true
+    }
   ]
 }

@@ -5,8 +5,8 @@
 `python tools/verificar_paridad.py` comprueba los recursos fijados en
 `parity/reference.json`, los casos de comparación y el seguimiento F01–F15.
 `--require-results` exige además los resultados JUnit y lint de la compilación
-actual: al menos 125 pruebas, sin fallos ni omisiones, incluidos los seis casos
-ETA compartidos. Los casos pendientes se informan por separado.
+actual: al menos 146 pruebas, sin fallos ni omisiones, incluidos los once casos
+ETA y ocho casos de comparación de rutas. Los casos pendientes se informan por separado.
 
 `python -m unittest discover -s tools/tests -p "test_*.py"` ejecuta las pruebas
 del verificador. El informe queda en
@@ -15,6 +15,7 @@ Para comprobar también un checkout iOS exacto, añadir `--ios RUTA_CHECKOUT_IOS
 No necesita acceso al broker ni credenciales.
 
 Ver [el resultado y reproducción de fase 1](../docs/FASE_1_REFERENCIA_Y_VALIDACION.md).
+La [fase 2](../docs/FASE_2_RUTAS_Y_LLEGADAS.md) activa los casos de ETA y transbordos.
 
 ## Comprobar el APK generado
 

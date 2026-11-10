@@ -7,18 +7,20 @@
       "phases": [
         2
       ],
-      "status": "pending",
+      "status": "verified",
       "acceptance": "ETA fiel a velocidad, sentido, radio y referencia de mapa",
-      "validation": "Fixture ETA completo y prueba de ancla/sede."
+      "validation": "11 casos ETA parametrizados, circular, curva densa y velocidad no finita; ancla/sede revisada en código; GPS en dispositivo pendiente.",
+      "evidence": "docs/FASE_2_RUTAS_Y_LLEGADAS.md"
     },
     {
       "id": "F02",
       "phases": [
         2
       ],
-      "status": "pending",
+      "status": "verified",
       "acceptance": "Transbordos sujetos a ahorro 45 min/15 min/25 %",
-      "validation": "Casos ROUTE-01 a ROUTE-08 y comparación del itinerario completo."
+      "validation": "8 límites parametrizados y pruebas de alternativas completas, esperas, 40 directas y caminatas verificadas/estimadas.",
+      "evidence": "docs/FASE_2_RUTAS_Y_LLEGADAS.md"
     },
     {
       "id": "F03",

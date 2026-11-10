@@ -6,6 +6,7 @@ La referencia de esta actualización es main, commit 8145276 del 09/11/2026.
 - [Comparación y límites de la adaptación](docs/PARIDAD_IOS.md)
 - [Plan de actualización por fases](docs/PLAN_PARIDAD_IOS_ANDROID.md)
 - [Fase 1: referencia y comprobaciones automáticas](docs/FASE_1_REFERENCIA_Y_VALIDACION.md)
+- [Fase 2: reglas de rutas y llegadas](docs/FASE_2_RUTAS_Y_LLEGADAS.md)
 - [Configurar avisos remotos con Firebase](docs/FIREBASE_ANDROID.md)
 - [Almacenes y claves locales](PERSISTENCIA.md)
 - [Herramientas de desarrollo](tools/README.md)

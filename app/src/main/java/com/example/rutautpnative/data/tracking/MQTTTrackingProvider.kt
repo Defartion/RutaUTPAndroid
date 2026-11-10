@@ -117,6 +117,11 @@ class MQTTTrackingProvider(private val config: MQTTConfiguration, context: andro
         gate.invalidate()
         runCatching { if (cliente?.isConnected == true) cliente?.subscribe(VehicleTrackingWire.CONTROL_TOPIC, 1) }
     }
+    /** Revalidar caducidad y control antes de reutilizar una posición al cambiar de destino. */
+    fun posicionesParaPresentar(): List<VehiclePosition> {
+        refrescar()
+        return posiciones.value
+    }
     private fun refrescar() {
         val wall = System.currentTimeMillis() / 1000.0
         val uptime = android.os.SystemClock.elapsedRealtime() / 1000.0
