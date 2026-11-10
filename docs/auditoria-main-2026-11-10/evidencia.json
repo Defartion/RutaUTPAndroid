@@ -1,0 +1,3566 @@
+{
+  "audit_date": "2026-11-10",
+  "scope": "main de ambos repositorios; estado publicado, no archivos heredados sin seguimiento",
+  "ios_commit": "8145276bb6fc72a168cc78119def2727578ec0bb",
+  "android_commit": "7ba57cbe73f97e83fd112584a9e8ff89623ac4c1",
+  "ios_branch": "main",
+  "android_branch": "main",
+  "tracked_android_changes": "",
+  "gtfs": [
+    {
+      "name": "agency.txt",
+      "rows": 56,
+      "sha256": "73c3de0aa89772e0fa7ccca50069434dafcb6ebba59ad0921ebdf9eed75a3484",
+      "identical_to_ios": true
+    },
+    {
+      "name": "calendar.txt",
+      "rows": 1,
+      "sha256": "086d066ff481f242e47304da063cac2dcfafd46f0690ea7a5222fa404c783759",
+      "identical_to_ios": true
+    },
+    {
+      "name": "fare_attributes.txt",
+      "rows": 102,
+      "sha256": "3adc355b34782470f5cf8b5a86c27dd96cd3daf951c296fe7cf55dfe19099174",
+      "identical_to_ios": true
+    },
+    {
+      "name": "fare_rules.txt",
+      "rows": 102,
+      "sha256": "df6f1b23f4d69b610b917c9c5a169e89f46138a999a61fa189566003a2b0045c",
+      "identical_to_ios": true
+    },
+    {
+      "name": "feed_info.txt",
+      "rows": 1,
+      "sha256": "9ad4678d3dd8597a0c6d699792edcda03a830fd483a41d1da491319bc7b08087",
+      "identical_to_ios": true
+    },
+    {
+      "name": "frequencies.txt",
+      "rows": 102,
+      "sha256": "0a683adabffae17f2464909bcd9666ae6930c93012267ed15717a01a90253399",
+      "identical_to_ios": true
+    },
+    {
+      "name": "routes.txt",
+      "rows": 102,
+      "sha256": "c82fae9b019ebc8424c93d994367b29f719ea5f4b70543ebb259d62b677f36b0",
+      "identical_to_ios": true
+    },
+    {
+      "name": "shapes.txt",
+      "rows": 53616,
+      "sha256": "3ca8162d28b0ca5ec4ae039e1c57a50456623171b3635788caf1df92ff95e6f2",
+      "identical_to_ios": true
+    },
+    {
+      "name": "stop_times.txt",
+      "rows": 20170,
+      "sha256": "ac7effef507ad692a3cef581283af7eee948b2ce9745243f6e6a0ab830701cf0",
+      "identical_to_ios": true
+    },
+    {
+      "name": "stops.txt",
+      "rows": 4067,
+      "sha256": "2c0040773f5348aa0085a81ac9c3aab205206adaf2d626ca0653a0713a5366a1",
+      "identical_to_ios": true
+    },
+    {
+      "name": "trips.txt",
+      "rows": 102,
+      "sha256": "5920232397f21cad9b5104cfa156d20e77ef97b242119fe8f6543584718074e4",
+      "identical_to_ios": true
+    }
+  ],
+  "catalogs": [
+    {
+      "android": "negocios_promocionados.json",
+      "ios": "RutaUTP/Services/Negocios/negocios_promocionados.json",
+      "sha256": "57c5a6176c3bb16fdd35986907e3065b8afdd1ee00b45596244ca09c0c3a8795",
+      "identical": true
+    },
+    {
+      "android": "sedes-empresas-trujillo.json",
+      "ios": "RutaUTP/Data/sedes-empresas-trujillo.json",
+      "sha256": "3e665ea2a42ad8f284babb5d959ee657f0a89ee57082788839e58179152694c1",
+      "identical": true
+    },
+    {
+      "android": "traducciones.json",
+      "ios": "RutaUTP/Localization/traducciones.json",
+      "sha256": "c7937db0601c2297d532bb8a5e926ebadcab4645cf859a3c1ac322b38db52f8f",
+      "identical": true
+    },
+    {
+      "android": "senias/manifest.json",
+      "ios": "senias/manifest.json",
+      "sha256": "54654ad038ed018fdb7d9ec342dd08646c273d3214ec84761ad0f46aedcdd325",
+      "identical": true
+    }
+  ],
+  "signs": {
+    "clip_files": 56,
+    "identical_files": 56,
+    "manifest_entries": 29,
+    "available_entries_per_language": {
+      "es": 29,
+      "en": 29,
+      "fr": 0,
+      "pt-BR": 0,
+      "de": 0,
+      "zh-Hans": 0
+    }
+  },
+  "translations": {
+    "catalog_entries": 1958,
+    "method": "L.t con primer argumento literal simple, sin escapes ni interpolación; barrido estático, no cobertura de pantallas",
+    "android": {
+      "simple_literal_count": 882,
+      "missing_catalog_key_count": 329,
+      "missing_catalog_keys": [
+        {
+          "text": "(simulado)",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/EscanerQRScreen.kt",
+              "line": 339
+            }
+          ]
+        },
+        {
+          "text": "1 hora",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 196
+            }
+          ]
+        },
+        {
+          "text": "3 horas",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 197
+            }
+          ]
+        },
+        {
+          "text": "30 minutos",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 195
+            }
+          ]
+        },
+        {
+          "text": "A ",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 748
+            }
+          ]
+        },
+        {
+          "text": "Abajo",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/Transportes3DScreen.kt",
+              "line": 118
+            }
+          ]
+        },
+        {
+          "text": "Abre Ajustes en tu teléfono.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilExtras.kt",
+              "line": 206
+            }
+          ]
+        },
+        {
+          "text": "Abre RutaUTP para revisar tu línea, sus paraderos y la información disponible antes de salir.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/notificaciones/NotificacionesService.kt",
+              "line": 123
+            }
+          ]
+        },
+        {
+          "text": "Abrir Ajustes de accesibilidad",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilExtras.kt",
+              "line": 253
+            }
+          ]
+        },
+        {
+          "text": "Abrir ajustes",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ExploradorRutaScreen.kt",
+              "line": 189
+            }
+          ]
+        },
+        {
+          "text": "Abrir ajustes de Android",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 60
+            }
+          ]
+        },
+        {
+          "text": "Acceso a la cámara denegado",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/CarnetScannerScreen.kt",
+              "line": 310
+            }
+          ]
+        },
+        {
+          "text": "Accidente",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PublicarComunidadSheet.kt",
+              "line": 68
+            }
+          ]
+        },
+        {
+          "text": "Activa Ubicación en Ajustes. Las distancias usan UTP como referencia.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ParaderosIluminadosScreen.kt",
+              "line": 171
+            }
+          ]
+        },
+        {
+          "text": "Activa o desactiva TalkBack con su interruptor.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilExtras.kt",
+              "line": 208
+            }
+          ]
+        },
+        {
+          "text": "Activación en tu teléfono",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilExtras.kt",
+              "line": 203
+            }
+          ]
+        },
+        {
+          "text": "Activadas",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilScreen.kt",
+              "line": 120
+            }
+          ]
+        },
+        {
+          "text": "Activar",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 475
+            }
+          ]
+        },
+        {
+          "text": "Activar notificaciones",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 208
+            },
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 50
+            }
+          ]
+        },
+        {
+          "text": "Ajustar el punto",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RouteChangesSheet.kt",
+              "line": 250
+            }
+          ]
+        },
+        {
+          "text": "Android puede retrasar los avisos para ahorrar batería. Los horarios del catálogo son referencias, no llegadas en vivo.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 116
+            }
+          ]
+        },
+        {
+          "text": "Aplicación que ayuda a los estudiantes de la UTP Trujillo a encontrar rutas de micros y combis hacia el campus. Incluye lugares guardados, reportes comunitarios y seguimiento en tiempo real.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 557
+            }
+          ]
+        },
+        {
+          "text": "Arrastra el mapa hasta el lugar",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoScreen.kt",
+              "line": 470
+            }
+          ]
+        },
+        {
+          "text": "Arrastra el mapa hasta el lugar afectado",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RouteChangesSheet.kt",
+              "line": 325
+            }
+          ]
+        },
+        {
+          "text": "Arrastra el mapa hasta tu destino",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 879
+            }
+          ]
+        },
+        {
+          "text": "Arrastra para mover; pellizca para acercar. Guarda solo lo visible.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/components/EditorEncuadre.kt",
+              "line": 138
+            }
+          ]
+        },
+        {
+          "text": "Arriba",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/Transportes3DScreen.kt",
+              "line": 117
+            }
+          ]
+        },
+        {
+          "text": "Asegúrate que el texto sea legible",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/CarnetScannerScreen.kt",
+              "line": 143
+            }
+          ]
+        },
+        {
+          "text": "Autor ficticio. La foto de archivo pertenece a su respectivo titular.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/SeguridadScreen.kt",
+              "line": 911
+            }
+          ]
+        },
+        {
+          "text": "Avisos diarios",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 106
+            }
+          ]
+        },
+        {
+          "text": "Avisos sin sonido",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/notificaciones/NotificacionesService.kt",
+              "line": 67
+            }
+          ]
+        },
+        {
+          "text": "Ayuda de TalkBack",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilExtras.kt",
+              "line": 181
+            }
+          ]
+        },
+        {
+          "text": "Añade una foto de tu carné",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/VisorFotoCarnet.kt",
+              "line": 44
+            }
+          ]
+        },
+        {
+          "text": "Añadir referencia de tarjeta",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TarjetaFormSheet.kt",
+              "line": 51
+            }
+          ]
+        },
+        {
+          "text": "Añadir ubicación",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PublicarComunidadSheet.kt",
+              "line": 288
+            }
+          ]
+        },
+        {
+          "text": "Aún no hay tarjetas guardadas",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/MonederoSheets.kt",
+              "line": 144
+            }
+          ]
+        },
+        {
+          "text": "Baja en",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 960
+            }
+          ]
+        },
+        {
+          "text": "Buscar transporte cercano",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoScreen.kt",
+              "line": 167
+            }
+          ]
+        },
+        {
+          "text": "CAMBIOS CONFIRMADOS",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RouteChangesSheet.kt",
+              "line": 126
+            }
+          ]
+        },
+        {
+          "text": "CERCA DE TI",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ParaderosIluminadosScreen.kt",
+              "line": 398
+            }
+          ]
+        },
+        {
+          "text": "COMENTARIOS",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/SeguridadScreen.kt",
+              "line": 928
+            }
+          ]
+        },
+        {
+          "text": "CONTACTO",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/DatosPersonalesSheet.kt",
+              "line": 155
+            }
+          ]
+        },
+        {
+          "text": "Cambiar foto",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/VisorFotoCarnet.kt",
+              "line": 48
+            }
+          ]
+        },
+        {
+          "text": "Cambiar idioma",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/BienvenidaScreen.kt",
+              "line": 97
+            }
+          ]
+        },
+        {
+          "text": "Cambio en tu línea guardada",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/notificaciones/RutaFirebaseMessagingService.kt",
+              "line": 48
+            }
+          ]
+        },
+        {
+          "text": "Camina",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 961
+            }
+          ]
+        },
+        {
+          "text": "Campus",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/DatosPersonalesSheet.kt",
+              "line": 149
+            }
+          ]
+        },
+        {
+          "text": "Canal MQTT no configurado en esta compilación.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RouteChangesSheet.kt",
+              "line": 115
+            }
+          ]
+        },
+        {
+          "text": "Canal MQTT no configurado. Añade MQTT_HOST, MQTT_USERNAME y MQTT_PASSWORD en local.properties y vuelve a compilar.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 378
+            }
+          ]
+        },
+        {
+          "text": "Cerrar recorrido",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ExploradorRutaScreen.kt",
+              "line": 136
+            }
+          ]
+        },
+        {
+          "text": "Cerrar seña",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/components/SeniasVentana.kt",
+              "line": 287
+            }
+          ]
+        },
+        {
+          "text": "Compara el tiempo estimado y cuánto necesitas caminar. Las caminatas se comprueban al elegir.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/AlternativasRutaSheet.kt",
+              "line": 26
+            }
+          ]
+        },
+        {
+          "text": "Comparte ubicaciones de tus viajes vinculadas a una sesión y tu cuenta MQTT.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 392
+            }
+          ]
+        },
+        {
+          "text": "Concede el permiso de cámara para escanear.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/EscanerQRScreen.kt",
+              "line": 197
+            }
+          ]
+        },
+        {
+          "text": "Conectado",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 968
+            }
+          ]
+        },
+        {
+          "text": "Conectando…",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 970
+            }
+          ]
+        },
+        {
+          "text": "Conectando… Puedes preparar el reporte sin conexión.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RouteChangesSheet.kt",
+              "line": 117
+            }
+          ]
+        },
+        {
+          "text": "Configura una cuenta MQTT propia con TLS para registrar avisos.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/notificaciones/PushRutasService.kt",
+              "line": 86
+            }
+          ]
+        },
+        {
+          "text": "Confirmado, sigo esa ruta todos los días.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/SeguridadScreen.kt",
+              "line": 954
+            }
+          ]
+        },
+        {
+          "text": "Confirmado: al menos dos cuentas distintas coinciden en el estado del bus.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/tracking/OccupancyService.kt",
+              "line": 330
+            }
+          ]
+        },
+        {
+          "text": "Confirmados por la comunidad, vigentes 15 min",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/components/ReportarIncidenteSheet.kt",
+              "line": 54
+            }
+          ]
+        },
+        {
+          "text": "Confirmar ocupación",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1632
+            }
+          ]
+        },
+        {
+          "text": "Consulta los reportes actuales de tu línea. El aviso no confirma por sí solo el estado de la ruta.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/notificaciones/RutaFirebaseMessagingService.kt",
+              "line": 46
+            }
+          ]
+        },
+        {
+          "text": "Copia exportada.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RespaldosRecuperacionSheet.kt",
+              "line": 38
+            }
+          ]
+        },
+        {
+          "text": "Copiar",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NegociosDemoComponents.kt",
+              "line": 254
+            }
+          ]
+        },
+        {
+          "text": "Cuenta qué pasó: robo, acoso, persona sospechosa o accidente. Indica el lugar aproximado.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PublicarComunidadSheet.kt",
+              "line": 54
+            }
+          ]
+        },
+        {
+          "text": "Curso",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 561
+            }
+          ]
+        },
+        {
+          "text": "Código UTP",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/DatosPersonalesSheet.kt",
+              "line": 146
+            }
+          ]
+        },
+        {
+          "text": "D",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 142
+            }
+          ]
+        },
+        {
+          "text": "DESDE UTP",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ParaderosIluminadosScreen.kt",
+              "line": 398
+            }
+          ]
+        },
+        {
+          "text": "Dar permiso",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/EscanerQRScreen.kt",
+              "line": 361
+            },
+            {
+              "file": "com/example/rutautpnative/ui/screens/NavegacionScreen.kt",
+              "line": 425
+            }
+          ]
+        },
+        {
+          "text": "Datos restablecidos y copia conservada.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RespaldosRecuperacionSheet.kt",
+              "line": 73
+            }
+          ]
+        },
+        {
+          "text": "Deben ser exactamente 4 dígitos.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TarjetaFormSheet.kt",
+              "line": 93
+            }
+          ]
+        },
+        {
+          "text": "Demo",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NavegacionScreen.kt",
+              "line": 365
+            }
+          ]
+        },
+        {
+          "text": "Derecha",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/Transportes3DScreen.kt",
+              "line": 114
+            }
+          ]
+        },
+        {
+          "text": "Desliza con dos dedos para ver más contenido.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilExtras.kt",
+              "line": 231
+            }
+          ]
+        },
+        {
+          "text": "Destino guardado",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 73
+            }
+          ]
+        },
+        {
+          "text": "Destino: ",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 873
+            }
+          ]
+        },
+        {
+          "text": "Desvío en la ruta",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PublicarComunidadSheet.kt",
+              "line": 69
+            }
+          ]
+        },
+        {
+          "text": "Detectada",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/EscanerQRScreen.kt",
+              "line": 298
+            }
+          ]
+        },
+        {
+          "text": "Detener viaje de prueba",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 432
+            }
+          ]
+        },
+        {
+          "text": "Dirección encontrada",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoScreen.kt",
+              "line": 408
+            }
+          ]
+        },
+        {
+          "text": "Distancia recorrida",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 1080
+            }
+          ]
+        },
+        {
+          "text": "Distancias aproximadas",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/AlternativasRutaSheet.kt",
+              "line": 51
+            }
+          ]
+        },
+        {
+          "text": "ESTADO DEL VIAJE",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/FlujoAbordaje.kt",
+              "line": 1067
+            }
+          ]
+        },
+        {
+          "text": "Editar lugar",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoScreen.kt",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "text": "Ej. Av. España 123",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoScreen.kt",
+              "line": 370
+            }
+          ]
+        },
+        {
+          "text": "Ej. Joaquín Díaz",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TarjetaFormSheet.kt",
+              "line": 60
+            }
+          ]
+        },
+        {
+          "text": "El QR repite la moneda.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/monedero/ResultadoQR.kt",
+              "line": 15
+            }
+          ]
+        },
+        {
+          "text": "El aviso venció, la línea ya no está guardada o hay un viaje activo.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/MainActivity.kt",
+              "line": 137
+            }
+          ]
+        },
+        {
+          "text": "El backend no aceptó el registro FCM. Revisa su configuración para Android.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/notificaciones/PushRutasService.kt",
+              "line": 147
+            }
+          ]
+        },
+        {
+          "text": "El bus ya no tiene una posición reciente.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/tracking/OccupancyService.kt",
+              "line": 350
+            }
+          ]
+        },
+        {
+          "text": "El contacto de emergencia se guarda solo en este teléfono.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/DatosPersonalesSheet.kt",
+              "line": 213
+            }
+          ]
+        },
+        {
+          "text": "El código contiene un importe ilegible o ambiguo.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/monedero/ResultadoQR.kt",
+              "line": 14
+            }
+          ]
+        },
+        {
+          "text": "El servidor recibió tus ajustes, pero el envío FCM aún no está configurado.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/notificaciones/PushRutasService.kt",
+              "line": 150
+            }
+          ]
+        },
+        {
+          "text": "Elegir de contactos",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ContactoEmergenciaSheet.kt",
+              "line": 43
+            }
+          ]
+        },
+        {
+          "text": "Elegir de galería",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/components/SelectorFoto.kt",
+              "line": 137
+            },
+            {
+              "file": "com/example/rutautpnative/ui/screens/DatosPersonalesSheet.kt",
+              "line": 235
+            }
+          ]
+        },
+        {
+          "text": "Elegir en el mapa",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1084
+            }
+          ]
+        },
+        {
+          "text": "Elige la línea afectada",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RouteChangesSheet.kt",
+              "line": 199
+            },
+            {
+              "file": "com/example/rutautpnative/ui/screens/RouteChangesSheet.kt",
+              "line": 358
+            }
+          ]
+        },
+        {
+          "text": "Elige qué carnés aparecen en tu billetera. Ocultarlos conserva tus fotos.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilScreen.kt",
+              "line": 150
+            }
+          ]
+        },
+        {
+          "text": "Elige una hora, días y destino válidos.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 82
+            }
+          ]
+        },
+        {
+          "text": "Eliminar contacto",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ContactoEmergenciaSheet.kt",
+              "line": 52
+            }
+          ]
+        },
+        {
+          "text": "Eliminar de guardados",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoScreen.kt",
+              "line": 173
+            }
+          ]
+        },
+        {
+          "text": "En controles con acciones, el menú de TalkBack permite elegir opciones como abrir un reporte o mover un punto del mapa.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilExtras.kt",
+              "line": 233
+            }
+          ]
+        },
+        {
+          "text": "En el mapa, toca los chips de Casa / UTP / Trabajo para cambiar rápido.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 496
+            }
+          ]
+        },
+        {
+          "text": "En este dispositivo no hay cámara disponible.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/EscanerQRScreen.kt",
+              "line": 198
+            }
+          ]
+        },
+        {
+          "text": "Encuadra tu carnet aquí",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/CarnetScannerScreen.kt",
+              "line": 130
+            }
+          ]
+        },
+        {
+          "text": "Encuadre de tu foto",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/components/EditorEncuadre.kt",
+              "line": 93
+            }
+          ]
+        },
+        {
+          "text": "Encuadre del carné",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/components/EditorEncuadre.kt",
+              "line": 94
+            }
+          ]
+        },
+        {
+          "text": "Entra en Accesibilidad y luego en TalkBack.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilExtras.kt",
+              "line": 207
+            }
+          ]
+        },
+        {
+          "text": "Enviar notificación de prueba",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 119
+            }
+          ]
+        },
+        {
+          "text": "Espera 30 segundos entre reportes; repetir no suma confirmación.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/tracking/OccupancyService.kt",
+              "line": 352
+            }
+          ]
+        },
+        {
+          "text": "Esperando GPS…",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NavegacionScreen.kt",
+              "line": 397
+            },
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 815
+            }
+          ]
+        },
+        {
+          "text": "Esperando confirmación…",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1613
+            }
+          ]
+        },
+        {
+          "text": "Esperando posiciones de vehículos",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1222
+            }
+          ]
+        },
+        {
+          "text": "Estas referencias se guardan cifradas en este dispositivo. No permiten pagar, recargar el monedero ni usar NFC.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/MonederoSheets.kt",
+              "line": 131
+            }
+          ]
+        },
+        {
+          "text": "Este ajuste no cambia los permisos de GPS. El mapa y la contribución de viajes se controlan por separado.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilScreen.kt",
+              "line": 164
+            }
+          ]
+        },
+        {
+          "text": "Este monedero demo solo admite soles.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/monedero/ResultadoQR.kt",
+              "line": 17
+            }
+          ]
+        },
+        {
+          "text": "Estás cerca de tu destino",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NavegacionScreen.kt",
+              "line": 405
+            },
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 825
+            }
+          ]
+        },
+        {
+          "text": "Estás en la ruta",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NavegacionScreen.kt",
+              "line": 400
+            }
+          ]
+        },
+        {
+          "text": "Explorar recorrido",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RutasScreen.kt",
+              "line": 183
+            }
+          ]
+        },
+        {
+          "text": "Falta configurar Firebase para los avisos remotos.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/notificaciones/PushRutasService.kt",
+              "line": 50
+            }
+          ]
+        },
+        {
+          "text": "Fin de la franja",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 113
+            }
+          ]
+        },
+        {
+          "text": "Fin del viaje",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 826
+            }
+          ]
+        },
+        {
+          "text": "Foto adjunta",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PublicarComunidadSheet.kt",
+              "line": 247
+            }
+          ]
+        },
+        {
+          "text": "Foto guardada del carné",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/VisorFotoCarnet.kt",
+              "line": 40
+            }
+          ]
+        },
+        {
+          "text": "Fuera de la ruta",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NavegacionScreen.kt",
+              "line": 402
+            },
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 824
+            }
+          ]
+        },
+        {
+          "text": "GPS OFF",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 702
+            }
+          ]
+        },
+        {
+          "text": "GPS ON",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 703
+            }
+          ]
+        },
+        {
+          "text": "Gracias por aportar a la comunidad UTP.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PublicarComunidadSheet.kt",
+              "line": 372
+            }
+          ]
+        },
+        {
+          "text": "Gracias por avisar, justo iba a salir.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/SeguridadScreen.kt",
+              "line": 952
+            }
+          ]
+        },
+        {
+          "text": "Gracias por colaborar con la comunidad.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/components/ReportarIncidenteSheet.kt",
+              "line": 97
+            }
+          ]
+        },
+        {
+          "text": "Guarda los puntos que te sirvan",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/BienvenidaScreen.kt",
+              "line": 140
+            }
+          ]
+        },
+        {
+          "text": "Guarda paraderos para verlos aquí.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ParaderosGuardadosSeguridad.kt",
+              "line": 23
+            }
+          ]
+        },
+        {
+          "text": "Guardar copia y restablecer",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RespaldosRecuperacionSheet.kt",
+              "line": 76
+            }
+          ]
+        },
+        {
+          "text": "Guardar recordatorio",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 84
+            }
+          ]
+        },
+        {
+          "text": "HACE 10 MIN",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/SeguridadScreen.kt",
+              "line": 954
+            }
+          ]
+        },
+        {
+          "text": "HACE 15 MIN",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/SeguridadScreen.kt",
+              "line": 955
+            }
+          ]
+        },
+        {
+          "text": "HACE 2 MIN",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/SeguridadScreen.kt",
+              "line": 952
+            }
+          ]
+        },
+        {
+          "text": "HACE 5 MIN",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/SeguridadScreen.kt",
+              "line": 953
+            }
+          ]
+        },
+        {
+          "text": "Hacia",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1283
+            }
+          ]
+        },
+        {
+          "text": "Hasta 300 m del lugar",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RutasScreen.kt",
+              "line": 103
+            }
+          ]
+        },
+        {
+          "text": "Hora (HH:mm)",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 71
+            }
+          ]
+        },
+        {
+          "text": "Inactivo",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 974
+            }
+          ]
+        },
+        {
+          "text": "Indefinido",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 198
+            },
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 235
+            }
+          ]
+        },
+        {
+          "text": "Iniciar viaje a",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 937
+            }
+          ]
+        },
+        {
+          "text": "Inicio de la franja",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 112
+            }
+          ]
+        },
+        {
+          "text": "Inicio del recorrido",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ExploradorRutaScreen.kt",
+              "line": 126
+            },
+            {
+              "file": "com/example/rutautpnative/ui/screens/ExploradorRutaScreen.kt",
+              "line": 181
+            }
+          ]
+        },
+        {
+          "text": "Ir a mi ubicación",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ExploradorRutaScreen.kt",
+              "line": 151
+            }
+          ]
+        },
+        {
+          "text": "Izquierda",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/Transportes3DScreen.kt",
+              "line": 113
+            }
+          ]
+        },
+        {
+          "text": "J",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 142
+            }
+          ]
+        },
+        {
+          "text": "L",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 142
+            }
+          ]
+        },
+        {
+          "text": "LUGAR AFECTADO",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RouteChangesSheet.kt",
+              "line": 226
+            }
+          ]
+        },
+        {
+          "text": "LUGARES GUARDADOS",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/DestinosGuardadosSheet.kt",
+              "line": 116
+            }
+          ]
+        },
+        {
+          "text": "La app usa tu ubicación y actividad física para detectar un viaje. Comparte sesión, ruta, coordenadas, hora, velocidad, rumbo, precisión y actividad con el servidor, mediante tu cuenta MQTT. No envía nombre ni correo, pero el broker y el backend pueden relacionar viajes. El envío se pausa en segundo plano. Terminar el viaje no borra los datos del servidor ni garantiza anonimato.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/FlujoAbordaje.kt",
+              "line": 575
+            },
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 460
+            }
+          ]
+        },
+        {
+          "text": "La búsqueda de direcciones y el cálculo de indicaciones de Google Maps requieren internet. El mapa base puede no mostrarse si no está en caché. Esta app no descarga mapas de Google para uso offline ni garantiza navegación completa sin conexión.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilExtras.kt",
+              "line": 153
+            }
+          ]
+        },
+        {
+          "text": "La búsqueda de lugares y el cálculo de indicaciones utilizan servicios de Google Maps. Para resolver esas consultas se envían a Google los textos de búsqueda, direcciones o coordenadas necesarios, que pueden incluir tu ubicación como punto de partida.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/BienvenidaScreen.kt",
+              "line": 279
+            }
+          ]
+        },
+        {
+          "text": "La caminata de esta ruta supera el límite. Elige otra opción.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaViewModel.kt",
+              "line": 288
+            }
+          ]
+        },
+        {
+          "text": "La cámara no está disponible en este dispositivo.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/EscanerQRScreen.kt",
+              "line": 366
+            }
+          ]
+        },
+        {
+          "text": "La ocupación estará disponible en los buses en vivo. Los buses de demostración no reciben reportes.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1506
+            }
+          ]
+        },
+        {
+          "text": "La preferencia se guarda en este dispositivo. No comparte tu ubicación con otros usuarios ni desactiva el GPS del mapa.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilScreen.kt",
+              "line": 140
+            }
+          ]
+        },
+        {
+          "text": "Las notificaciones están disponibles en este dispositivo.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/notificaciones/NotificacionesService.kt",
+              "line": 122
+            }
+          ]
+        },
+        {
+          "text": "Letra del transporte:",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/FlujoAbordaje.kt",
+              "line": 407
+            }
+          ]
+        },
+        {
+          "text": "Linterna",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/EscanerQRScreen.kt",
+              "line": 268
+            }
+          ]
+        },
+        {
+          "text": "Llegada no disponible: faltan datos suficientes del vehículo.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1473
+            }
+          ]
+        },
+        {
+          "text": "Llegada: ",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 998
+            }
+          ]
+        },
+        {
+          "text": "Llegaste a",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NavegacionScreen.kt",
+              "line": 556
+            }
+          ]
+        },
+        {
+          "text": "Los ajustes guardados no se pueden leer. Se conservan sin sobrescribirlos.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 61
+            }
+          ]
+        },
+        {
+          "text": "Luego toma Micro",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 962
+            }
+          ]
+        },
+        {
+          "text": "Lugar frecuente",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoScreen.kt",
+              "line": 385
+            }
+          ]
+        },
+        {
+          "text": "Líneas guardadas",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoPantalla.kt",
+              "line": 80
+            },
+            {
+              "file": "com/example/rutautpnative/ui/screens/RespaldosRecuperacionSheet.kt",
+              "line": 50
+            }
+          ]
+        },
+        {
+          "text": "M",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 142
+            }
+          ]
+        },
+        {
+          "text": "Marca el lugar y la dirección se escribe sola; puedes corregirla. Es opcional y se guarda solo en tu teléfono.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/FlujoAbordaje.kt",
+              "line": 459
+            }
+          ]
+        },
+        {
+          "text": "Marca el punto exacto en el mapa",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PublicarComunidadSheet.kt",
+              "line": 289
+            }
+          ]
+        },
+        {
+          "text": "Marcar el punto en el mapa",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RouteChangesSheet.kt",
+              "line": 249
+            }
+          ]
+        },
+        {
+          "text": "Me pasó lo mismo ayer por esa zona.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/SeguridadScreen.kt",
+              "line": 953
+            }
+          ]
+        },
+        {
+          "text": "Mi",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 142
+            }
+          ]
+        },
+        {
+          "text": "Micros visibles en el mapa",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 319
+            }
+          ]
+        },
+        {
+          "text": "Modalidad",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/DatosPersonalesSheet.kt",
+              "line": 148
+            }
+          ]
+        },
+        {
+          "text": "Modelo 3D del transporte",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/Transportes3DScreen.kt",
+              "line": 142
+            }
+          ]
+        },
+        {
+          "text": "Modelo tridimensional del transporte",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/Transportes3DScreen.kt",
+              "line": 240
+            }
+          ]
+        },
+        {
+          "text": "Modelos de referencia por categoría. No certifican la carrocería ni el aspecto actual de toda una línea.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/Transportes3DScreen.kt",
+              "line": 123
+            }
+          ]
+        },
+        {
+          "text": "Monedero demo",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RespaldosRecuperacionSheet.kt",
+              "line": 50
+            }
+          ]
+        },
+        {
+          "text": "Mostrar transportes",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1215
+            }
+          ]
+        },
+        {
+          "text": "Muévete al aire libre para mejorar la señal.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NavegacionScreen.kt",
+              "line": 398
+            }
+          ]
+        },
+        {
+          "text": "NOMBRE EN LA TARJETA",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TarjetaFormSheet.kt",
+              "line": 55
+            }
+          ]
+        },
+        {
+          "text": "Necesitamos acceso a la cámara para escanear tu carnet universitario.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/CarnetScannerScreen.kt",
+              "line": 313
+            }
+          ]
+        },
+        {
+          "text": "Necesitamos tu ubicación para calcular la ruta. Activa la ubicación con el botón de la derecha.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaViewModel.kt",
+              "line": 462
+            }
+          ]
+        },
+        {
+          "text": "Necesitas dar acceso a la cámara para tomar una foto.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/components/SelectorFoto.kt",
+              "line": 115
+            }
+          ]
+        },
+        {
+          "text": "No encontramos esa empresa.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SelectorTematicasSheet.kt",
+              "line": 218
+            }
+          ]
+        },
+        {
+          "text": "No encontramos esa sede.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SelectorTematicasSheet.kt",
+              "line": 446
+            }
+          ]
+        },
+        {
+          "text": "No hay conexión con la ocupación en este momento.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1619
+            }
+          ]
+        },
+        {
+          "text": "No hay copias de recuperación.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RespaldosRecuperacionSheet.kt",
+              "line": 48
+            }
+          ]
+        },
+        {
+          "text": "No hay líneas con paradero a menos de 300 m de este lugar.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RutasScreen.kt",
+              "line": 132
+            }
+          ]
+        },
+        {
+          "text": "No hay líneas que coincidan",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoScreen.kt",
+              "line": 276
+            }
+          ]
+        },
+        {
+          "text": "No hay más líneas para agregar",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoScreen.kt",
+              "line": 276
+            }
+          ]
+        },
+        {
+          "text": "No hay rutas disponibles en este catálogo.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RutasScreen.kt",
+              "line": 133
+            }
+          ]
+        },
+        {
+          "text": "No hay transportes para mostrar.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1222
+            }
+          ]
+        },
+        {
+          "text": "No introduzcas el número completo ni el CVV. Esta referencia no vincula la tarjeta con el banco ni habilita pagos.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TarjetaFormSheet.kt",
+              "line": 113
+            }
+          ]
+        },
+        {
+          "text": "No la encontramos; ubícala en el mapa",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoScreen.kt",
+              "line": 412
+            }
+          ]
+        },
+        {
+          "text": "No pudimos confirmar la recepción del reporte. Revisa tu conexión.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/tracking/OccupancyService.kt",
+              "line": 401
+            }
+          ]
+        },
+        {
+          "text": "No pudimos leer tus líneas guardadas. Los datos originales se conservan.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/SeguridadAyuda.kt",
+              "line": 107
+            }
+          ]
+        },
+        {
+          "text": "No pudimos obtener tu ubicación. Revisa el permiso de RutaUTP y vuelve a intentarlo.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ExploradorRutaScreen.kt",
+              "line": 187
+            }
+          ]
+        },
+        {
+          "text": "No se completó el restablecimiento. Revisa la copia y vuelve a intentarlo.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RespaldosRecuperacionSheet.kt",
+              "line": 73
+            }
+          ]
+        },
+        {
+          "text": "No se pudieron cargar las rutas GTFS",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/tracking/PassiveTrackingCoordinator.kt",
+              "line": 202
+            },
+            {
+              "file": "com/example/rutautpnative/data/tracking/PassiveTrackingCoordinator.kt",
+              "line": 498
+            }
+          ]
+        },
+        {
+          "text": "No se pudieron guardar los ajustes.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 45
+            }
+          ]
+        },
+        {
+          "text": "No se pudo cargar el catálogo de rutas.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoPantalla.kt",
+              "line": 82
+            },
+            {
+              "file": "com/example/rutautpnative/ui/screens/RutasScreen.kt",
+              "line": 128
+            }
+          ]
+        },
+        {
+          "text": "No se pudo cargar el catálogo.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoScreen.kt",
+              "line": 272
+            }
+          ]
+        },
+        {
+          "text": "No se pudo cargar el modelo 3D.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/Transportes3DScreen.kt",
+              "line": 102
+            },
+            {
+              "file": "com/example/rutautpnative/ui/screens/Transportes3DScreen.kt",
+              "line": 177
+            }
+          ]
+        },
+        {
+          "text": "No se pudo completar la programación.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/notificaciones/NotificacionesService.kt",
+              "line": 106
+            }
+          ]
+        },
+        {
+          "text": "No se pudo exportar la copia.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RespaldosRecuperacionSheet.kt",
+              "line": 39
+            }
+          ]
+        },
+        {
+          "text": "No se pudo guardar la foto. Vuelve a intentarlo.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/CarneDigitalScreen.kt",
+              "line": 80
+            },
+            {
+              "file": "com/example/rutautpnative/ui/screens/VisorFotoCarnet.kt",
+              "line": 47
+            }
+          ]
+        },
+        {
+          "text": "No se pudo mostrar el modelo 3D.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/Transportes3DScreen.kt",
+              "line": 106
+            }
+          ]
+        },
+        {
+          "text": "No se pudo recargar. Revisa los datos del monedero y el límite de S/ 1 000 000. No se hicieron cambios.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/MonederoFormularios.kt",
+              "line": 101
+            }
+          ]
+        },
+        {
+          "text": "No se pudo registrar el dispositivo en Firebase.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/notificaciones/PushRutasService.kt",
+              "line": 81
+            }
+          ]
+        },
+        {
+          "text": "No se pudo registrar el servicio de avisos.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/notificaciones/PushRutasService.kt",
+              "line": 169
+            }
+          ]
+        },
+        {
+          "text": "No se pudo ubicar la dirección de este lugar.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoScreen.kt",
+              "line": 122
+            }
+          ]
+        },
+        {
+          "text": "No se puede confirmar la moneda del importe.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/monedero/ResultadoQR.kt",
+              "line": 18
+            }
+          ]
+        },
+        {
+          "text": "No se pueden leer algunos datos guardados. Los originales se conservan. Revisa Perfil → Respaldos guardados.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoPantalla.kt",
+              "line": 67
+            }
+          ]
+        },
+        {
+          "text": "Número alternativo (opcional)",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ContactoEmergenciaSheet.kt",
+              "line": 49
+            }
+          ]
+        },
+        {
+          "text": "Número principal",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ContactoEmergenciaSheet.kt",
+              "line": 48
+            }
+          ]
+        },
+        {
+          "text": "OCUPACIÓN DEL MICRO",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/FlujoAbordaje.kt",
+              "line": 1041
+            }
+          ]
+        },
+        {
+          "text": "Ocultar transportes",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1215
+            }
+          ]
+        },
+        {
+          "text": "Ocupación simulada",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1495
+            }
+          ]
+        },
+        {
+          "text": "Ocupación simulada: ",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1681
+            }
+          ]
+        },
+        {
+          "text": "PARADAS PRINCIPALES",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoScreen.kt",
+              "line": 202
+            }
+          ]
+        },
+        {
+          "text": "PARADEROS GUARDADOS",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/DestinosGuardadosSheet.kt",
+              "line": 93
+            }
+          ]
+        },
+        {
+          "text": "PAUSAR NOTIFICACIONES",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 216
+            }
+          ]
+        },
+        {
+          "text": "PAUSAS Y SILENCIO",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 87
+            }
+          ]
+        },
+        {
+          "text": "PRINCIPAL",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/MonederoSheets.kt",
+              "line": 170
+            }
+          ]
+        },
+        {
+          "text": "Pagar",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/EscanerQRScreen.kt",
+              "line": 339
+            }
+          ]
+        },
+        {
+          "text": "Paraderos: ",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NavegacionScreen.kt",
+              "line": 486
+            }
+          ]
+        },
+        {
+          "text": "Permitidas por Android",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 57
+            }
+          ]
+        },
+        {
+          "text": "Pin de ubicación",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/MapaUbicacionPicker.kt",
+              "line": 123
+            }
+          ]
+        },
+        {
+          "text": "Por recorrer: ",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NavegacionScreen.kt",
+              "line": 482
+            }
+          ]
+        },
+        {
+          "text": "Preferencia guardada",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilScreen.kt",
+              "line": 164
+            }
+          ]
+        },
+        {
+          "text": "Prepara tu viaje",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/notificaciones/NotificacionesService.kt",
+              "line": 120
+            }
+          ]
+        },
+        {
+          "text": "Pronto añadiremos más ciudades.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 278
+            }
+          ]
+        },
+        {
+          "text": "Próxima parada: ",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NavegacionScreen.kt",
+              "line": 584
+            }
+          ]
+        },
+        {
+          "text": "Próxima parada: destino",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NavegacionScreen.kt",
+              "line": 582
+            }
+          ]
+        },
+        {
+          "text": "Publicación de demostración",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/SeguridadScreen.kt",
+              "line": 850
+            }
+          ]
+        },
+        {
+          "text": "Publicado en la comunidad",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PublicarComunidadSheet.kt",
+              "line": 371
+            }
+          ]
+        },
+        {
+          "text": "Publicar",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PublicarComunidadSheet.kt",
+              "line": 340
+            }
+          ]
+        },
+        {
+          "text": "Puedes exportar las copias locales. Restablecer un grupo guarda primero sus datos originales y después lo devuelve a sus valores iniciales.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RespaldosRecuperacionSheet.kt",
+              "line": 46
+            }
+          ]
+        },
+        {
+          "text": "Quitar recordatorio",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 85
+            }
+          ]
+        },
+        {
+          "text": "RECORDATORIO DE VIAJE",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 70
+            }
+          ]
+        },
+        {
+          "text": "RED",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TarjetaFormSheet.kt",
+              "line": 67
+            }
+          ]
+        },
+        {
+          "text": "REPORTAR O CONFIRMAR UN CAMBIO",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RouteChangesSheet.kt",
+              "line": 188
+            }
+          ]
+        },
+        {
+          "text": "Reanudar",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 90
+            }
+          ]
+        },
+        {
+          "text": "Recibe alertas de rutas y reportes",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 209
+            }
+          ]
+        },
+        {
+          "text": "Recibido, pero aún no hay suficientes reportes coincidentes para confirmarlo.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/tracking/OccupancyService.kt",
+              "line": 335
+            }
+          ]
+        },
+        {
+          "text": "Recordatorios de viaje",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/notificaciones/NotificacionesService.kt",
+              "line": 66
+            }
+          ]
+        },
+        {
+          "text": "Recorre una línea real con GPS sintético: la app detecta el abordaje, publica observaciones reales y — con el agregador o el backend corriendo — el bus aparece en vivo en el mapa. Termina solo con el descenso simulado (~2 min).",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 439
+            }
+          ]
+        },
+        {
+          "text": "Referencia orientativa; el aspecto actual está por confirmar.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ReferenciaTransporte.kt",
+              "line": 54
+            }
+          ]
+        },
+        {
+          "text": "Reporta congestión, choques o desvíos que estén afectando tu ruta ahora mismo.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PublicarComunidadSheet.kt",
+              "line": 55
+            }
+          ]
+        },
+        {
+          "text": "Reporta solo si estás a bordo: se necesitan dos cuentas que coincidan; los reportes duran 3 minutos.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1615
+            }
+          ]
+        },
+        {
+          "text": "Reporte enviado",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/components/ReportarIncidenteSheet.kt",
+              "line": 96
+            }
+          ]
+        },
+        {
+          "text": "Reporte no aceptado.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/tracking/OccupancyService.kt",
+              "line": 356
+            }
+          ]
+        },
+        {
+          "text": "Reportes compartidos en línea.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RouteChangesSheet.kt",
+              "line": 116
+            }
+          ]
+        },
+        {
+          "text": "Respaldos y recuperación",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RespaldosRecuperacionSheet.kt",
+              "line": 45
+            }
+          ]
+        },
+        {
+          "text": "Restablecer",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RespaldosRecuperacionSheet.kt",
+              "line": 51
+            }
+          ]
+        },
+        {
+          "text": "Restan ",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 1004
+            }
+          ]
+        },
+        {
+          "text": "Restante: ",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NavegacionScreen.kt",
+              "line": 478
+            }
+          ]
+        },
+        {
+          "text": "Resumen del viaje",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 1077
+            }
+          ]
+        },
+        {
+          "text": "Revisa el permiso de notificaciones de Android.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 57
+            }
+          ]
+        },
+        {
+          "text": "Rumbo: ",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 739
+            }
+          ]
+        },
+        {
+          "text": "Ruta real · Línea",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 947
+            }
+          ]
+        },
+        {
+          "text": "SIMULACIÓN · posición de demostración",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1515
+            }
+          ]
+        },
+        {
+          "text": "Se cancelará la sesión de este viaje.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 1111
+            }
+          ]
+        },
+        {
+          "text": "Se guarda solo en este teléfono. Las llamadas se abren en la aplicación de teléfono.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ContactoEmergenciaSheet.kt",
+              "line": 53
+            }
+          ]
+        },
+        {
+          "text": "Se guardará una copia de los datos actuales antes de sustituirlos. Las demás preferencias se conservan.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RespaldosRecuperacionSheet.kt",
+              "line": 60
+            }
+          ]
+        },
+        {
+          "text": "Se necesita permiso de cámara para escanear.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/EscanerQRScreen.kt",
+              "line": 356
+            }
+          ]
+        },
+        {
+          "text": "Se necesitan dos cuentas distintas en la misma ruta, motivo y zona. Los reportes vencen a los 15 minutos. El aviso señala la incidencia; el recorrido alterno aún no está verificado.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RouteChangesSheet.kt",
+              "line": 302
+            }
+          ]
+        },
+        {
+          "text": "Selecciona tu ciudad para ver rutas y paraderos actualizados.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 255
+            }
+          ]
+        },
+        {
+          "text": "Seña no disponible todavía",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/components/SeniasVentana.kt",
+              "line": 267
+            }
+          ]
+        },
+        {
+          "text": "Simular un viaje de prueba",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 433
+            }
+          ]
+        },
+        {
+          "text": "Sin conexión",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 972
+            }
+          ]
+        },
+        {
+          "text": "Sin permiso",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilScreen.kt",
+              "line": 120
+            }
+          ]
+        },
+        {
+          "text": "Sin referencia visual verificada para este ramal.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ReferenciaTransporte.kt",
+              "line": 57
+            }
+          ]
+        },
+        {
+          "text": "Subida más cercana",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/AlternativasRutaSheet.kt",
+              "line": 44
+            }
+          ]
+        },
+        {
+          "text": "Sí, detener",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 1114
+            }
+          ]
+        },
+        {
+          "text": "Sí, reportar",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1647
+            }
+          ]
+        },
+        {
+          "text": "TIPO",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PublicarComunidadSheet.kt",
+              "line": 158
+            }
+          ]
+        },
+        {
+          "text": "TRACKING DEMO",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 695
+            }
+          ]
+        },
+        {
+          "text": "TU TRANSPORTE PÚBLICO",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/FlujoAbordaje.kt",
+              "line": 402
+            },
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/FlujoAbordaje.kt",
+              "line": 1018
+            }
+          ]
+        },
+        {
+          "text": "TalkBack describe los controles y lee la pantalla. La activación se realiza en Android; esta app mantiene sus controles accesibles aunque TalkBack esté apagado.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilExtras.kt",
+              "line": 195
+            }
+          ]
+        },
+        {
+          "text": "TalkBack está activado",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilExtras.kt",
+              "line": 188
+            }
+          ]
+        },
+        {
+          "text": "TalkBack está desactivado",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilExtras.kt",
+              "line": 189
+            }
+          ]
+        },
+        {
+          "text": "También puedes mantener pulsados los botones de volumen para activarlo o desactivarlo.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilExtras.kt",
+              "line": 214
+            }
+          ]
+        },
+        {
+          "text": "Todo listo para empezar",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 816
+            }
+          ]
+        },
+        {
+          "text": "Toma el micro",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 819
+            }
+          ]
+        },
+        {
+          "text": "Tracking Demo",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/SideDrawer.kt",
+              "line": 124
+            }
+          ]
+        },
+        {
+          "text": "Tu posición",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NavegacionScreen.kt",
+              "line": 316
+            },
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 665
+            }
+          ]
+        },
+        {
+          "text": "Tu ubicación",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ExploradorRutaScreen.kt",
+              "line": 186
+            }
+          ]
+        },
+        {
+          "text": "Ubicar en el mapa",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoScreen.kt",
+              "line": 433
+            }
+          ]
+        },
+        {
+          "text": "Un dedo para girar; dos para ampliar o desplazar.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/Transportes3DScreen.kt",
+              "line": 110
+            },
+            {
+              "file": "com/example/rutautpnative/ui/screens/Transportes3DScreen.kt",
+              "line": 189
+            }
+          ]
+        },
+        {
+          "text": "Usa entre 7 y 15 dígitos, con código de país si hace falta. El número alternativo debe ser diferente.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ContactoEmergenciaSheet.kt",
+              "line": 50
+            }
+          ]
+        },
+        {
+          "text": "Usa un importe positivo sin fracciones de céntimo.",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/data/monedero/ResultadoQR.kt",
+              "line": 20
+            }
+          ]
+        },
+        {
+          "text": "V",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/NotificacionesScreen.kt",
+              "line": 142
+            }
+          ]
+        },
+        {
+          "text": "Velocidad",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 1038
+            }
+          ]
+        },
+        {
+          "text": "Velocidad estimada: ",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 733
+            }
+          ]
+        },
+        {
+          "text": "Velocidad media",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 1081
+            }
+          ]
+        },
+        {
+          "text": "Velocidad no disponible",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 734
+            }
+          ]
+        },
+        {
+          "text": "Ver fuente de la referencia",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ReferenciaTransporte.kt",
+              "line": 55
+            }
+          ]
+        },
+        {
+          "text": "Ver recorrido completo",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ExploradorRutaScreen.kt",
+              "line": 153
+            }
+          ]
+        },
+        {
+          "text": "Ver ruta desde mi posición",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/GuardadoScreen.kt",
+              "line": 155
+            }
+          ]
+        },
+        {
+          "text": "Ver ubicación",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ParaderosGuardadosSeguridad.kt",
+              "line": 34
+            }
+          ]
+        },
+        {
+          "text": "Zonas de referencia",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/SeguridadScreen.kt",
+              "line": 610
+            }
+          ]
+        },
+        {
+          "text": "caminata estimada",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 950
+            }
+          ]
+        },
+        {
+          "text": "de ti",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 748
+            }
+          ]
+        },
+        {
+          "text": "desconocido",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 1286
+            }
+          ]
+        },
+        {
+          "text": "español",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/idioma/L.kt",
+              "line": 15
+            }
+          ]
+        },
+        {
+          "text": "pasajes a",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/MonederoSheets.kt",
+              "line": 80
+            }
+          ]
+        },
+        {
+          "text": "puntos GPS: ",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 1005
+            }
+          ]
+        },
+        {
+          "text": "vence",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1581
+            }
+          ]
+        },
+        {
+          "text": "vigente hasta",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RouteChangesSheet.kt",
+              "line": 166
+            }
+          ]
+        },
+        {
+          "text": "··· A pie",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1374
+            }
+          ]
+        },
+        {
+          "text": "¿A dónde vas?",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TrackingDemoScreen.kt",
+              "line": 1243
+            }
+          ]
+        },
+        {
+          "text": "¿DÓNDE SUBISTE? (OPCIONAL)",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/FlujoAbordaje.kt",
+              "line": 417
+            }
+          ]
+        },
+        {
+          "text": "¿Eliminar contacto?",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/ContactoEmergenciaSheet.kt",
+              "line": 58
+            }
+          ]
+        },
+        {
+          "text": "¿Eliminar referencia?",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/MonederoSheets.kt",
+              "line": 230
+            }
+          ]
+        },
+        {
+          "text": "¿Hay desvío por otra avenida?",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/SeguridadScreen.kt",
+              "line": 955
+            }
+          ]
+        },
+        {
+          "text": "¿QUÉ TAN LLENO VA? (OPCIONAL)",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/FlujoAbordaje.kt",
+              "line": 468
+            }
+          ]
+        },
+        {
+          "text": "¿Restablecer este grupo?",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/RespaldosRecuperacionSheet.kt",
+              "line": 59
+            }
+          ]
+        },
+        {
+          "text": "ÚLTIMOS 4 DÍGITOS",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/TarjetaFormSheet.kt",
+              "line": 80
+            }
+          ]
+        },
+        {
+          "text": "Últimos 4",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/MonederoSheets.kt",
+              "line": 207
+            }
+          ]
+        },
+        {
+          "text": "≈",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/MonederoSheets.kt",
+              "line": 79
+            }
+          ]
+        },
+        {
+          "text": "━━ En bus",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/mapa/MapaScreen.kt",
+              "line": 1375
+            }
+          ]
+        },
+        {
+          "text": "✓ Carné guardado",
+          "locations": [
+            {
+              "file": "com/example/rutautpnative/ui/screens/PerfilScreen.kt",
+              "line": 85
+            }
+          ]
+        }
+      ]
+    },
+    "ios": {
+      "simple_literal_count": 1394,
+      "missing_catalog_key_count": 25,
+      "missing_catalog_keys": [
+        {
+          "text": ". Inicio del recorrido",
+          "locations": [
+            {
+              "file": "Screens/DetalleRuta/ExploradorRutaView.swift",
+              "line": 452
+            }
+          ]
+        },
+        {
+          "text": "Activa la ubicación para RutaUTP en Ajustes para centrar el mapa en tu posición.",
+          "locations": [
+            {
+              "file": "Screens/DetalleRuta/ExploradorRutaView.swift",
+              "line": 650
+            }
+          ]
+        },
+        {
+          "text": "Cerrar recorrido",
+          "locations": [
+            {
+              "file": "Screens/DetalleRuta/ExploradorRutaView.swift",
+              "line": 478
+            }
+          ]
+        },
+        {
+          "text": "Cerrar seguimiento",
+          "locations": [
+            {
+              "file": "Screens/Tracking/RouteTrackingDemoView.swift",
+              "line": 337
+            }
+          ]
+        },
+        {
+          "text": "Elige cuántos micros se muestran en el mapa",
+          "locations": [
+            {
+              "file": "Screens/Mapa/AjustesSheet.swift",
+              "line": 95
+            }
+          ]
+        },
+        {
+          "text": "Envío de ubicaciones no configurado",
+          "locations": [
+            {
+              "file": "Screens/Mapa/AjustesSheet.swift",
+              "line": 150
+            }
+          ]
+        },
+        {
+          "text": "Español",
+          "locations": [
+            {
+              "file": "Utils/Idioma.swift",
+              "line": 130
+            }
+          ]
+        },
+        {
+          "text": "Esperando posiciones de vehículos",
+          "locations": [
+            {
+              "file": "Screens/Mapa/MapHeaderView.swift",
+              "line": 40
+            }
+          ]
+        },
+        {
+          "text": "Este dispositivo restringe el acceso a la ubicación.",
+          "locations": [
+            {
+              "file": "Screens/DetalleRuta/ExploradorRutaView.swift",
+              "line": 653
+            }
+          ]
+        },
+        {
+          "text": "Guarda tu ubicación actual como punto de subida.",
+          "locations": [
+            {
+              "file": "Design/Components/BoardingPointMap.swift",
+              "line": 418
+            }
+          ]
+        },
+        {
+          "text": "Inicio del recorrido",
+          "locations": [
+            {
+              "file": "Screens/DetalleRuta/ExploradorRutaView.swift",
+              "line": 24
+            },
+            {
+              "file": "Screens/DetalleRuta/ExploradorRutaView.swift",
+              "line": 444
+            }
+          ]
+        },
+        {
+          "text": "Ir a mi ubicación",
+          "locations": [
+            {
+              "file": "Screens/DetalleRuta/ExploradorRutaView.swift",
+              "line": 530
+            }
+          ]
+        },
+        {
+          "text": "Micros en el mapa",
+          "locations": [
+            {
+              "file": "Screens/Mapa/AjustesSheet.swift",
+              "line": 82
+            },
+            {
+              "file": "Screens/Mapa/AjustesSheet.swift",
+              "line": 91
+            }
+          ]
+        },
+        {
+          "text": "Muestra la mayor parte de Trujillo sin cambiar el lugar marcado",
+          "locations": [
+            {
+              "file": "Screens/Guardado/MapaElegirLugar.swift",
+              "line": 296
+            }
+          ]
+        },
+        {
+          "text": "No pudimos obtener tu ubicación. Vuelve a intentarlo.",
+          "locations": [
+            {
+              "file": "Screens/DetalleRuta/ExploradorRutaView.swift",
+              "line": 656
+            }
+          ]
+        },
+        {
+          "text": "Ocupación no disponible",
+          "locations": [
+            {
+              "file": "Screens/Mapa/BusDetailPopup.swift",
+              "line": 73
+            }
+          ]
+        },
+        {
+          "text": "POSICIÓN RECIBIDA",
+          "locations": [
+            {
+              "file": "Screens/Tracking/TrackingDemoComponents.swift",
+              "line": 213
+            }
+          ]
+        },
+        {
+          "text": "Puedes ver los micros, pero el envío de ubicaciones desde este teléfono aún no está configurado. Necesita una cuenta propia para enviar sus aportes.",
+          "locations": [
+            {
+              "file": "Screens/Mapa/AjustesSheet.swift",
+              "line": 142
+            }
+          ]
+        },
+        {
+          "text": "Punto guardado. Toca otro lugar del mapa para cambiarlo.",
+          "locations": [
+            {
+              "file": "Design/Components/BoardingPointMap.swift",
+              "line": 371
+            }
+          ]
+        },
+        {
+          "text": "SEGUIMIENTO",
+          "locations": [
+            {
+              "file": "Screens/Tracking/RouteTrackingDemoView.swift",
+              "line": 341
+            }
+          ]
+        },
+        {
+          "text": "Tu ubicación",
+          "locations": [
+            {
+              "file": "Screens/DetalleRuta/ExploradorRutaView.swift",
+              "line": 429
+            }
+          ]
+        },
+        {
+          "text": "Tu ubicación es aproximada. Ajusta el punto en el mapa si hace falta.",
+          "locations": [
+            {
+              "file": "Design/Components/BoardingPointMap.swift",
+              "line": 384
+            }
+          ]
+        },
+        {
+          "text": "Ubicación del vehículo",
+          "locations": [
+            {
+              "file": "Screens/Tracking/TrackingDemoComponents.swift",
+              "line": 209
+            }
+          ]
+        },
+        {
+          "text": "Ver la ciudad",
+          "locations": [
+            {
+              "file": "Screens/Guardado/MapaElegirLugar.swift",
+              "line": 295
+            }
+          ]
+        },
+        {
+          "text": "Ver recorrido completo",
+          "locations": [
+            {
+              "file": "Screens/DetalleRuta/ExploradorRutaView.swift",
+              "line": 546
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "places_search_area": {
+    "android_rectangle": {
+      "lat_min": -8.145,
+      "lat_max": -8.05,
+      "lon_min": -79.075,
+      "lon_max": -78.99
+    },
+    "stop_count": 4067,
+    "stops_outside_rectangle": 999
+  },
+  "android_unit_tests": {
+    "suites": [
+      {
+        "suite": "com.example.rutautpnative.BoardingPlaceStoreTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "com.example.rutautpnative.CuponNegocioTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "com.example.rutautpnative.ExampleUnitTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "com.example.rutautpnative.GTFSCSVTest",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "com.example.rutautpnative.GTFSRelacionViajeTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "com.example.rutautpnative.PagoQRTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "com.example.rutautpnative.ParaderosIluminadosTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "com.example.rutautpnative.ParidadIosTest",
+        "tests": 24,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "com.example.rutautpnative.PinturaTransporte3DTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "com.example.rutautpnative.PolylineMatchingTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "com.example.rutautpnative.PreferenciasPerfilTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "com.example.rutautpnative.RecursosParidadTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "com.example.rutautpnative.RepresentacionRutaTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "com.example.rutautpnative.RouteCalculationCacheTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "com.example.rutautpnative.TematicaEmpresaTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "com.example.rutautpnative.TrackingTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "suite": "com.example.rutautpnative.TransitPlannerTest",
+        "tests": 21,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "totals": {
+      "tests": 119,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "android_lint": {
+    "severity": {
+      "Warning": 76,
+      "Hint": 16
+    },
+    "types": {
+      "ApplySharedPref": 1,
+      "InlinedApi": 2,
+      "OldTargetApi": 1,
+      "RedundantLabel": 1,
+      "GradleDependency": 5,
+      "NewerVersionAvailable": 6,
+      "ModifierParameter": 3,
+      "StaticFieldLeak": 9,
+      "AutoboxingStateCreation": 16,
+      "UnusedResources": 7,
+      "IconXmlAndPng": 2,
+      "ViewConstructor": 1,
+      "UseKtx": 37,
+      "UseTomlInstead": 1
+    }
+  },
+  "ci_files": {
+    "ios": [
+      ".github/workflows/ios.yml"
+    ],
+    "android": []
+  },
+  "android_debug_apk_sha256": "071a4b77cfabe13f4a940cd15277e410e52d4e2699ca004de447026572fc4a1c"
+}

@@ -1,5 +1,21 @@
 # Herramientas de desarrollo
 
+## Referencia iOS y comprobaciones automáticas
+
+`python tools/verificar_paridad.py` comprueba los recursos fijados en
+`parity/reference.json`, los casos de comparación y el seguimiento F01–F15.
+`--require-results` exige además los resultados JUnit y lint de la compilación
+actual: al menos 125 pruebas, sin fallos ni omisiones, incluidos los seis casos
+ETA compartidos. Los casos pendientes se informan por separado.
+
+`python -m unittest discover -s tools/tests -p "test_*.py"` ejecuta las pruebas
+del verificador. El informe queda en
+`app/build/reports/parity/reference-check.json`.
+Para comprobar también un checkout iOS exacto, añadir `--ios RUTA_CHECKOUT_IOS`.
+No necesita acceso al broker ni credenciales.
+
+Ver [el resultado y reproducción de fase 1](../docs/FASE_1_REFERENCIA_Y_VALIDACION.md).
+
 ## Comprobar el APK generado
 
 Después de assembleDebug, ejecutar `python tools/verificar_apk.py`. Verifica las
@@ -28,7 +44,7 @@ posiciones como flota observada. Sus comentarios originales sobre anonimato y
 vehículos reales no describen el contrato actual.
 
 Para probar la flota compartida se debe usar el backend y el simulador actuales
-[del repositorio iOS](https://github.com/JDiazD33/RutaUTP/tree/138900d06bf57a8835ad6c4261f3b608cf6b66b5/backend),
+[del repositorio iOS fijado para la paridad](https://github.com/JDiazD33/RutaUTP/tree/8145276bb6fc72a168cc78119def2727578ec0bb/backend),
 con MQTT v2/v3, sus cuentas y ACL, y el control vigente de simulación. No ejecutar
 los scripts heredados contra un servicio compartido para comprobar paridad.
 La demostración local dentro de la app continúa separada y rotulada como simulación.

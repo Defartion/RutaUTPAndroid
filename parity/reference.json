@@ -1,0 +1,557 @@
+{
+  "schemaVersion": 1,
+  "verifiedAt": "2026-11-10",
+  "repositories": {
+    "ios": {
+      "url": "https://github.com/JDiazD33/RutaUTP.git",
+      "branch": "main",
+      "commit": "8145276bb6fc72a168cc78119def2727578ec0bb"
+    },
+    "android": {
+      "url": "https://github.com/Defartion/RutaUTPAndroid.git",
+      "branch": "main",
+      "commit": "7ba57cbe73f97e83fd112584a9e8ff89623ac4c1"
+    }
+  },
+  "minimumUnitTests": 125,
+  "originalUnitTests": 119,
+  "requiredBaselineCaseIds": [
+    "ETA-01",
+    "ETA-02",
+    "ETA-03",
+    "ETA-04",
+    "ETA-05",
+    "ETA-06"
+  ],
+  "minimumFixtureCases": {
+    "eta": 11,
+    "route-comparison": 8,
+    "travel-state": 8
+  },
+  "sharedResourceCount": 71,
+  "sharedResources": [
+    {
+      "androidPath": "app/src/main/assets/gtfs/agency.txt",
+      "iosPath": "gtfs/agency.txt",
+      "sha256": "0003aaf44a68c1b958395f1f9bdb6efb2068a4f4a2e8fa548c6f66549cd56143",
+      "hashMode": "lf"
+    },
+    {
+      "androidPath": "app/src/main/assets/gtfs/calendar.txt",
+      "iosPath": "gtfs/calendar.txt",
+      "sha256": "e658c808bc47700d2eaff17bd96eeb157499c727a337b32a2176713f36707b26",
+      "hashMode": "lf"
+    },
+    {
+      "androidPath": "app/src/main/assets/gtfs/fare_attributes.txt",
+      "iosPath": "gtfs/fare_attributes.txt",
+      "sha256": "dc16f1ff6177620fee6990c6f60cb4d4ea9df6dd175db6e1850135cd96dddc30",
+      "hashMode": "lf"
+    },
+    {
+      "androidPath": "app/src/main/assets/gtfs/fare_rules.txt",
+      "iosPath": "gtfs/fare_rules.txt",
+      "sha256": "2f068b93cab0fc4b9292efa16c579a29bba702b73084e6631691fae63953e7a8",
+      "hashMode": "lf"
+    },
+    {
+      "androidPath": "app/src/main/assets/gtfs/feed_info.txt",
+      "iosPath": "gtfs/feed_info.txt",
+      "sha256": "8fb7435b4f069f6526e016c77e1a544cc03b9f27ea03b6bd5c3ddebf0185ef17",
+      "hashMode": "lf"
+    },
+    {
+      "androidPath": "app/src/main/assets/gtfs/frequencies.txt",
+      "iosPath": "gtfs/frequencies.txt",
+      "sha256": "ae98041bc276d36b3d80a1ffaa7b594f5d5cabf6132992cbfba84585224c163e",
+      "hashMode": "lf"
+    },
+    {
+      "androidPath": "app/src/main/assets/gtfs/routes.txt",
+      "iosPath": "gtfs/routes.txt",
+      "sha256": "3b72327c0650f676c9a73ff22369c146bcf2e03b488324cbf25f83905d8d36a2",
+      "hashMode": "lf"
+    },
+    {
+      "androidPath": "app/src/main/assets/gtfs/shapes.txt",
+      "iosPath": "gtfs/shapes.txt",
+      "sha256": "0009011b8a87fbd2c456bc5c4671c64a3bcd002a0c1c542a8b361a471c15a786",
+      "hashMode": "lf"
+    },
+    {
+      "androidPath": "app/src/main/assets/gtfs/stop_times.txt",
+      "iosPath": "gtfs/stop_times.txt",
+      "sha256": "758e0dab4d016af03aeb7f57025ae85731d09172c775c48748314dee7933dd2f",
+      "hashMode": "lf"
+    },
+    {
+      "androidPath": "app/src/main/assets/gtfs/stops.txt",
+      "iosPath": "gtfs/stops.txt",
+      "sha256": "f946cda12b3f61d1022b0479b30f1d1310500726e42e607ff607994baaf52870",
+      "hashMode": "lf"
+    },
+    {
+      "androidPath": "app/src/main/assets/gtfs/trips.txt",
+      "iosPath": "gtfs/trips.txt",
+      "sha256": "a45196230c5e51d842675acf677b371106ec98932a6e47e9d54fff5f9e29be8f",
+      "hashMode": "lf"
+    },
+    {
+      "androidPath": "app/src/main/assets/negocios_promocionados.json",
+      "iosPath": "RutaUTP/Services/Negocios/negocios_promocionados.json",
+      "sha256": "a6f9f7d8e363b2ef504152bd56468b3f77155cce82f4ad4db03aa078cd4f4533",
+      "hashMode": "lf"
+    },
+    {
+      "androidPath": "app/src/main/assets/sedes-empresas-trujillo.json",
+      "iosPath": "RutaUTP/Data/sedes-empresas-trujillo.json",
+      "sha256": "e754c41d10858ecb307de79a8d414b13c0898aa657686de538bf1ca0c3a51022",
+      "hashMode": "lf"
+    },
+    {
+      "androidPath": "app/src/main/assets/traducciones.json",
+      "iosPath": "RutaUTP/Localization/traducciones.json",
+      "sha256": "3c1da5bebd9e5e59e30053938c6ef6c891d9280ac9d7c5bce96708ed09a9d04d",
+      "hashMode": "lf"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/manifest.json",
+      "iosPath": "senias/manifest.json",
+      "sha256": "22bb055e35ad3ea7098c72ca70bc6ed4f7eb668a5749a19e9379e15a23de9beb",
+      "hashMode": "lf"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/anadir_linea.mp4",
+      "iosPath": "senias/clips/en/anadir_linea.mp4",
+      "sha256": "76fd8c0cac30c0235e0ed5c6a3c92996b98ced172197cce97d22021eda9b636b",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/anadir_lugar.mp4",
+      "iosPath": "senias/clips/en/anadir_lugar.mp4",
+      "sha256": "5cb49d9c8060e64d38e7c93e03d4c38b0381b849b5a8f42e6c778fadf5a03281",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/centro.mp4",
+      "iosPath": "senias/clips/en/centro.mp4",
+      "sha256": "0870d34cad9fbc3875a45a9955e4ff7dbe6760d23a76128ba5834749b67b18db",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/comenzar.mp4",
+      "iosPath": "senias/clips/en/comenzar.mp4",
+      "sha256": "036c92f29fe61459ca66518ad582f91904ec19595edd284f4b7f2253d64ed6f3",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/comunidad.mp4",
+      "iosPath": "senias/clips/en/comunidad.mp4",
+      "sha256": "39b2eab5c19bbdd8a1f8fd5d6bb62a675f0f2b9e24ca4eb8e714dc90a41c211e",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/costo.mp4",
+      "iosPath": "senias/clips/en/costo.mp4",
+      "sha256": "f23d87785053fd28489c250c8074dc1ae61fff9083707a86159e866ba9c6a910",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/elige_tu_ruta.mp4",
+      "iosPath": "senias/clips/en/elige_tu_ruta.mp4",
+      "sha256": "9ce8aa6d3280d2b4ad43a9ac6de9951ff2269b1f60f3bfbf2be021c060349c1b",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/frecuencia.mp4",
+      "iosPath": "senias/clips/en/frecuencia.mp4",
+      "sha256": "4ab99c5806a745f731ca626c0755f525f65940c81ad2700bb7911a02b679d483",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/guardado.mp4",
+      "iosPath": "senias/clips/en/guardado.mp4",
+      "sha256": "e1df1366419734639d2352762d34c9f541cac3ccb82f56d471eddb748b24ce10",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/guardar_lugar.mp4",
+      "iosPath": "senias/clips/en/guardar_lugar.mp4",
+      "sha256": "30e39aebb87d119ac00b72a213232631a8106206d89deb16e48d31f6474dcaeb",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/guia_paso_a_paso.mp4",
+      "iosPath": "senias/clips/en/guia_paso_a_paso.mp4",
+      "sha256": "3a680a8c7b04b9f3891577fdb5fce3902312a0f004837a3d0ed242be131a6cf2",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/huanchaco.mp4",
+      "iosPath": "senias/clips/en/huanchaco.mp4",
+      "sha256": "0e15cf79cb578feb971eb8ac8e98c69f2f3fc1c4b49eef156049f24f47eb3272",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/idioma.mp4",
+      "iosPath": "senias/clips/en/idioma.mp4",
+      "sha256": "1463781ed846e16698ff6626ec4de4092ef1b90b940cbf926b6803fa229bb637",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/iniciar_navegacion.mp4",
+      "iosPath": "senias/clips/en/iniciar_navegacion.mp4",
+      "sha256": "0bc4c962ac4a99a57b57a911caa845bed25387045ab72ed6437d870df02bd5c4",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/lineas.mp4",
+      "iosPath": "senias/clips/en/lineas.mp4",
+      "sha256": "fe0ef6c478b84389abddfebcb52402ec6e6ac2ec75dc87c17d120e9e47b86c20",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/llamar_105.mp4",
+      "iosPath": "senias/clips/en/llamar_105.mp4",
+      "sha256": "0f124abde4c0b94c92a8fad6daadb33e3577d7074df603b6e4de71fb35556b5a",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/lugares.mp4",
+      "iosPath": "senias/clips/en/lugares.mp4",
+      "sha256": "bbfe1b986c1a49a1eaf5c6aa070d998b858d904bad800fe0cf6835611c553652",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/lugares_guardados.mp4",
+      "iosPath": "senias/clips/en/lugares_guardados.mp4",
+      "sha256": "245896887185ecefcc0e36745f6b96ee2a601b3d82f5bf7f5cf9b3e5cd4f670a",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/modo_senias.mp4",
+      "iosPath": "senias/clips/en/modo_senias.mp4",
+      "sha256": "345115cb6f02f227a16cfb5b65a903c2a9a790aa3351b99c23ef5e54062d3ce2",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/paraderos.mp4",
+      "iosPath": "senias/clips/en/paraderos.mp4",
+      "sha256": "bf9c10d4723470ddf48942d1fe0fc2e9483e788dfe341bebfe7598f965aedd66",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/recorrido.mp4",
+      "iosPath": "senias/clips/en/recorrido.mp4",
+      "sha256": "1cdf00f8c8f47a89e86c386d4aa8635a66a18a563accffab549598813fd34580",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/reportar.mp4",
+      "iosPath": "senias/clips/en/reportar.mp4",
+      "sha256": "d1c116fa5cc4183f5e1b7f3eaf47df2201d35e99ecd3ab4668b69ee1c6a5a1d0",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/rutas.mp4",
+      "iosPath": "senias/clips/en/rutas.mp4",
+      "sha256": "ff1632d52bcae3ff85c619fbe51cf59eba40d7f212beef4425fa1316038ce583",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/rutas_seguras.mp4",
+      "iosPath": "senias/clips/en/rutas_seguras.mp4",
+      "sha256": "0020a7a240e0c0485656279cd572b7775b202156e7aeb25a024f05e2e130a443",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/saltar.mp4",
+      "iosPath": "senias/clips/en/saltar.mp4",
+      "sha256": "1a2d17dcaca93d57470b9512cb6ff53e5dc04a8f09b14a34c197af1def7ff037",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/tiempo_viaje.mp4",
+      "iosPath": "senias/clips/en/tiempo_viaje.mp4",
+      "sha256": "bc8b44964bc2e4b34223a186546552271582d7e50962d0a8c6818541563deb4b",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/transportes_cercanos.mp4",
+      "iosPath": "senias/clips/en/transportes_cercanos.mp4",
+      "sha256": "9e21c8a783da4448497c1576cd8cb24cefa8abef70d525057acd52deccbbadad",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/en/utp.mp4",
+      "iosPath": "senias/clips/en/utp.mp4",
+      "sha256": "ab75aae1b14e1a85468ae6ded52d8f5b10795063719412aba993d429fce2ce15",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/anadir_linea.mp4",
+      "iosPath": "senias/clips/es/anadir_linea.mp4",
+      "sha256": "53506f6a13fe2066d5c2881f16f1717bc3ed5d10decf27fb61d9481fea0bfec4",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/anadir_lugar.mp4",
+      "iosPath": "senias/clips/es/anadir_lugar.mp4",
+      "sha256": "47a703def5fba60dd58fb7068dd237004cc5763b6160bda121d96eed03bf5752",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/centro.mp4",
+      "iosPath": "senias/clips/es/centro.mp4",
+      "sha256": "ee9ce64f90336afcc490b9ea46c32bfce0893af0bf4f071526bc86d7218286ea",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/comenzar.mp4",
+      "iosPath": "senias/clips/es/comenzar.mp4",
+      "sha256": "999ac798d13aca5574000bb59f8c352da8196b02d4118566d6b958a3a9193ef3",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/comunidad.mp4",
+      "iosPath": "senias/clips/es/comunidad.mp4",
+      "sha256": "fc76d34ad93a2edf78048877d29a68285589bed33015a1d2494c3fe25f976def",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/costo.mp4",
+      "iosPath": "senias/clips/es/costo.mp4",
+      "sha256": "d552fc27a24e41f639dc8ec772be3c7cc5bf07d88751bc7807121b6f336b79e0",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/elige_tu_ruta.mp4",
+      "iosPath": "senias/clips/es/elige_tu_ruta.mp4",
+      "sha256": "29188a4ef083cf9898c690cd588dd68c523bcd0c96df140346d1f73ff79b8c1d",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/frecuencia.mp4",
+      "iosPath": "senias/clips/es/frecuencia.mp4",
+      "sha256": "8cc95eae507744f23eed22810548fead4eb8e983d4f3b69ed01da9bf38433360",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/guardado.mp4",
+      "iosPath": "senias/clips/es/guardado.mp4",
+      "sha256": "ec2ff3bd373b5dcd24c6f4f3344dd9766c5b7b249e9e77bb2372739bfbb25d6b",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/guardar_lugar.mp4",
+      "iosPath": "senias/clips/es/guardar_lugar.mp4",
+      "sha256": "6e8741e74a9b2a6295e66c1755e6c38ed244f143302feef1a49ff0a3c6e0b055",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/guia_paso_a_paso.mp4",
+      "iosPath": "senias/clips/es/guia_paso_a_paso.mp4",
+      "sha256": "ca3cafec0d9e097ab487fecba2b7208b93e831883dab7fffc059f9437f0625d9",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/huanchaco.mp4",
+      "iosPath": "senias/clips/es/huanchaco.mp4",
+      "sha256": "b6b014873f2ddc092910a8b546676ed257179a138ad651c9cb0091595bd8f514",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/idioma.mp4",
+      "iosPath": "senias/clips/es/idioma.mp4",
+      "sha256": "cd3449ddf142e3fc4d23e4740d21d2a9d30b380f242c58dce41a395d9f5a7258",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/iniciar_navegacion.mp4",
+      "iosPath": "senias/clips/es/iniciar_navegacion.mp4",
+      "sha256": "56225ffbd7f06c4679ed87837e248373d57b9329b590fb4bc0326e5144708c1c",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/lineas.mp4",
+      "iosPath": "senias/clips/es/lineas.mp4",
+      "sha256": "ea650760dec383d2d6b2337d774b325c9dcaaf193c3b1d1930910fa19968e864",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/llamar_105.mp4",
+      "iosPath": "senias/clips/es/llamar_105.mp4",
+      "sha256": "d824316f7b25b87ff9c9c38cd49432b94781fe44a77b4ea4fada427414bfca4a",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/lugares.mp4",
+      "iosPath": "senias/clips/es/lugares.mp4",
+      "sha256": "8e579b201b23c312d14664182bdbe4323f3ba473be79f730e2216d44579704d5",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/lugares_guardados.mp4",
+      "iosPath": "senias/clips/es/lugares_guardados.mp4",
+      "sha256": "6c71bc5f3a308bf61096dff5c0c7bada779e5428ca8f946e781af29be188b2ae",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/modo_senias.mp4",
+      "iosPath": "senias/clips/es/modo_senias.mp4",
+      "sha256": "379f52f64ee09956e216e96c4b71907cc8c5843d869fa18dc6ddc081a800e9bb",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/paraderos.mp4",
+      "iosPath": "senias/clips/es/paraderos.mp4",
+      "sha256": "29aacfc03c03b7264d5e2e0a0987ce9c16d68120d39922686ac45eb8e9aa0ec5",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/recorrido.mp4",
+      "iosPath": "senias/clips/es/recorrido.mp4",
+      "sha256": "95ae15a6ff1df0b9154c260eba13d0584f4db2dadcbfc4d1cb753044f946a30d",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/reportar.mp4",
+      "iosPath": "senias/clips/es/reportar.mp4",
+      "sha256": "9f3d3df516aafeb3e87f0f2c4d985217c7a5db81225a7d34e021bb293226f606",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/rutas.mp4",
+      "iosPath": "senias/clips/es/rutas.mp4",
+      "sha256": "f4f0ddefbbae597a9e22ccf1dcf0943f2e9feaf389627bc3af805925699550cc",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/rutas_seguras.mp4",
+      "iosPath": "senias/clips/es/rutas_seguras.mp4",
+      "sha256": "fee6d0a8ae80fe0bfef498b3d25d1f56c491bfd6b334e582cefe861de0115ea1",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/saltar.mp4",
+      "iosPath": "senias/clips/es/saltar.mp4",
+      "sha256": "b09c816f2040a28d09a947fd860565e90933257b8c794a638b7a981c59a36a63",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/tiempo_viaje.mp4",
+      "iosPath": "senias/clips/es/tiempo_viaje.mp4",
+      "sha256": "e68dd0acff08bb16ab5a5fe6521b90b74e8d470c02b118187e5cd72019d95278",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/transportes_cercanos.mp4",
+      "iosPath": "senias/clips/es/transportes_cercanos.mp4",
+      "sha256": "e9c9009c7fea5294f809190fb4edb8559544a36495f6e7a753498ce5b1aee37a",
+      "hashMode": "binary"
+    },
+    {
+      "androidPath": "app/src/main/assets/senias/clips/es/utp.mp4",
+      "iosPath": "senias/clips/es/utp.mp4",
+      "sha256": "27e2b49fb7374226e62b9112445e6ca41e4942a0164558aaceecb125a3c7dfce",
+      "hashMode": "binary"
+    }
+  ],
+  "iosSources": [
+    {
+      "path": "RutaUTP/Services/Routing/VehicleETAEstimator.swift",
+      "sha256": "b92b31a660d8bf82b150b68851edeebd066b0709e1a0a04218c12acdd4b77e93",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTPTests/VehiclePositionSanitizerTests.swift",
+      "sha256": "86e972450db41260fe2f61b2721cd9d21e8cf8901d11ac2243aee5f782882774",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Services/Routing/TransitPlanning.swift",
+      "sha256": "4f0500f52e9ed4b8b6fb490d475d7dc01770b5325000c938dcdfcbe82f00c21f",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Navigation/RootView.swift",
+      "sha256": "b09ac47119c06599cb77dbe0c70cfa5902af78dc1535b930b138793270828d05",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Services/GTFS/TransporteApp.swift",
+      "sha256": "af6f09b5ee749b4c76c48d2811157378c083957b4e916932fc6a5f1744bc7f91",
+      "hashMode": "lf"
+    },
+    {
+      "path": "backend/rutautp_backend/models.py",
+      "sha256": "f2c9e7186e9be2b86c2f6dc4ca02023a44ad539117438f157f630b92c7fffab3",
+      "hashMode": "lf"
+    },
+    {
+      "path": "backend/rutautp_backend/validation.py",
+      "sha256": "c0e2616e04d4ad8b573696c25cfa25bb8887bc3c5e28302e5a9e7f47d489c6a9",
+      "hashMode": "lf"
+    },
+    {
+      "path": "backend/rutautp_backend/simulation_control.py",
+      "sha256": "f335a65d59946715764ed92500bedf7cf1fc45e6ec24be68dc66a26056c8a9fc",
+      "hashMode": "lf"
+    },
+    {
+      "path": "backend/rutautp_backend/occupancy.py",
+      "sha256": "e401fdad169efac07e8afa0f3b592c1fec87d07041d1cf48efaeecf19927e594",
+      "hashMode": "lf"
+    },
+    {
+      "path": "backend/rutautp_backend/route_changes.py",
+      "sha256": "b81cb23151298c0dbc76a2bf8f35a48b401beabd5aadeec795c8d3088f1ee2e0",
+      "hashMode": "lf"
+    },
+    {
+      "path": "backend/rutautp_backend/push_service.py",
+      "sha256": "ed3c4e03fbb7ce2a18718e2dc77c91a0a79ab6886e9774d309ee3321be264a94",
+      "hashMode": "lf"
+    },
+    {
+      "path": "backend/PUSH-NOTIFICACIONES.md",
+      "sha256": "311829cc3183f70bc77faba3e6d061b528e83888c9335a341fce380df02f2ba9",
+      "hashMode": "lf"
+    }
+  ],
+  "backendContracts": {
+    "referenceCommit": "8145276bb6fc72a168cc78119def2727578ec0bb",
+    "vehiclePosition": {
+      "schemaVersions": [
+        2,
+        3
+      ],
+      "topic": "rutautp/vehiculos/{vehicleId}/posicion",
+      "v3OnlySimulated": true,
+      "occupancyScriptVersion": 1
+    },
+    "simulationControl": {
+      "schemaVersion": 1,
+      "topic": "rutautp/simulacion/estado",
+      "timeZone": "America/Lima"
+    },
+    "occupancy": {
+      "schemaVersion": 1,
+      "topic": "rutautp/ocupacion/estado",
+      "minimumPrincipals": 2
+    },
+    "routeChanges": {
+      "schemaVersion": 1,
+      "topic": "rutautp/cambios/estado",
+      "minimumPrincipals": 2
+    },
+    "pushRegistration": {
+      "backendSchemaVersion": 1,
+      "backendProvider": "apns",
+      "androidSchemaVersion": 2,
+      "androidProvider": "fcm",
+      "androidSupportedByPinnedBackend": false,
+      "finding": "F07"
+    }
+  }
+}

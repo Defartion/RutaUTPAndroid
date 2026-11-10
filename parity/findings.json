@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "audit": "docs/auditoria-main-2026-11-10/INFORME.md",
+  "findings": [
+    {
+      "id": "F01",
+      "phases": [
+        2
+      ],
+      "status": "pending",
+      "acceptance": "ETA fiel a velocidad, sentido, radio y referencia de mapa",
+      "validation": "Fixture ETA completo y prueba de ancla/sede."
+    },
+    {
+      "id": "F02",
+      "phases": [
+        2
+      ],
+      "status": "pending",
+      "acceptance": "Transbordos sujetos a ahorro 45 min/15 min/25 %",
+      "validation": "Casos ROUTE-01 a ROUTE-08 y comparación del itinerario completo."
+    },
+    {
+      "id": "F03",
+      "phases": [
+        3
+      ],
+      "status": "pending",
+      "acceptance": "Una respuesta antigua no sustituye un destino posterior",
+      "validation": "STATE-01 y STATE-02 con servicio de búsqueda controlado."
+    },
+    {
+      "id": "F04",
+      "phases": [
+        3
+      ],
+      "status": "pending",
+      "acceptance": "Cambiar catálogo retira flota y contexto anteriores",
+      "validation": "STATE-03 con y sin MQTT; catálogo UTP ausente."
+    },
+    {
+      "id": "F05",
+      "phases": [
+        3
+      ],
+      "status": "pending",
+      "acceptance": "Avisos respetan todos los tipos de viaje activo",
+      "validation": "STATE-04, STATE-05 y STATE-08; toque consumido una vez."
+    },
+    {
+      "id": "F06",
+      "phases": [
+        4
+      ],
+      "status": "pending",
+      "acceptance": "Cuenta MQTT distinta por instalación sin recompilar APK",
+      "validation": "Dos instalaciones reales, TLS, revocación y quorum."
+    },
+    {
+      "id": "F07",
+      "phases": [
+        7
+      ],
+      "status": "pending",
+      "acceptance": "FCM aceptado por registro y worker sin romper APNs",
+      "validation": "Integración backend y entrega real bajo políticas de silencio."
+    },
+    {
+      "id": "F08",
+      "phases": [
+        4
+      ],
+      "status": "pending",
+      "acceptance": "La configuración Google elegida es efectiva",
+      "validation": "Inspección del manifiesto empaquetado y prueba de mapa/búsqueda/caminata."
+    },
+    {
+      "id": "F09",
+      "phases": [
+        4
+      ],
+      "status": "pending",
+      "acceptance": "Búsqueda cubre el ámbito acordado del GTFS y sedes",
+      "validation": "Consultas en los extremos del área de servicio."
+    },
+    {
+      "id": "F10",
+      "phases": [
+        3
+      ],
+      "status": "pending",
+      "acceptance": "Pestañas y tracking conservan el contexto acordado",
+      "validation": "STATE-06 y STATE-07; rotación y recreación."
+    },
+    {
+      "id": "F11",
+      "phases": [
+        5
+      ],
+      "status": "pending",
+      "acceptance": "Claves y plantillas resuelven los seis idiomas",
+      "validation": "Barrido de cadenas y revisión de pantallas/errores por idioma."
+    },
+    {
+      "id": "F12",
+      "phases": [
+        5
+      ],
+      "status": "pending",
+      "acceptance": "Feed vacío, ausente e ilegible tienen estados diferentes",
+      "validation": "Fallo de carga inyectado, reintento y modo offline."
+    },
+    {
+      "id": "F13",
+      "phases": [
+        8
+      ],
+      "status": "pending",
+      "acceptance": "Cachés preservan resultados y reducen trabajo repetido",
+      "validation": "Equivalencia de resultados y mediciones en dispositivo."
+    },
+    {
+      "id": "F14",
+      "phases": [
+        1,
+        8
+      ],
+      "status": "in_progress",
+      "acceptance": "Comprobación automática de main/PR y cobertura de flujos",
+      "validation": "Workflow, resultados JUnit/lint/APK y pruebas instrumentales."
+    },
+    {
+      "id": "F15",
+      "phases": [
+        3
+      ],
+      "status": "pending",
+      "acceptance": "IDs urbanos e institucionales separados antes del feed real",
+      "validation": "Dos catálogos sintéticos con IDs repetidos; coordinación backend."
+    }
+  ]
+}

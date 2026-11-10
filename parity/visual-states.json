@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "referenceIosCommit": "8145276bb6fc72a168cc78119def2727578ec0bb",
+  "status": "pending_device_comparison",
+  "captureRules": [
+    "Mismos datos, estado, idioma y tamaño de texto comparable en ambas plataformas.",
+    "Registrar ancho útil y escalado; no estirar imágenes para forzar coincidencia.",
+    "Capturas Compose son vistas previas; GPS, cámara, mapas y OpenGL requieren dispositivo."
+  ],
+  "variants": [
+    "claro",
+    "oscuro",
+    "texto 150 %",
+    "texto 200 %",
+    "TalkBack cuando proceda"
+  ],
+  "screens": [
+    {
+      "id": "map",
+      "name": "Mapa",
+      "states": [
+        "flota simulada rotulada",
+        "flota observada",
+        "sin ubicación",
+        "sin posiciones",
+        "carga",
+        "error de búsqueda",
+        "viaje directo/transbordo",
+        "Buses UTP pendiente"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "routes",
+      "name": "Rutas",
+      "states": [
+        "catálogo",
+        "búsqueda y variantes",
+        "sin resultados",
+        "carga",
+        "error con reintento",
+        "detalle/explorador/3D"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "saved",
+      "name": "Guardado",
+      "states": [
+        "lugares y paraderos",
+        "líneas",
+        "lista vacía",
+        "carga de catálogo",
+        "datos ilegibles",
+        "detalle/edición"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "safety",
+      "name": "Seguridad",
+      "states": [
+        "ayuda",
+        "comunidad demo",
+        "paraderos guardados vacíos",
+        "carga de cambios",
+        "canal no configurado",
+        "contacto/reportes"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "profile",
+      "name": "Perfil",
+      "states": [
+        "identidad y billetera",
+        "carné físico/digital",
+        "sin tarjetas/cupones",
+        "lectura de recursos locales",
+        "error de recuperación",
+        "notificaciones sin permiso"
+      ],
+      "status": "pending"
+    }
+  ]
+}
