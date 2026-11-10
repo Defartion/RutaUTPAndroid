@@ -31,20 +31,35 @@ class GuardadoViewModel : ViewModel() {
     // Catálogo completo, para el selector y la resolución en vivo.
     private val _catalogo = MutableStateFlow<List<RutaGTFS>>(emptyList())
     val catalogo: StateFlow<List<RutaGTFS>> = _catalogo.asStateFlow()
+    private val _cargandoCatalogo = MutableStateFlow(true)
+    val cargandoCatalogo = _cargandoCatalogo.asStateFlow()
+    val errorCatalogo = GTFSRepository.errorCarga
 
     private var refsLineas: List<LineaGuardadaRef> = emptyList()
 
     init {
         viewModelScope.launch {
-            _catalogo.value = GTFSRepository.rutas()
             LineasGuardadasStore.observar().collect { refs ->
                 refsLineas = refs
                 _lineas.value = resolver()
             }
         }
+        viewModelScope.launch {
+            androidx.compose.runtime.snapshotFlow { com.example.rutautpnative.data.gtfs.TransporteApp.busesUTPActivos }.collect { cargarCatalogo() }
+        }
+    }
+
+    fun cargarCatalogo(reintentar: Boolean = false) {
+        viewModelScope.launch {
+            _cargandoCatalogo.value = true
+            try { _catalogo.value = GTFSRepository.rutas(reintentar); _lineas.value = resolver() }
+            finally { _cargandoCatalogo.value = false }
+        }
     }
 
     // --- Lugares ---
+    fun reintentarLecturaLugares() { viewModelScope.launch { LugaresStore.cargar() } }
+    fun reintentarLecturaLineas() { viewModelScope.launch { refsLineas = LineasGuardadasStore.cargar(); _lineas.value = resolver() } }
     fun agregar(lugar: LugarGuardado) {
         viewModelScope.launch { LugaresStore.modificar { it + lugar } }
     }

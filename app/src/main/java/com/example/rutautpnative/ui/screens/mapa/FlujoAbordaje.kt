@@ -619,6 +619,7 @@ fun MapaPuntoSubida(
     var mensajeUbicacion by remember { mutableStateOf<String?>(null) }
     var mostrarAjustes by remember { mutableStateOf(false) }
     var peticionUbicacion by remember { mutableStateOf(0) }
+    var revisionPunto by remember { mutableIntStateOf(0) }
 
     fun pedirUbicacion(reemplazar: Boolean) {
         buscandoUbicacion = true
@@ -655,11 +656,12 @@ fun MapaPuntoSubida(
     LaunchedEffect(Unit) {
         if (permisoUbicacion.status.isGranted) {
             val solicitud = ++peticionUbicacion
+            val revisionAlAbrir = revisionPunto
             UbicacionUnaVez.solicitar(contexto, scope) { resultado ->
                 if (solicitud != peticionUbicacion) return@solicitar
                 buscandoUbicacion = false
-                if (resultado != null && punto == null) {
-                    punto = PuntoSubida(resultado.latitude, resultado.longitude)
+                if (resultado != null && revisionPunto == revisionAlAbrir) {
+                    if (punto == null) punto = PuntoSubida(resultado.latitude, resultado.longitude)
                     scope.launch { camara.animate(CameraUpdateFactory.newLatLngZoom(resultado, 16f)) }
                 }
             }
@@ -684,6 +686,7 @@ fun MapaPuntoSubida(
                 cameraPositionState = camara,
                 uiSettings = MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false),
                 onMapClick = { coordenada ->
+                    revisionPunto++
                     punto = PuntoSubida(coordenada.latitude, coordenada.longitude)
                 }
             ) {

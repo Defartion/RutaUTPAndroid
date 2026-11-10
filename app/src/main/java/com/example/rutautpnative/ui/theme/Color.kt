@@ -4,6 +4,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+
+// Equivalente de secondarySystemGroupedBackground usado por las pantallas iOS.
+val SuperficieAgrupada: Color
+    get() = if (OnSurface.luminance() > 0.5f) SurfaceContainer else SurfaceContainerLowest
+
+// Las acciones usan el tono claro de la empresa sobre superficies oscuras.
+val AcentoInterfaz: Color
+    get() = if (OnSurface.luminance() > 0.5f) PrimaryFixed else AppPrimary
 
 //----Colores de marca (RESUELTOS desde la temática activa)----
 // Desde la Fase de temáticas son vars respaldados por MutableState, como los

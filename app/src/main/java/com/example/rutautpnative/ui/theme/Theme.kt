@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
@@ -44,8 +45,8 @@ private fun esquemaClaro() = lightColorScheme(
 )
 
 private fun esquemaOscuro() = darkColorScheme(
-    primary           = AppPrimary,
-    onPrimary         = OnPrimary,
+    primary           = PrimaryFixed,
+    onPrimary         = AppBackground,
     primaryContainer  = PrimaryContainer,
     onPrimaryContainer = OnPrimaryContainer,
     secondary         = Secondary,
@@ -92,7 +93,9 @@ fun RutaUTPNativeTheme(
     modoOscuro: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    LaunchedEffect(modoOscuro) { aplicarTemaOscuro(modoOscuro) }
+    // Android Studio y las capturas no ejecutan LaunchedEffect.
+    if (LocalInspectionMode.current) aplicarTemaOscuro(modoOscuro)
+    else LaunchedEffect(modoOscuro) { aplicarTemaOscuro(modoOscuro) }
 
     // STATUS BAR + NAV BAR: iconos claros en oscuro, oscuros en claro.
     // Equivalente del overrideUserInterfaceStyle del iOS: con edge-to-edge,

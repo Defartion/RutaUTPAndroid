@@ -284,28 +284,6 @@ fun EscanerQRScreen(onCerrar: () -> Unit) {
                     .padding(16.dp)
             ) {
                 when {
-                    !permisoCamara.status.isGranted -> {
-                        Text(
-                            L.t("Se necesita permiso de cámara para escanear.", "Camera permission is needed to scan."),
-                            style = BodySm, color = TextoScanner
-                        )
-                        Spacer(Modifier.height(10.dp))
-                        Button(onClick = { permisoCamara.launchPermissionRequest() }, shape = RoundedCornerShape(12.dp)) {
-                            Text(L.t("Dar permiso", "Grant permission"), color = Color.White)
-                        }
-                    }
-
-                    !camaraDisponible -> {
-                        Text(L.t("En el emulador no hay cámara.", "There's no camera in the emulator."), style = BodySm, color = TextoScannerVar)
-                        Spacer(Modifier.height(10.dp))
-                        OutlinedButton(
-                            onClick = { procesarLectura(PagoQR.cargaUtil(PagoQR.cuentaDemo, 2.50)) },
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text(L.t("Probar con un código de ejemplo", "Try a sample code"), color = AppPrimary)
-                        }
-                    }
-
                     resultado != null -> {
                         val campos = resultado ?: return@Column   // smart-cast sin !!
                         Text(L.t("Código leído", "Code scanned"), style = HeadlineSm, color = TextoScanner)
@@ -370,6 +348,28 @@ fun EscanerQRScreen(onCerrar: () -> Unit) {
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(L.t("Escanear otro", "Scan another"), color = AppPrimary)
+                        }
+                    }
+
+                    !permisoCamara.status.isGranted -> {
+                        Text(
+                            L.t("Se necesita permiso de cámara para escanear.", "Camera permission is needed to scan."),
+                            style = BodySm, color = TextoScanner
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        Button(onClick = { permisoCamara.launchPermissionRequest() }, shape = RoundedCornerShape(12.dp)) {
+                            Text(L.t("Dar permiso", "Grant permission"), color = Color.White)
+                        }
+                    }
+
+                    !camaraDisponible -> {
+                        Text(L.t("La cámara no está disponible en este dispositivo.", "The camera is unavailable on this device."), style = BodySm, color = TextoScannerVar)
+                        Spacer(Modifier.height(10.dp))
+                        OutlinedButton(
+                            onClick = { procesarLectura(PagoQR.cargaUtil(PagoQR.cuentaDemo, 2.50)) },
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(L.t("Probar con un código de ejemplo", "Try a sample code"), color = AppPrimary)
                         }
                     }
 

@@ -16,6 +16,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
@@ -997,59 +999,14 @@ private fun EstadoContribucion(modifier: Modifier = Modifier) {
 
 // Header
 @Composable
-private fun MapaHeader(
-    onMenuClick: () -> Unit,
-    titulo: String? = null,
-    fuenteReal: Boolean = false,
-    datosRecientes: Boolean = false
-) {    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .background(AppSurface.copy(alpha = 0.95f))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .padding(horizontal = 20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(SurfaceContainerLow)
-                    .clickable { onMenuClick() },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Filled.Menu, L.t("Abrir menú", "Open menu"), tint = OnSurface, modifier = Modifier.size(22.dp))
-            }
-            Spacer(Modifier.width(12.dp))
-            Text(titulo ?: L.t("Mapa", "Map"), style = HeadlineLg, color = AppPrimary)
-            // Con flota real: frescura de las POSICIONES (tener credenciales
-            // no demuestra que hayan llegado datos). Verde = recientes.
-            // Fondo TRANSLUCIDO al 14% (iOS .opacity(0.14)): opaco parecia una
-            // barra marron pegada al titulo.
-            if (fuenteReal) {
-                Spacer(Modifier.width(10.dp))
-                val colorBadge = if (datosRecientes) VerdeExito else OnSurfaceVariant
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(colorBadge.copy(alpha = 0.14f))
-                        .padding(horizontal = 7.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        if (datosRecientes) L.t("DATOS RECIENTES", "RECENT DATA")
-                        else L.t("ESPERANDO DATOS", "WAITING FOR DATA"),
-                        style = LabelCapsSm,
-                        color = colorBadge,
-                        fontSize = 9.sp
-                    )
-                }
-            }
+private fun MapaHeader(onMenuClick: () -> Unit, titulo: String? = null, fuenteReal: Boolean = false, datosRecientes: Boolean = false) {
+    Row(Modifier.fillMaxWidth().statusBarsPadding().background(AppSurface).padding(horizontal = 20.dp, vertical = 8.dp).heightIn(min = 60.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        FilledTonalIconButton(onClick = onMenuClick, shape = CircleShape) { Icon(Icons.Filled.Menu, L.t("Abrir menú", "Open menu"), tint = AppPrimary) }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(titulo ?: L.t("Mapa", "Map"), style = HeadlineLg, color = OnSurface)
+            if (fuenteReal) Text(if (datosRecientes) L.t("DATOS RECIENTES", "RECENT DATA") else L.t("ESPERANDO DATOS", "WAITING FOR DATA"), style = BodyXs, color = if (datosRecientes) VerdeExito else OnSurfaceVariant)
         }
+        Icon(Icons.Filled.Map, null, tint = AppPrimary)
     }
 }
 
@@ -1247,106 +1204,26 @@ private fun DestinoChipItem(destino: DestinoChip, isActive: Boolean, onClick: ()
 
 // Boton del panel
 @Composable
-private fun BottomPanel(
-    rutas: List<RutaGTFS>,
-    buses: List<BusAnimado>,
-    fuenteReal: Boolean,
-    utpPendiente: Boolean,
-    colapsado: Boolean,
-    onAlternarColapso: () -> Unit,
-    onReportar: () -> Unit,
-    onSeleccionarBus: (BusAnimado) -> Unit
-) {
-    Column(modifier = Modifier.padding(bottom = 8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                // REPORTAR señable (Fase 6): tarjeta 3 s y luego abre el sheet.
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .background(AppPrimary)
-                    .senableAccion("mapa.reportar") { onReportar() }
-                    .padding(horizontal = 16.dp, vertical = 9.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Icon(Icons.Filled.Warning, null, tint = Color.White, modifier = Modifier.size(14.dp))
-                    Text(L.t("REPORTAR", "REPORT"), style = LabelCapsMd, color = Color.White)
-                }
+private fun BottomPanel(rutas: List<RutaGTFS>, buses: List<BusAnimado>, fuenteReal: Boolean, utpPendiente: Boolean,
+    colapsado: Boolean, onAlternarColapso: () -> Unit, onReportar: () -> Unit, onSeleccionarBus: (BusAnimado) -> Unit) {
+    Column(Modifier.fillMaxWidth().background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color.Transparent, AppBackground.copy(alpha = .92f), AppBackground))).padding(bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+            Button(onClick = { SeniasOverlay.ejecutarTrasVerSenia("mapa.reportar", onReportar) }, colors = ButtonDefaults.buttonColors(containerColor = PrimaryFill, contentColor = OnPrimaryFill)) {
+                Icon(Icons.Filled.WarningAmber, null, modifier = Modifier.size(17.dp)); Spacer(Modifier.width(8.dp)); Text(L.t("REPORTAR", "REPORT"), style = BodyXsMedium)
             }
-            Spacer(Modifier.width(12.dp))
-            // Al colapsar, el texto se retira y queda solo el icono de bus
-            // (NearbyTransportPanel iOS: ancla fija a la derecha).
-            if (!colapsado) {
-                // Título señable (Fase 6): mapa.cercanos, en bucle al tocar.
-                com.example.rutautpnative.ui.components.Signable(
-                    clave = "mapa.cercanos",
-                    es = if (utpPendiente) L.t("Rutas próximamente", "Routes coming soon")
-                    else if (rutas.size == 1) L.t("1 línea operando ahora", "1 route operating now")
-                    else L.t("${rutas.size} líneas operando ahora", "${rutas.size} routes operating now"),
-                    en = if (utpPendiente) L.t("Rutas próximamente", "Routes coming soon")
-                    else if (rutas.size == 1) L.t("1 línea operando ahora", "1 route operating now")
-                    else L.t("${rutas.size} líneas operando ahora", "${rutas.size} routes operating now"),
-                    style = HeadlineBody,
-                    color = OnSurface.copy(alpha = 0.85f),
-                    modifier = Modifier.weight(1f)
-                )
-            } else {
-                Spacer(Modifier.weight(1f))
-            }
-            // Icono de bus: colapsa/expande el panel (36dp, ancla fija).
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(PrimaryContainer)
-                    .clickable { onAlternarColapso() },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Filled.DirectionsBus,
-                    contentDescription = if (colapsado)
-                        L.t("Mostrar transportes cercanos", "Show nearby transport")
-                    else
-                        L.t("Ocultar transportes cercanos", "Hide nearby transport"),
-                    tint = OnPrimaryContainer,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-            Spacer(Modifier.width(6.dp))
-            // Badge "En vivo": SOLO con flota real del broker (igual que iOS,
-            // que lo enciende con fuenteFlota == .real).
-            if (fuenteReal) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(PrimaryFixed)
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Box(modifier = Modifier.size(7.dp).clip(CircleShape).background(AppPrimary))
-                        Text(if (buses.any { it.dataOrigin == com.example.rutautpnative.data.tracking.VehicleDataOrigin.SIMULATED }) L.t("Simulación", "Simulation") else if (buses.isEmpty()) L.t("Sin datos", "No data") else L.t("En vivo", "Live"), style = LabelCapsSm, color = AppPrimary)
-                    }
-                }
+            FilledTonalButton(onClick = onAlternarColapso, colors = ButtonDefaults.filledTonalButtonColors(containerColor = AppSurface, contentColor = OnSurface)) {
+                Icon(Icons.Filled.DirectionsBus, if (colapsado) L.t("Mostrar transportes", "Show transport") else L.t("Ocultar transportes", "Hide transport"), modifier = Modifier.size(19.dp))
+                Spacer(Modifier.width(6.dp)); Text(L.f("{0} micros", "{0} buses", buses.size.toString()), style = BodySmMedium)
+                Icon(if (colapsado) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, null)
             }
         }
-        Spacer(Modifier.height(10.dp))
         if (!colapsado) {
-            Row(
-                modifier = Modifier
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Cards con TODAS las líneas que pasan por el punto (el tope de 8
-                // es solo para los marcadores del mapa). Tap → popup del bus.
-                buses.forEach { bus ->
-                    BusCard(bus = bus) { onSeleccionarBus(bus) }
-                }
+            if (buses.isEmpty()) Surface(Modifier.fillMaxWidth().padding(horizontal = 20.dp), shape = RoundedCornerShape(12.dp), color = SurfaceContainerLow) {
+                Text(if (utpPendiente) TransporteApp.mensajePendiente else if (fuenteReal) L.t("Esperando posiciones de vehículos", "Waiting for vehicle positions") else L.t("No hay transportes para mostrar.", "No transport to show."), style = BodySm, color = OnSurfaceVariant, modifier = Modifier.padding(16.dp))
+            } else androidx.compose.foundation.lazy.LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(buses.size, key = { buses[it].id }) { index -> BusCard(buses[index]) { onSeleccionarBus(buses[index]) } }
             }
         }
-        Spacer(Modifier.height(8.dp))
     }
 }
 
@@ -1797,7 +1674,13 @@ private fun BusCard(bus: BusAnimado, onClick: () -> Unit) {
     ) {
         Box {
             Column(modifier = Modifier.padding(14.dp)) {
-                Text(L.t("LÍNEA", "ROUTE") + " ${bus.linea}", style = LabelCapsMd, color = OnSurfaceVariant)
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(L.t("LÍNEA", "ROUTE") + " ${bus.linea}", style = LabelCapsMd, color = OnSurfaceVariant, modifier = Modifier.weight(1f))
+                    if (bus.dataOrigin == com.example.rutautpnative.data.tracking.VehicleDataOrigin.SIMULATED && bus.scenarioOccupancy != null) {
+                        val ocupacion = when (bus.scenarioOccupancy) { "empty" -> L.t("Vacío", "Empty"); "space" -> L.t("Con espacio", "Room available"); "full" -> L.t("Lleno", "Full"); else -> null }
+                        ocupacion?.let { Text(it, style = BodyXs, color = if (bus.scenarioOccupancy == "full") AppError else OnSurfaceVariant, modifier = Modifier.semantics { contentDescription = L.t("Ocupación simulada: ", "Simulated occupancy: ") + it }) }
+                    }
+                }
                 Text(bus.empresa, style = HeadlineSm, color = OnSurface, maxLines = 1)
                 Spacer(Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {

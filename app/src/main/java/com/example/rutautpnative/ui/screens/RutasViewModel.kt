@@ -14,7 +14,13 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
 //----Modelo de vista de Rutas----
@@ -45,10 +51,16 @@ class RutasViewModel : ViewModel() {
         val distancias: Map<String, Int>
     )
 
+    private data class CatalogoBusqueda(val rutas: List<RutaGTFS>) {
+        val indices = rutas.associate { it.id to IndiceBusquedaRuta(it) }
+        val letras = indices.values.map { it.letra }.filter { it.isNotBlank() }.toSet()
+    }
+
     val rutasFiltradas: StateFlow<ResultadoFiltro> =
-        combine(_rutas, _textoBusqueda, _lugarCercano) { rutas, texto, lugar ->
-            val indices = rutas.associate { it.id to IndiceBusquedaRuta(it) }
-            val consulta = ConsultaRuta(texto, indices.values.map { it.letra }.filter { it.isNotBlank() }.toSet())
+        combine(_rutas.map { CatalogoBusqueda(it) }, _textoBusqueda, _lugarCercano) { catalogo, texto, lugar ->
+            val rutas = catalogo.rutas
+            val indices = catalogo.indices
+            val consulta = ConsultaRuta(texto, catalogo.letras)
             var base = rutas.filter { indices[it.id]?.coincide(consulta) == true }
 
             var distancias = emptyMap<String, Int>()
@@ -68,7 +80,7 @@ class RutasViewModel : ViewModel() {
             }
 
             ResultadoFiltro(rutas = base, distancias = distancias)
-        }.stateIn(viewModelScope, SharingStarted.Eagerly, ResultadoFiltro(emptyList(), emptyMap()))
+        }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.Eagerly, ResultadoFiltro(emptyList(), emptyMap()))
 
     fun actualizarBusqueda(texto: String) {
         _textoBusqueda.value = texto
@@ -86,10 +98,16 @@ class RutasViewModel : ViewModel() {
     private val _cargando = MutableStateFlow(true)
     val cargando = _cargando.asStateFlow()
     val errorCarga = GTFSRepository.errorCarga
+    private var carga: Job? = null
     fun cargar(reintentar: Boolean = false) {
-        viewModelScope.launch {
+        carga?.cancel()
+        carga = viewModelScope.launch {
             _cargando.value = true
-            try { _rutas.value = GTFSRepository.rutas(reintentar) } finally { _cargando.value = false }
+            try {
+                val nuevas = GTFSRepository.rutas(reintentar)
+                coroutineContext.ensureActive()
+                _rutas.value = nuevas
+            } finally { if (isActive) _cargando.value = false }
         }
     }
     init {

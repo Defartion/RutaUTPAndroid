@@ -20,6 +20,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 
 //Navtab — etiquetas se traducen inline al renderizar (L.t reactiva al idioma)
 private data class NavTab(
@@ -49,6 +54,7 @@ fun BottomNavBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .selectableGroup()
             .background(AppSurface)
             .windowInsetsPadding(WindowInsets.navigationBars)
             .drawBehind {
@@ -70,21 +76,22 @@ fun BottomNavBar(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .weight(1f)
-                    .clickable { router.navigate(tab.screen) }
-                    .padding(vertical = 6.dp)
+                    .selectable(selected = isActive, role = Role.Tab, onClick = { router.navigate(tab.screen) })
+                    .padding(horizontal = 2.dp, vertical = 6.dp)
             ) {
                 Icon(
                     imageVector = if (isActive) tab.iconFilled else tab.iconOutlined,
-                    contentDescription = label,
-                    tint = if (isActive) AppPrimary else OnSurfaceVariant.copy(alpha = 0.65f),
+                    contentDescription = null,
+                    tint = if (isActive) AcentoInterfaz else OnSurfaceVariant.copy(alpha = 0.65f),
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.height(3.dp))
                 Text(
                     text = label,
-                    style = LabelCapsSm,
-                    color = if (isActive) AppPrimary else OnSurfaceVariant.copy(alpha = 0.65f),
+                    style = BodyXs.copy(fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal),
+                    color = if (isActive) AcentoInterfaz else OnSurfaceVariant.copy(alpha = 0.65f),
                     maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     softWrap = false,
                     fontSize = 10.sp   // minimo accesible (antes 9sp, bajo el limite recomendado)
                 )

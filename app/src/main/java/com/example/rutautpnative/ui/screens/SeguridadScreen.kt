@@ -71,6 +71,7 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
     val rutas by viewModel.rutas.collectAsState()
     val numParaderos = remember(rutas) { ParaderosIluminados.seleccionar(rutas).size }
     val context = LocalContext.current
+    var seccion by remember { mutableIntStateOf(0) }
     val borderColor = OutlineVariant.copy(alpha = 0.25f)
     var showReportarSheet by remember { mutableStateOf(false) }
     var mostrarCambiosRuta by remember { mutableStateOf(false) }
@@ -96,99 +97,30 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(AppBackground)) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .background(AppSurface)
-                    .drawBehind { drawLine(borderColor, Offset(0f, size.height), Offset(size.width, size.height), 1.dp.toPx()) }
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(PrimaryFixed), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.Lock, null, tint = AppPrimary, modifier = Modifier.size(24.dp))
-                }
-                Spacer(Modifier.width(12.dp))
-                Text(L.t("Seguridad", "Safety"), style = HeadlineLg, color = AppPrimary, modifier = Modifier.weight(1f))
-                Box(
-                    // "Reportar" señable (Fase 6): tarjeta 3 s y luego el sheet.
-                    modifier = Modifier.clip(CircleShape).background(AppPrimary)
-                        .senableAccion("seguridad.reportar") { showReportarSheet = true }
-                        .padding(horizontal = 14.dp, vertical = 8.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Icon(Icons.Filled.Warning, null, tint = Color.White, modifier = Modifier.size(12.dp))
-                        Text(L.t("Reportar", "Report"), style = LabelCapsMd, color = Color.White)
-                    }
+    Scaffold(containerColor = AppBackground, contentWindowInsets = WindowInsets(0, 0, 0, 0), bottomBar = { BottomNavBar(router) }, snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding).statusBarsPadding()) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp).heightIn(min = 60.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(L.t("Seguridad", "Safety"), style = HeadlineLg, color = OnSurface, modifier = Modifier.weight(1f))
+                Icon(Icons.Filled.Shield, null, tint = AppPrimary)
+            }
+            SaludoSeguridad()
+            TabRow(seccion, containerColor = Color.Transparent, contentColor = AppPrimary, modifier = Modifier.padding(horizontal = 20.dp)) {
+                listOf(L.t("Ayuda", "Help") to Icons.Filled.HealthAndSafety, L.t("Comunidad", "Community") to Icons.Filled.People).forEachIndexed { index, (nombre, icono) ->
+                    Tab(seccion == index, { seccion = index }, text = { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { Icon(icono, null, modifier = Modifier.size(20.dp)); Text(nombre, style = BodyMdMedium) } })
                 }
             }
-
-            // Summary bar
-            Card(
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = SurfaceContainer),
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
-            ) {
-                Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        // Conteo REAL de alertas del feed (iOS: contado del
-                        // array, no hardcodeado) + paraderos iluminados.
-                        Text(L.t("Alertas hoy: ${com.example.rutautpnative.data.ComunidadDatos.alertasHoy}", "Alerts today: ${com.example.rutautpnative.data.ComunidadDatos.alertasHoy}"), style = BodySmMedium, color = OnSurface)
-                        Text(L.t("Paraderos iluminados: $numParaderos", "Well-lit stops: $numParaderos"), style = BodySmMedium, color = OnSurface)
-                    }
-                    Box(
-                        // "Llamar 105" señable (Fase 6): tarjeta 3 s y luego el
-                        // dialogo de confirmacion de la llamada.
-                        modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(SurfaceContainerHigh)
-                            .senableAccion("seguridad.emergencia") { showLlamarDialog = true }
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                    ) {
-                        Text(L.t("Llamar 105", "Call 105"), style = BodyXsMedium, color = OnSurface)
-                    }
+            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                if (seccion == 0) {
+                    AyudaRapidaSeguridad(onEmergencia = { showLlamarDialog = true }, onEditarContacto = { mostrarContacto = true }, onReportar = { showReportarSheet = true })
+                    LugaresSection(router, viewModel)
+                    RutasSegurasSection(numParaderos, remember(rutas) { ParaderosIluminados.seleccionar(rutas).map { LatLng(it.lat, it.lon) } }, { mostrarParaderos = true })
+                    ParaderosGuardadosSeguridad(router, rutas)
+                    AvisosLineasSeguridad(router, rutas)
+                } else {
+                    ComunidadSection(viewModel, onAnadir = { showPublicarComunidad = true })
                 }
-            }
-
-            // Scrollable content
-            Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
-                Spacer(Modifier.height(4.dp))
-                ContactoEmergenciaCard { mostrarContacto = true }
-                Spacer(Modifier.height(16.dp))
-                GreetingCard()
-                Spacer(Modifier.height(28.dp))
-                LugaresSection(router, viewModel)
-                Spacer(Modifier.height(28.dp))
-                RutasSegurasSection(
-                    numParaderos = numParaderos,
-                    posicionesParaderos = remember(rutas) {
-                        ParaderosIluminados.seleccionar(rutas).map { LatLng(it.lat, it.lon) }
-                    },
-                    onOpenParaderos = { mostrarParaderos = true }
-                )
-                Spacer(Modifier.height(28.dp))
-                ZonasReferenciaSection(onZona = { zona -> viewModel.buscarZona(zona.nombre) })
-                Spacer(Modifier.height(28.dp))
-                ParaderosGuardadosSeguridad(router, rutas)
-                Spacer(Modifier.height(20.dp))
-                ComunidadSection(
-                    viewModel = viewModel,
-                    onAnadir = { showPublicarComunidad = true }
-                )
-                // Holgura para la BottomNavBar superpuesta (~64 dp + insets).
-                Spacer(Modifier.height(120.dp))
             }
         }
-
-        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-            BottomNavBar(router)
-        }
-
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp)
-        )
     }
 
     if (mostrarContacto) ContactoEmergenciaSheet { mostrarContacto = false }
@@ -231,28 +163,6 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
 }
 
 @Composable
-private fun GreetingCard() {
-    val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-    val saludo = when (hour) {
-        in 5..11  -> L.t("Buenos días", "Good morning")
-        in 12..18 -> L.t("Buenas tardes", "Good afternoon")
-        else      -> L.t("Buenas noches", "Good evening")
-    }
-    Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest)) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(48.dp).clip(CircleShape).background(Tertiary.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
-                Icon(Icons.Filled.CalendarToday, null, tint = Tertiary, modifier = Modifier.size(24.dp))
-            }
-            Spacer(Modifier.width(14.dp))
-            Column {
-                Text(saludo, style = HeadlineBody, color = OnSurface)
-                Text("Trujillo, La Libertad", style = BodySm, color = OnSurfaceVariant)
-            }
-        }
-    }
-}
-
-@Composable
 private fun LugaresSection(router: AppRouter, viewModel: SeguridadViewModel) {
     val tiles by viewModel.tiles.collectAsState()
     val lugares by viewModel.lugares.collectAsState()
@@ -264,7 +174,7 @@ private fun LugaresSection(router: AppRouter, viewModel: SeguridadViewModel) {
             // Titulo señable en bucle (Fase 6).
             Signable(
                 clave = "seguridad.lugares_guardados",
-                es = "Lugares Guardados", en = "Saved Places",
+                es = "Cerca de ti", en = "Near you",
                 style = HeadlineSm, color = OnSurface,
                 modifier = Modifier.weight(1f)
             )
@@ -581,7 +491,7 @@ private fun RutasSegurasSection(
             // Titulo señable en bucle (Fase 6).
             Signable(
                 clave = "seguridad.rutas_seguras",
-                es = "Rutas Seguras Hoy", en = "Safe Routes Today",
+                es = "Paraderos", en = "Stops",
                 style = HeadlineSm, color = OnSurface
             )
         }
@@ -600,7 +510,7 @@ private fun RutasSegurasSection(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Icon(Icons.Filled.Lightbulb, null, tint = TertiaryFixedDim, modifier = Modifier.size(16.dp))
-                    Text(L.t("Paraderos iluminados activos: $numParaderos", "Well-lit stops active: $numParaderos"), style = BodySm, color = Color.White)
+                    Text(L.t("Explorar paraderos", "Explore stops"), style = BodySm, color = Color.White)
                 }
             }
         }

@@ -1,7 +1,7 @@
 # RutaUTP Android
 
 Aplicación Kotlin y Jetpack Compose adaptada de RutaUTP para iOS.
-La referencia de esta actualización es main, commit 138900d del 30/10/2026.
+La referencia de esta actualización es main, commit 8145276 del 09/11/2026.
 
 - [Comparación y límites de la adaptación](docs/PARIDAD_IOS.md)
 - [Configurar avisos remotos con Firebase](docs/FIREBASE_ANDROID.md)
@@ -27,9 +27,14 @@ sistema y renderizado 3D deben revisarse también en un dispositivo Android.
 ## Probar desde Android Studio
 
 Abrir esta carpeta, sincronizar Gradle, seleccionar la configuración `app`
-y un teléfono o emulador, y pulsar Run. La versión de esta revisión es **1.1 (2)**;
+y un teléfono o emulador, y pulsar Run. La versión de esta revisión es **1.2 (3)**;
 se puede comprobar en el menú del mapa → Sobre nosotros.
 Ver [dónde aparecen los cambios](docs/COMPROBAR_ACTUALIZACION.md).
+
+Rutas tiene buscador fijo y tarjetas con letra, empresa y extremos reales del
+recorrido. El detalle incluye mapa ampliable y modelo 3D de la línea. Perfil
+se organiza en identidad, billetera y grupos de ajustes; Guardado separa
+lugares y paraderos; Seguridad separa Ayuda y Comunidad.
 
 ## Servicios externos
 

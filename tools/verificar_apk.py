@@ -6,6 +6,7 @@ No necesita dependencias, dispositivo ni conexión de red.
 import argparse
 import gzip
 import hashlib
+import json
 from pathlib import Path
 import struct
 from zipfile import ZipFile
@@ -25,13 +26,20 @@ def verificar(apk: Path, assets: Path):
             magic, count = struct.unpack_from(">II", data)
             if magic != 0x52555433 or not 3 <= count <= 300_000 or count % 3 or len(data) != 8 + count * 40:
                 raise ValueError(f"Malla empaquetada inválida: {name}")
+            parts_source = source.with_name(source.name.replace(".mesh.gz", ".partes.json"))
+            parts_data = archive.read(f"assets/transportes3d/{parts_source.name}")
+            if parts_data != parts_source.read_bytes():
+                raise ValueError(f"Partes de identificación distintas: {parts_source.name}")
+            parts = json.loads(parts_data)
+            if not parts["carrocerias"] or any(start < 0 or size <= 0 or start + size > count for start, size in parts["carrocerias"] + parts["contornos"]):
+                raise ValueError(f"Partes de identificación inválidas: {parts_source.name}")
         for source in [assets / "referencias_transporte.json", assets / "traducciones.json"]:
             if archive.read(f"assets/{source.name}") != source.read_bytes():
                 raise ValueError(f"Catálogo empaquetado distinto: {source.name}")
         dex = b"".join(archive.read(name) for name in archive.namelist() if name.endswith(".dex"))
         if b".mesh.gz" in dex:
             raise ValueError("El visor aún busca .mesh.gz, pero AAPT instala las mallas como .mesh")
-        for screen in [b"Transportes3DScreenKt", b"NotificacionesScreenKt", b"AlternativasRutaSheetKt", b"RespaldosRecuperacionSheetKt"]:
+        for screen in [b"Transportes3DScreenKt", b"NotificacionesScreenKt", b"AlternativasRutaSheetKt", b"RespaldosRecuperacionSheetKt", b"GuardadoPantallaKt", b"SeguridadAyudaKt", b"RutaOpcionCardKt", b"VisorFotoCarnetKt", b"PinturaTransporte3DKt"]:
             if screen not in dex:
                 raise ValueError(f"Pantalla ausente del APK: {screen.decode()}")
     print("APK comprobado: seis mallas accesibles, catálogos exactos y pantallas nuevas incluidas")

@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material3.*
@@ -57,6 +58,8 @@ fun BienvenidaScreen(router: AppRouter) {
     val pagerState = rememberPagerState(pageCount = { 3 })
     val scope = rememberCoroutineScope()
     var mostrarLegal by remember { mutableStateOf(false) }
+    var mostrarIdiomas by remember { mutableStateOf(false) }
+    if (mostrarIdiomas) com.example.rutautpnative.ui.components.SelectorIdiomaSheet { mostrarIdiomas = false }
 
     Box(
         modifier = Modifier
@@ -87,10 +90,11 @@ fun BienvenidaScreen(router: AppRouter) {
             ) {
                 Text(
                     text = "Ruta UTP Trujillo",
-                    style = HeadlineLg,
+                    style = HeadlineSm,
                     color = AppPrimary,
                     modifier = Modifier.weight(1f)
                 )
+                IconButton(onClick = { mostrarIdiomas = true }) { Icon(Icons.Filled.Language, L.t("Cambiar idioma", "Change language"), tint = AppPrimary) }
                 TextButton(onClick = {
                     com.example.rutautpnative.data.senias.SeniasOverlay.ejecutarTrasVerSenia("bienvenida.saltar") {
                         router.navigate(AppScreen.MapaPrincipal)

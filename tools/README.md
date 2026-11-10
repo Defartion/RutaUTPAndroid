@@ -14,6 +14,10 @@ convertir_transportes_ios.py convierte los seis modelos USDZ de la referencia
 iOS a las mallas locales usadas por el visor OpenGL ES de Android. No requiere
 USD en la aplicación. La herramienta necesita Python, NumPy y usd-core en el
 equipo que realice la conversión; ver su ayuda y ThirdPartyNotices/Transportes3D.md.
+También genera `.partes.json`: rangos de vértices de Carroceria/ContornoMarca
+y transformación del espacio local al normalizado. Permiten pintar solo las
+zonas originales de carrocería y situar las bandas/cartel de cada línea en
+las mismas coordenadas de iOS. Deben regenerarse junto con las seis mallas.
 
 ## Scripts de demostración anteriores
 

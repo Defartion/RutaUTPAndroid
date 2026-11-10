@@ -99,41 +99,43 @@ object GTFSRepository {
 
     //----Parseo del feed----
 
-    private fun parsear(am: AssetManager, carpeta: String): List<RutaGTFS> {
+    private fun parsear(am: AssetManager, carpeta: String): List<RutaGTFS> = parsearFuente { leer(am, carpeta, it) }
+
+    internal fun parsearFuente(leerTabla: (String) -> String): List<RutaGTFS> {
         // 1. Agencias (agency_id → nombre)
-        val agency = GTFSCSV.parsear(leer(am, carpeta, "agency"))
+        val agency = GTFSCSV.parsear(leerTabla("agency"))
         val nombresAgencia = diccionario(agency.columna("agency_id"), agency.columna("agency_name"))
 
         // 2. Rutas
-        val routeRows = GTFSParser.routeRows(leer(am, carpeta, "routes"))
+        val routeRows = GTFSParser.routeRows(leerTabla("routes"))
 
         // 3. Trips (en este feed: 1 trip por ruta, trip_id == route_id)
-        val tripRows = GTFSParser.tripRows(leer(am, carpeta, "trips"))
+        val tripRows = GTFSParser.tripRows(leerTabla("trips"))
         val tripShape = tripRows.associate { it.tripId to it.shapeId }
         val routeTrip = tripRows.associate { it.routeId to it.tripId }
 
         // 4. Shapes agrupados por id y ordenados por secuencia
-        val shapeRows = GTFSParser.shapeRows(leer(am, carpeta, "shapes"))
+        val shapeRows = GTFSParser.shapeRows(leerTabla("shapes"))
         val shapesPorId = shapeRows
             .groupBy { it.shapeId }
             .mapValues { (_, pts) -> pts.sortedBy { it.sequence }.map { LatLng(it.lat, it.lon) } }
 
         // 5. Paraderos (stop_id → ParaderoGTFS)
-        val stopRows = GTFSParser.stopRows(leer(am, carpeta, "stops"))
+        val stopRows = GTFSParser.stopRows(leerTabla("stops"))
         val paraderosPorId = stopRows.associate { it.stopId to ParaderoGTFS(it.stopId, it.stopName, it.lat, it.lon) }
 
         // 6. Stop times agrupados por trip
-        val stopTimeRows = GTFSParser.stopTimeRows(leer(am, carpeta, "stop_times"))
+        val stopTimeRows = GTFSParser.stopTimeRows(leerTabla("stop_times"))
         val paradasPorTrip = stopTimeRows.groupBy { it.tripId }
 
         // 7. Frecuencias (headway) por trip
-        val frequencyRows = GTFSParser.frequencyRows(leer(am, carpeta, "frequencies"))
+        val frequencyRows = GTFSParser.frequencyRows(leerTabla("frequencies"))
         val headwayPorTrip = frequencyRows.associate { it.tripId to it.headwaySecs }
 
         // 8. Tarifas: route_id → precio
-        val fareAttributeRows = GTFSParser.fareAttributeRows(leer(am, carpeta, "fare_attributes"))
+        val fareAttributeRows = GTFSParser.fareAttributeRows(leerTabla("fare_attributes"))
         val precioPorFare = fareAttributeRows.associate { it.fareId to it.price }
-        val fareRuleRows = GTFSParser.fareRuleRows(leer(am, carpeta, "fare_rules"))
+        val fareRuleRows = GTFSParser.fareRuleRows(leerTabla("fare_rules"))
         val precioPorRuta = HashMap<String, Double>()
         for (rule in fareRuleRows) {
             precioPorFare[rule.fareId]?.let { precioPorRuta[rule.routeId] = it }
@@ -143,11 +145,12 @@ object GTFSRepository {
         return routeRows.map { r ->
             val (linea, variante) = GTFSNombreParser.lineaYVariante(r.routeShortName).let { it.linea to it.variante }
 
-            val tripId = routeTrip[r.routeId] ?: r.routeId
-            val shapeId = tripShape[tripId] ?: r.routeId
+            val tripId = routeTrip[r.routeId]
+            val declarado = tripId?.let { tripShape[it] }.orEmpty()
+            val shapeId = declarado.takeIf { it.isNotBlank() && shapesPorId.containsKey(it) } ?: r.routeId
             val shapePuntos = shapesPorId[shapeId] ?: emptyList()
 
-            val paradas = (paradasPorTrip[tripId] ?: emptyList()).sortedBy { it.stopSequence }
+            val paradas = (tripId?.let { paradasPorTrip[it] } ?: emptyList()).sortedBy { it.stopSequence }
             val paraderos = paradas.mapNotNull { paraderosPorId[it.stopId] }
 
             // Duración del viaje según stop_times (última - primera salida)
@@ -155,7 +158,7 @@ object GTFSRepository {
             val ultima = segundos(paradas.lastOrNull()?.departureTime ?: "")
             val duracionMin = if (ultima >= primera) (ultima - primera) / 60 else 0
 
-            val headwayMin = (headwayPorTrip[tripId] ?: 0) / 60
+            val headwayMin = (tripId?.let { headwayPorTrip[it] } ?: 0) / 60
 
             val colorHex = r.routeColor.ifEmpty { "00CC00" }
             val recorrido = GTFSNombreParser.recorrido(r.routeLongName, r.routeShortName)

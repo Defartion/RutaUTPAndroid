@@ -1,655 +1,253 @@
 package com.example.rutautpnative.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.*
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.rutautpnative.data.gtfs.GTFSRepository
-import com.example.rutautpnative.data.gtfs.RutaGTFS
-import com.example.rutautpnative.data.gtfs.TransporteApp
+import com.example.rutautpnative.data.gtfs.*
 import com.example.rutautpnative.data.senias.SeniasOverlay
-import com.example.rutautpnative.data.senias.SeniasPrefs
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.DestinoPendiente
-import com.example.rutautpnative.ui.components.BottomNavBar
-import com.example.rutautpnative.ui.components.Signable
-import com.example.rutautpnative.ui.components.signable
+import com.example.rutautpnative.ui.components.*
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
-import kotlinx.coroutines.launch
-import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.*
-import androidx.compose.ui.text.style.TextAlign
-import kotlin.math.roundToInt
+import java.util.Locale
+import kotlinx.coroutines.delay
 
-// Estimación de referencia (5 km/h) para el detalle de Rutas: este mini-mapa
-// no usa GPS ni Directions (el origen es mock). El Mapa y el TrackingDemo
-// sí usan caminatas reales vía TransitPlanner + DirectionsService.
-private const val VELOCIDAD_CAMINATA_KMH = 5.0
-
-//----Main Screen----
 @Composable
 fun RutasScreen(router: AppRouter, viewModel: RutasViewModel = viewModel()) {
     val rutas by viewModel.rutas.collectAsState()
     val cargando by viewModel.cargando.collectAsState()
-    val errorCarga by viewModel.errorCarga.collectAsState()
-    val textoBusqueda by viewModel.textoBusqueda.collectAsState()
+    val error by viewModel.errorCarga.collectAsState()
+    val busqueda by viewModel.textoBusqueda.collectAsState()
     val filtro by viewModel.rutasFiltradas.collectAsState()
-    val lugarCercano by viewModel.lugarCercano.collectAsState()
-
-    var galeria3d by remember { mutableStateOf(false) }
-    var identificacion3d by remember { mutableStateOf<RutaGTFS?>(null) }
-    var rutaSeleccionada by remember { mutableStateOf<RutaGTFS?>(null) }
-    var mostrarNavegacion by remember { mutableStateOf(false) }
-    var rutaNavegando by remember { mutableStateOf<RutaGTFS?>(null) }
-
-    // Consume una ruta pendiente enviada desde otra pantalla (p.ej. "Ver ruta"
-    // del panel de Mapa) y abre directamente su detalle. Clave en `rutas` para
-    // re-chequear cuando el feed termine de cargar.
+    val cerca by viewModel.lugarCercano.collectAsState()
+    var seleccionada by remember { mutableStateOf<RutaGTFS?>(null) }
+    var galeria by remember { mutableStateOf(false) }
+    var modelo by remember { mutableStateOf<RutaGTFS?>(null) }
+    var navegando by remember { mutableStateOf<RutaGTFS?>(null) }
     LaunchedEffect(router.rutaPendiente, rutas) {
         val id = router.rutaPendiente ?: return@LaunchedEffect
-        val ruta = rutas.firstOrNull { it.id == id } ?: rutas.firstOrNull { it.linea == id }
-        if (ruta != null) {
-            router.rutaPendiente = null
-            rutaSeleccionada = ruta
+        (rutas.firstOrNull { it.id == id } ?: rutas.firstOrNull { it.linea == id })?.let {
+            seleccionada = it; router.rutaPendiente = null
         }
     }
-
-    // Consume el filtro "transporte cerca de este lugar" (Guardado/paraderos).
     LaunchedEffect(router.lugarCercanoPendiente) {
-        val lugar = router.lugarCercanoPendiente ?: return@LaunchedEffect
-        router.lugarCercanoPendiente = null
-        viewModel.filtrarCercaDe(lugar)
+        router.lugarCercanoPendiente?.let { viewModel.limpiarBusqueda(); viewModel.filtrarCercaDe(it); router.lugarCercanoPendiente = null }
     }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        AnimatedContent(
-            targetState = rutaSeleccionada,
-            transitionSpec = {
-                if (targetState != null) {
-                    slideInHorizontally { it } togetherWith slideOutHorizontally { -it / 3 }
-                } else {
-                    fadeIn() togetherWith fadeOut()
-                }
-            },
-            label = "ruta_transition"
-        ) { ruta ->
-            if (ruta != null) {
-                DetalleRutaScreen(
-                    ruta = ruta,
-                    router = router,
-                    onBack = { rutaSeleccionada = null },
-                    onIniciarNavegacion = { rutaNavegando = ruta; mostrarNavegacion = true },
-                    onVer3D = { identificacion3d = ruta }
-                )
-            } else {
-                ListaRutasScreen(
-                    router = router,
-                    rutas = filtro.rutas,
-                    distancias = filtro.distancias,
-                    lugarCercano = lugarCercano,
-                    totalRutas = rutas.size,
-                    cargando = cargando,
-                    errorCarga = errorCarga,
-                    onReintentar = { viewModel.cargar(true) },
-                    textoBusqueda = textoBusqueda,
-                    onSearchChange = viewModel::actualizarBusqueda,
-                    onClearSearch = viewModel::limpiarBusqueda,
-                    onQuitarFiltro = { viewModel.filtrarCercaDe(null) },
-                    onSelectRuta = { rutaSeleccionada = it },
-                    onVer3D = { galeria3d = true }
-                )
-            }
-        }
-
-        if (galeria3d) Transportes3DScreen(onCerrar = { galeria3d = false })
-        identificacion3d?.let { Transportes3DScreen(ruta = it, onCerrar = { identificacion3d = null }) }
-        val navegando = rutaNavegando
-        if (mostrarNavegacion && navegando != null) {
-            NavegacionScreen(
-                ruta = navegando,
-                onFinish = { mostrarNavegacion = false; rutaNavegando = null }
-            )
+    BackHandler(seleccionada != null) { seleccionada = null }
+    Scaffold(containerColor = AppBackground, contentWindowInsets = WindowInsets(0, 0, 0, 0), bottomBar = { BottomNavBar(router) }) { padding ->
+        AnimatedContent(seleccionada, modifier = Modifier.fillMaxSize().padding(padding).statusBarsPadding(), label = "ruta_detalle") { ruta ->
+            if (ruta == null) RutasCatalogo(filtro.rutas, filtro.distancias, cerca, cargando, error, busqueda,
+                viewModel::actualizarBusqueda, { viewModel.cargar(true) }, { viewModel.filtrarCercaDe(null) },
+                { seleccionada = it }, { galeria = true })
+            else DetalleRutaActual(ruta, { seleccionada = null }, { navegando = ruta }, { modelo = ruta })
         }
     }
+    if (galeria) Transportes3DScreen(onCerrar = { galeria = false })
+    modelo?.let { Transportes3DScreen(it) { modelo = null } }
+    navegando?.let { NavegacionScreen(it) { navegando = null } }
 }
 
-//----Lista de rutas----
 @Composable
-private fun ListaRutasScreen(
-    router: AppRouter,
-    rutas: List<RutaGTFS>,
-    distancias: Map<String, Int>,
-    lugarCercano: DestinoPendiente?,
-    totalRutas: Int,
-    cargando: Boolean,
-    errorCarga: String?,
-    onReintentar: () -> Unit,
-    textoBusqueda: String,
-    onSearchChange: (String) -> Unit,
-    onClearSearch: () -> Unit,
-    onQuitarFiltro: () -> Unit,
-    onSelectRuta: (RutaGTFS) -> Unit,
-    onVer3D: () -> Unit
-) {
-    val borderColor = OutlineVariant.copy(alpha = 0.25f)
-    Box(modifier = Modifier.fillMaxSize().background(AppBackground)) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Header
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .background(AppSurface)
-                    .drawBehind {
-                        drawLine(borderColor, Offset(0f, size.height), Offset(size.width, size.height), 1.dp.toPx())
-                    }
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .padding(horizontal = 20.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Filled.DirectionsBus, null, tint = AppPrimary, modifier = Modifier.size(26.dp))
-                    Spacer(Modifier.width(10.dp))
-                    Text(
-                        if (TransporteApp.busesUTPActivos) L.t("Rutas UTP", "UTP routes") else L.t("Rutas", "Routes"),
-                        style = HeadlineLg, color = AppPrimary,
-                        // Titulo señable (Fase 6): seña en bucle al tocar.
-                        modifier = Modifier.weight(1f).signable("rutas.titulo")
-                    )
-                    TextButton(onClick = onVer3D) { Text("3D") }
-                    // Badge con el número de resultados (RutasView iOS); el
-                    // "EN VIVO" decorativo se retiró: el real vive solo en el
-                    // mapa, ligado a la flota MQTT (fase-mejoras-futuras).
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(50))
-                            .background(PrimaryFixed)
-                            .padding(horizontal = 10.dp, vertical = 5.dp)
-                    ) {
-                        Text("${rutas.size}", style = LabelCapsSm, color = AppPrimary)
-                    }
+fun RutasCatalogo(rutas: List<RutaGTFS>, distancias: Map<String, Int>, cerca: DestinoPendiente?, cargando: Boolean,
+    error: String?, texto: String, onBusqueda: (String) -> Unit, onReintentar: () -> Unit, onQuitarCerca: () -> Unit,
+    onRuta: (RutaGTFS) -> Unit, on3D: () -> Unit) {
+    val foco = LocalFocusManager.current
+    Column(Modifier.fillMaxSize()) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp).heightIn(min = 60.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(if (TransporteApp.busesUTPActivos) L.t("Rutas UTP", "UTP routes") else L.t("Rutas", "Routes"), style = HeadlineLg,
+                color = OnSurface, modifier = Modifier.weight(1f).semantics { heading() }.signable("rutas.titulo"))
+            Icon(Icons.Filled.DirectionsBus, null, tint = AcentoInterfaz)
+        }
+        OutlinedTextField(texto, onBusqueda, modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
+            placeholder = { Text(L.t("Buscar rutas", "Search routes")) }, leadingIcon = { Icon(Icons.Filled.Search, null) },
+            trailingIcon = { if (texto.isNotEmpty()) IconButton(onClick = { onBusqueda("") }) { Icon(Icons.Filled.Cancel, L.t("Borrar búsqueda de rutas", "Clear route search")) } },
+            singleLine = true, shape = RoundedCornerShape(14.dp), keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { foco.clearFocus() }),
+            colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color.Transparent, focusedBorderColor = AcentoInterfaz,
+                unfocusedContainerColor = SuperficieAgrupada, focusedContainerColor = SuperficieAgrupada))
+        if (cerca != null) Surface(Modifier.fillMaxWidth().padding(horizontal = 20.dp), shape = RoundedCornerShape(14.dp), color = SuperficieAgrupada) {
+            Row(Modifier.padding(start = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.NearMe, null, tint = AcentoInterfaz)
+                Column(Modifier.weight(1f).padding(12.dp)) {
+                    Text(L.t("Cerca de ", "Near ") + cerca.titulo, style = BodyMdMedium)
+                    Text(L.t("Hasta 300 m del lugar", "Within 300 m of this place"), style = BodyXs, color = OnSurfaceVariant)
                 }
-            }
-
-            // LazyColumn: el catálogo tiene ~102 rutas; con Column+verticalScroll se
-            // renderizarían todas de golpe. El mapa y el buscador van como `item {}`
-            // para conservar el mismo scroll global y el mismo layout visual.
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(bottom = 80.dp)
-            ) {
-                // Mapa overview + encabezado + búsqueda
-                item {
-                    Box(modifier = Modifier.fillMaxWidth().height(280.dp)) {
-                        val utpLatLng = LatLng(-8.1116, -79.0287)
-                        val origenLatLng = LatLng(-8.1180, -79.0350)
-                        val cameraState = rememberCameraPositionState {
-                            position = CameraPosition.fromLatLngZoom(utpLatLng, 13f)
-                        }
-                        GoogleMap(
-                            modifier = Modifier.fillMaxSize(),
-                            cameraPositionState = cameraState,
-                            uiSettings = MapUiSettings(
-                                zoomControlsEnabled = false,
-                                scrollGesturesEnabled = false,
-                                zoomGesturesEnabled = false
-                            )
-                        ) {
-                            Polyline(points = listOf(origenLatLng, utpLatLng), color = AppPrimary, width = 8f)
-                            Marker(state = MarkerState(position = utpLatLng), title = "UTP Trujillo")
-                            Marker(state = MarkerState(position = origenLatLng), title = "Mi ubicación")
-                        }
-                    }
-                    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                        Spacer(Modifier.height(20.dp))
-                        // Puerta única: texto traducible + señable en una sola llamada.
-                        Signable(clave = "rutas.elegir", es = "Elige tu ruta", en = "Choose your route",
-                            style = HeadlineSm, color = OnSurface)
-                        Text(L.t("Toca una ruta para ver el detalle", "Tap a route to see details"), style = BodySm, color = OnSurfaceVariant)
-                        Spacer(Modifier.height(12.dp))
-                        if (lugarCercano != null) {
-                            // Banner del filtro de cercanía (reemplaza al
-                            // buscador, como iOS): título + contador + quitar.
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(SurfaceContainerLow)
-                                    .padding(horizontal = 14.dp, vertical = 10.dp)
-                            ) {
-                                Icon(Icons.Filled.Place, null, tint = AppPrimary, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(10.dp))
-                                Column(Modifier.weight(1f)) {
-                                    Text(
-                                        L.t("Líneas cerca de", "Lines near") + " ${lugarCercano.titulo}",
-                                        style = BodyMdMedium, color = OnSurface, maxLines = 1
-                                    )
-                                    Text(
-                                        L.t(
-                                            "${rutas.size} de $totalRutas líneas con paradero a menos de 300 m",
-                                            "${rutas.size} of $totalRutas lines with a stop within 300 m"
-                                        ),
-                                        style = BodyXs, color = OnSurfaceVariant, maxLines = 1
-                                    )
-                                }
-                                IconButton(onClick = onQuitarFiltro, modifier = Modifier.size(28.dp)) {
-                                    Icon(Icons.Filled.Close, null, tint = OnSurfaceVariant, modifier = Modifier.size(16.dp))
-                                }
-                            }
-                        } else {
-                            // Campo de búsqueda
-                            OutlinedTextField(
-                                value = textoBusqueda,
-                                onValueChange = onSearchChange,
-                                placeholder = { Text(L.t("Buscar línea, empresa o avenida", "Search line, company or avenue"), style = BodyMd, color = OnSurfaceVariant) },
-                                leadingIcon = { Icon(Icons.Filled.Search, null, tint = OnSurfaceVariant) },
-                                trailingIcon = {
-                                    if (textoBusqueda.isNotEmpty()) {
-                                        IconButton(onClick = onClearSearch) {
-                                            Icon(Icons.Filled.Close, null, tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
-                                        }
-                                    }
-                                },
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                        Spacer(Modifier.height(16.dp))
-                    }
-                }
-
-                if (cargando || errorCarga != null) {
-                    item {
-                        Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            if (cargando) CircularProgressIndicator(color = AppPrimary)
-                            else {
-                                Text(L.t("No se pudo cargar el catálogo de rutas.", "Could not load the route catalog."), color = OnSurface)
-                                TextButton(onClick = onReintentar) { Text(L.t("Reintentar", "Retry")) }
-                            }
-                        }
-                    }
-                } else if (rutas.isEmpty() && textoBusqueda.isNotBlank()) {
-                    item {
-                        Box(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                L.t(
-                                    "No hay rutas que coincidan con \"${textoBusqueda.trim()}\"",
-                                    "No routes match \"${textoBusqueda.trim()}\""
-                                ),
-                                style = BodyMd,
-                                color = OnSurfaceVariant,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                } else if (rutas.isEmpty()) {
-                    // Buses UTP sin feed institucional: el estado propio del
-                    // modo ("rutas próximamente", RutasView iOS) o el catálogo
-                    // urbano vacío (borde teórico del asset empaquetado).
-                    item {
-                        Box(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                if (TransporteApp.rutasUTPPendientes) TransporteApp.mensajePendiente
-                                else L.t("No hay rutas disponibles", "No routes available"),
-                                style = BodyMd,
-                                color = OnSurfaceVariant,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                } else {
-                    items(rutas, key = { it.id }) { ruta ->
-                        Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                            RutaOpcionCard(
-                                ruta = ruta,
-                                distanciaLugar = distancias[ruta.id],
-                                onClick = { onSelectRuta(ruta) }
-                            )
-                            Spacer(Modifier.height(12.dp))
-                        }
-                    }
-                }
+                IconButton(onClick = onQuitarCerca) { Icon(Icons.Filled.Cancel, L.t("Quitar filtro de cercanía", "Clear nearby filter")) }
             }
         }
-        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-            BottomNavBar(router)
-        }
-    }
-}
-
-//----Card de ruta----
-@Composable
-private fun RutaOpcionCard(ruta: RutaGTFS, distanciaLugar: Int? = null, onClick: () -> Unit) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest),
-        elevation = CardDefaults.cardElevation(2.dp),
-        modifier = Modifier.fillMaxWidth().clickable { onClick() }
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(modifier = Modifier.width(4.dp).height(56.dp).clip(RoundedCornerShape(2.dp)).background(ruta.color))
-            Spacer(Modifier.width(14.dp))
-            Box(
-                modifier = Modifier.size(44.dp).clip(CircleShape).background(ruta.color.copy(alpha = 0.12f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(ruta.linea, color = ruta.color, fontSize = 16.sp, style = HeadlineSm, maxLines = 1)
-            }
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(ruta.empresa, style = BodyMdMedium, color = OnSurface)
-                Text(ruta.recorrido, style = BodySm, color = OnSurfaceVariant, maxLines = 1)
-                if (distanciaLugar != null) {
-                    // Solo con el filtro activo: cercanía al lugar consultado.
-                    Text(
-                        L.t("a $distanciaLugar m del lugar", "$distanciaLugar m from the place"),
-                        style = LabelCapsSm, color = AppPrimary
-                    )
+        LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            item { Card(onClick = on3D, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = SuperficieAgrupada)) {
+                Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.ViewInAr, null, tint = AcentoInterfaz, modifier = Modifier.size(28.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(L.t("Transportes en 3D", "Transport in 3D"), style = BodyMdMedium, color = OnSurface)
+                        Text(L.t("Micro, combi y colectivo", "Bus, minibus and shared taxi"), style = BodyXs, color = OnSurfaceVariant)
+                    }
+                    Icon(Icons.Filled.ChevronRight, null, tint = OnSurfaceVariant)
+                }
+            } }
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(L.t("Elige tu ruta", "Pick your route"), style = HeadlineXs, color = OnSurface, modifier = Modifier.semantics { heading() }.signable("rutas.elegir"))
+                    if (!cargando && error == null) Text(L.f("{0} rutas encontradas", "{0} routes found", rutas.size.toString()), style = BodyXs, color = OnSurfaceVariant)
                 }
             }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(ruta.frecuenciaTexto, style = BodyMdMedium, color = ruta.color)
-                Text(L.t("frecuencia", "frequency"), style = LabelCapsSm, color = OnSurfaceVariant)
-            }
-            Spacer(Modifier.width(8.dp))
-            Icon(Icons.Filled.ChevronRight, null, tint = OnSurfaceVariant.copy(alpha = 0.4f), modifier = Modifier.size(16.dp))
-        }
-    }
-}
-
-//----Detalle de ruta----
-@Composable
-private fun DetalleRutaScreen(
-    ruta: RutaGTFS,
-    router: AppRouter,
-    onBack: () -> Unit,
-    onIniciarNavegacion: () -> Unit,
-    onVer3D: () -> Unit
-) {
-    val borderColor = OutlineVariant.copy(alpha = 0.25f)
-    var mostrarExplorador by remember { mutableStateOf(false) }
-
-    // --- Datos para la guía paso a paso ---
-    // Ubicación del usuario (mock) mientras no haya GPS real en esta pantalla;
-    // misma coordenada "Mi ubicación" que el mapa overview.
-    val origenUsuario = LatLng(-8.1180, -79.0350)
-    val paraderoSubida = ruta.paraderos.minByOrNull { GTFSRepository.distanciaMetros(origenUsuario, it.coordinate) }
-    val paraderoDestino = ruta.paraderos.lastOrNull()
-    val distanciaOrigenParadero = paraderoSubida?.let { GTFSRepository.distanciaMetros(origenUsuario, it.coordinate) }
-    val metrosCaminata = distanciaOrigenParadero?.roundToInt() ?: 0
-    val minutosCaminata = distanciaOrigenParadero?.let { (it / (VELOCIDAD_CAMINATA_KMH * 1000.0 / 60.0)).roundToInt() } ?: 0
-
-    Box(modifier = Modifier.fillMaxSize().background(AppBackground)) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Header
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .background(AppSurface)
-                    .drawBehind {
-                        drawLine(borderColor, Offset(0f, size.height), Offset(size.width, size.height), 1.dp.toPx())
-                    }
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onBack) {
-                        Box(
-                            modifier = Modifier.size(40.dp).clip(CircleShape).background(SurfaceContainerLow),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Filled.ArrowBack, null, tint = OnSurface)
-                        }
-                    }
-                    Spacer(Modifier.width(4.dp))
-                    Icon(Icons.Filled.DirectionsBus, null, tint = AppPrimary, modifier = Modifier.size(28.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(L.t("Ruta", "Route") + " ${ruta.linea}", style = HeadlineLg, color = AppPrimary, modifier = Modifier.weight(1f))
-                }
-            }
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp)
-            ) {
-                Spacer(Modifier.height(16.dp))
-
-                ReferenciaTransporte(ruta)
-                OutlinedButton(onClick = onVer3D, modifier = Modifier.fillMaxWidth()) { Text(L.t("Identificar transporte en 3D", "Identify transport in 3D")) }
-                Spacer(Modifier.height(12.dp))
-                // Mapa con el recorrido real
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(280.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                ) {
-                    val shape = ruta.shape
-                    val utpLatLng = LatLng(-8.1116, -79.0287)
-                    val origenLatLng = shape.firstOrNull() ?: utpLatLng
-                    val cameraState = rememberCameraPositionState {
-                        position = CameraPosition.fromLatLngZoom(utpLatLng, 14f)
-                    }
-                    GoogleMap(
-                        modifier = Modifier.fillMaxSize(),
-                        cameraPositionState = cameraState,
-                        uiSettings = MapUiSettings(
-                            zoomControlsEnabled = false,
-                            scrollGesturesEnabled = false,
-                            zoomGesturesEnabled = false,
-                            tiltGesturesEnabled = false,
-                            rotationGesturesEnabled = false,
-                            myLocationButtonEnabled = false,
-                            mapToolbarEnabled = false
-                        )
-                    ) {
-                        if (shape.size >= 2) {
-                            Polyline(points = shape, color = ruta.color, width = 10f)
-                        } else {
-                            Polyline(points = listOf(origenLatLng, utpLatLng), color = ruta.color, width = 10f)
-                        }
-                        Marker(state = MarkerState(position = utpLatLng), title = "UTP Trujillo", onClick = { true })
-                        Marker(state = MarkerState(position = origenLatLng), title = ruta.empresa, onClick = { true })
-                    }
-                    // Overlay transparente: captura el toque en toda el área del mapa.
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .clickable { mostrarExplorador = true }
-                    )
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(10.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(Tertiary)
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Text(L.t("Ruta Segura", "Safe Route"), style = LabelCapsMd, color = Color.White)
-                    }
-                    // Overlay: indicación de que el mapa es tocable
-                    Row(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(10.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(AppSurface.copy(alpha = 0.85f))
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(Icons.Filled.OpenInFull, null, tint = OnSurface, modifier = Modifier.size(14.dp))
-                        Text(L.t("Toca para ver el recorrido completo", "Tap to see the full route"), style = BodyXsMedium, color = OnSurface)
-                    }
-                }
-                Spacer(Modifier.height(20.dp))
-
-                // Info card
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest),
-                    elevation = CardDefaults.cardElevation(4.dp)
-                ) {
-                    Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.Top) {
-                        Box(modifier = Modifier.width(6.dp).height(48.dp).clip(RoundedCornerShape(3.dp)).background(ruta.color))
-                        Spacer(Modifier.width(14.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(ruta.empresa, style = HeadlineSm, color = OnSurface)
-                            Text(L.t("Destino: UTP Trujillo", "Destination: UTP Trujillo"), style = BodySm, color = OnSurfaceVariant)
-                        }
-                        Box(
-                            modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(PrimaryContainer).padding(horizontal = 12.dp, vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                // Señas de texto (Fase 6): FRECUENCIA al tocar, en bucle.
-                                Signable(clave = "rutas.frecuencia", es = "FRECUENCIA", en = "FREQUENCY", style = LabelCapsMd, color = OnPrimaryContainer)
-                                Text(if (ruta.headwayMin > 0) "${ruta.headwayMin} min" else "—", style = DisplayNumberMd, color = OnPrimaryContainer)
-                            }
-                        }
-                    }
-                }
-                Spacer(Modifier.height(16.dp))
-
-                // Stats grid (señables, Fase 6: tiempo/costo en bucle al tocar).
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    StatTile(L.t("TIEMPO", "TIME"), if (ruta.duracionMin > 0) "${ruta.duracionMin} min" else "—", Icons.Filled.Schedule, AppPrimary, Modifier.weight(1f).signable("rutas.tiempo"))
-                    StatTile(L.t("COSTO", "PRICE"), ruta.precioTexto, Icons.Filled.Payments, AppPrimary, Modifier.weight(1f).signable("rutas.costo"))
-                }
-                Spacer(Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    // Stats reales del feed (iOS idem): PARADEROS y RECORRIDO
-                    // en vez de TRANSBORDOS/CONGESTION fijos. Señables (Fase 6).
-                    StatTile(
-                        L.t("PARADEROS", "STOPS"),
-                        "${ruta.paraderos.size}",
-                        Icons.Filled.Place, AppPrimary, Modifier.weight(1f).signable("rutas.paraderos")
-                    )
-                    StatTile(
-                        L.t("RECORRIDO", "ROUTE"),
-                        if (ruta.distanciaKm > 0) String.format(java.util.Locale.US, "%.1f km", ruta.distanciaKm) else "—",
-                        Icons.Filled.Route, AppPrimary, Modifier.weight(1f).signable("rutas.recorrido")
-                    )
-                }
-                Spacer(Modifier.height(20.dp))
-
-                // Pasos (titulo señable en bucle, Fase 6).
-                Signable(clave = "rutas.guia", es = "Guía paso a paso", en = "Step-by-step guide", style = HeadlineXs, color = OnSurface)
-                Spacer(Modifier.height(16.dp))
-                PasoRow(
-                    "1",
-                    L.t("Camina al paradero ${paraderoSubida?.nombre ?: "más cercano"}", "Walk to stop ${paraderoSubida?.nombre ?: "nearest one"}"),
-                    if (paraderoSubida != null) "$metrosCaminata " + L.t("metros", "meters") + " • $minutosCaminata " + L.t("min aprox.", "min approx.") else L.t("A pie a tu paradero", "Walk to your stop"),
-                    Icons.Filled.DirectionsWalk, SurfaceContainerHighest, OnSurface, isLast = false
-                )
-                PasoRow("2", L.t("Sube a la línea", "Get on route") + " ${ruta.linea}", "${ruta.empresa} • ${ruta.duracionMin} " + L.t("min de viaje", "min ride"), Icons.Filled.DirectionsBus, AppPrimary, Color.White, isLast = false)
-                PasoRow("3", L.t("Baja en", "Get off at") + " ${paraderoDestino?.nombre ?: L.t("destino final", "final destination")}", L.t("Llegada a destino final", "Final destination arrival"), Icons.Filled.School, Tertiary, Color.White, isLast = true)
-                Spacer(Modifier.height(20.dp))
-
-                // Botón Iniciar Navegación señable (Fase 6): con el modo
-                // activo, tarjeta 3 s y LUEGO inicia la navegación.
-                Button(
-                    onClick = {
-                        com.example.rutautpnative.data.senias.SeniasOverlay.ejecutarTrasVerSenia("nav.iniciar") {
-                            onIniciarNavegacion()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryContainer)
-                ) {
-                    Icon(Icons.Filled.LocationOn, null, tint = OnPrimaryContainer)
-                    Spacer(Modifier.width(10.dp))
-                    Text(L.t("Iniciar Navegación", "Start Navigation"), style = HeadlineSm, color = OnPrimaryContainer)
-                }
-                Spacer(Modifier.height(80.dp))
-            }
-        }
-    }
-
-    if (mostrarExplorador) {
-        ExploradorRutaScreen(ruta = ruta, onCerrar = { mostrarExplorador = false })
-    }
-}
-
-//----Componentes compartidos----
-@Composable
-private fun StatTile(label: String, value: String, icon: ImageVector, iconColor: Color, modifier: Modifier = Modifier) {
-    Card(
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceContainerLow),
-        modifier = modifier
-    ) {
-        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(36.dp).clip(CircleShape).background(iconColor.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
-                Icon(icon, null, tint = iconColor, modifier = Modifier.size(18.dp))
-            }
-            Spacer(Modifier.width(10.dp))
-            Column {
-                Text(label, style = LabelCapsMd, color = OnSurfaceVariant)
-                Text(value, style = HeadlineXs, color = if (iconColor == Secondary) Secondary else OnSurface)
+            when {
+                cargando -> item { EstadoCatalogo(L.t("Cargando rutas…", "Loading routes…"), cargando = true) }
+                error != null -> item { EstadoCatalogo(L.t("No se pudo cargar el catálogo de rutas.", "Could not load the route catalog."), onRetry = onReintentar) }
+                rutas.isEmpty() -> item { EstadoCatalogo(when {
+                    TransporteApp.busesUTPActivos -> L.t("Buses UTP · rutas próximamente", "UTP buses · routes coming soon")
+                    texto.isNotBlank() -> L.t("No encontramos rutas para ", "No routes found for ") + "“$texto”"
+                    cerca != null -> L.t("No hay líneas con paradero a menos de 300 m de este lugar.", "No routes have a stop within 300 m of this place.")
+                    else -> L.t("No hay rutas disponibles en este catálogo.", "No routes are available in this catalog.")
+                }) }
+                else -> items(rutas, key = { it.id }) { ruta -> RutaOpcionCard(ruta, distancias[ruta.id]?.let { L.f("A {0} m del lugar", "{0} m from this place", it.toString()) }) { foco.clearFocus(); onRuta(ruta) } }
             }
         }
     }
 }
 
 @Composable
-private fun PasoRow(n: String, title: String, subtitle: String, icon: ImageVector, bg: Color, fg: Color, isLast: Boolean) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(modifier = Modifier.size(24.dp).clip(CircleShape).background(bg), contentAlignment = Alignment.Center) {
-                Icon(icon, null, tint = fg, modifier = Modifier.size(12.dp))
-            }
-            if (!isLast) {
-                Box(modifier = Modifier.width(2.dp).height(36.dp).background(SurfaceContainerHighest))
-            }
-        }
-        Column(modifier = Modifier.padding(top = 1.dp)) {
-            Text("$n. $title", style = BodyMd, color = OnSurface)
-            Text(subtitle, style = BodySm, color = OnSurfaceVariant)
+private fun EstadoCatalogo(texto: String, cargando: Boolean = false, onRetry: (() -> Unit)? = null) {
+    Surface(shape = RoundedCornerShape(20.dp), color = SuperficieAgrupada) {
+        Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (cargando) CircularProgressIndicator(color = AcentoInterfaz) else Icon(Icons.Filled.DirectionsBus, null, tint = OnSurfaceVariant)
+            Text(texto, style = BodySm, color = OnSurfaceVariant)
+            onRetry?.let { OutlinedButton(onClick = it) { Text(L.t("Reintentar", "Try again")) } }
         }
     }
+}
+
+@Composable
+private fun DetalleRutaActual(ruta: RutaGTFS, onBack: () -> Unit, onNavegar: () -> Unit, on3D: () -> Unit) {
+    var explorador by remember { mutableStateOf(false) }
+    var mapaListo by remember(ruta.id) { mutableStateOf(false) }
+    LaunchedEffect(ruta.id) { delay(450); mapaListo = true }
+    Column(Modifier.fillMaxSize()) {
+        Row(Modifier.fillMaxWidth().background(AppSurface).padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onBack, modifier = Modifier.clip(CircleShape).background(SurfaceContainerLow)) { Icon(Icons.AutoMirrored.Filled.ArrowBack, L.t("Volver", "Back"), tint = OnSurface) }
+            Text(L.t("Ruta ", "Route ") + ruta.codigoTransporte, style = HeadlineMd, color = OnSurface, modifier = Modifier.weight(1f).padding(horizontal = 12.dp))
+            Icon(Icons.Filled.DirectionsBus, null, tint = AcentoInterfaz)
+        }
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+            Surface(shape = RoundedCornerShape(20.dp), color = SuperficieAgrupada) {
+                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        InsigniaLinea(ruta, grande = true)
+                        Column(Modifier.weight(1f)) { Text(ruta.empresa, style = HeadlineSm, color = OnSurface); Text(L.t("Línea ", "Line ") + ruta.lineaConLetra, style = BodySm, color = OnSurfaceVariant) }
+                    }
+                    Text(ruta.recorrido, style = BodySm, color = OnSurfaceVariant)
+                    HorizontalDivider(color = OutlineVariant.copy(alpha = .3f))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { DatoBreveRuta(Icons.Filled.Schedule, L.t("Frecuencia", "Frequency")); Text(ruta.frecuenciaTexto, style = BodyMdMedium, color = OnSurface) }
+                }
+            }
+            Surface(shape = RoundedCornerShape(20.dp), color = SuperficieAgrupada) {
+                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                    Row { DatoViaje(Icons.Filled.Schedule, L.t("Tiempo de viaje", "Travel time"), ruta.tiempoTexto, Modifier.weight(1f)); DatoViaje(Icons.Filled.Payments, L.t("Pasaje", "Fare"), ruta.precioTexto, Modifier.weight(1f)) }
+                    Row { DatoViaje(Icons.Filled.Place, L.t("Paraderos", "Stops"), ruta.paraderos.size.toString(), Modifier.weight(1f)); DatoViaje(Icons.Filled.Route, L.t("Distancia", "Distance"), String.format(Locale.getDefault(), "%.1f km", ruta.distanciaKm), Modifier.weight(1f)) }
+                }
+            }
+            Card(onClick = { explorador = true }, colors = CardDefaults.cardColors(containerColor = Color.Transparent)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text(L.t("Ver el recorrido", "Show route"), style = HeadlineSm, color = OnSurface, modifier = Modifier.weight(1f)); Icon(Icons.Filled.OpenInFull, L.t("Explorar recorrido", "Explore route"), tint = AcentoInterfaz) }
+                    if (mapaListo) MapaVistaPreviaRuta(ruta, Modifier.fillMaxWidth().height(240.dp).clip(RoundedCornerShape(20.dp))) { explorador = true }
+                    else Box(Modifier.fillMaxWidth().height(240.dp).clip(RoundedCornerShape(20.dp)).background(SurfaceContainerLow))
+                }
+            }
+            Surface(shape = RoundedCornerShape(20.dp), color = SuperficieAgrupada) {
+                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) { Text(L.t("Reconoce tu transporte", "Recognize your vehicle"), style = HeadlineSm, color = OnSurface, modifier = Modifier.weight(1f)); IconButton(onClick = on3D) { Icon(Icons.Filled.OpenInFull, L.t("Ampliar modelo 3D", "Expand 3D model"), tint = AcentoInterfaz) } }
+                    ReferenciaTransporte(ruta)
+                    ModeloRuta3DDiferido(ruta)
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(L.t("Guía paso a paso", "Step-by-step guide"), style = HeadlineSm, color = OnSurface, modifier = Modifier.signable("rutas.guia"))
+                Surface(shape = RoundedCornerShape(20.dp), color = SuperficieAgrupada) {
+                    Column {
+                        PasoRuta(1, L.f("Ve al paradero {0}", "Go to {0} stop", ruta.paradaInicioVisible), L.f("Sale uno {0}", "One departs {0}", ruta.frecuenciaTexto), Icons.Filled.DirectionsWalk)
+                        HorizontalDivider(Modifier.padding(start = 68.dp), color = OutlineVariant.copy(alpha = .3f))
+                        PasoRuta(2, L.f("Sube a la línea {0}", "Board line {0}", ruta.lineaConLetra), ruta.empresa + " · " + ruta.tiempoTexto, Icons.Filled.DirectionsBus)
+                        HorizontalDivider(Modifier.padding(start = 68.dp), color = OutlineVariant.copy(alpha = .3f))
+                        PasoRuta(3, L.f("Baja en {0}", "Get off at {0}", ruta.paradaFinVisible), L.t("Fin del recorrido", "End of the route"), Icons.Filled.Flag)
+                    }
+                }
+            }
+        }
+        Surface(color = AppSurface) {
+            Button(onClick = { SeniasOverlay.ejecutarTrasVerSenia("nav.iniciar", onNavegar) }, modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp).heightIn(min = 54.dp), shape = RoundedCornerShape(16.dp), colors = ButtonDefaults.buttonColors(containerColor = PrimaryFill, contentColor = OnPrimaryFill)) {
+                Icon(Icons.Filled.Navigation, null); Spacer(Modifier.width(10.dp)); Text(L.t("Iniciar navegación", "Start navigation"), style = BodyMdMedium)
+            }
+        }
+    }
+    if (explorador) ExploradorRutaScreen(ruta) { explorador = false }
+}
+
+@Composable
+private fun DatoViaje(icono: ImageVector, titulo: String, valor: String, modifier: Modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) { DatoBreveRuta(icono, titulo); Text(valor, style = HeadlineSm, color = OnSurface) }
+}
+
+@Composable
+private fun PasoRuta(numero: Int, titulo: String, detalle: String, icono: ImageVector) {
+    Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Icon(icono, null, tint = AcentoInterfaz, modifier = Modifier.size(40.dp).clip(CircleShape).background(SurfaceContainerLow).padding(9.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) { Text("$numero. $titulo", style = BodyMdMedium, color = OnSurface); Text(detalle, style = BodySm, color = OnSurfaceVariant) }
+    }
+}
+
+@Composable
+private fun MapaVistaPreviaRuta(ruta: RutaGTFS, modifier: Modifier, onAbrir: () -> Unit) {
+    val camara = rememberCameraPositionState()
+    var listo by remember(ruta.id) { mutableStateOf(false) }
+    LaunchedEffect(listo, ruta.id) {
+        if (listo) {
+            val puntos = ruta.shape + ruta.paraderos.map { it.coordinate }
+            if (puntos.distinct().size > 1) camara.move(CameraUpdateFactory.newLatLngBounds(LatLngBounds.Builder().apply { puntos.forEach(::include) }.build(), 40))
+            else puntos.firstOrNull()?.let { camara.move(CameraUpdateFactory.newLatLngZoom(it, 15f)) }
+        }
+    }
+    GoogleMap(modifier = modifier, cameraPositionState = camara, onMapLoaded = { listo = true }, onMapClick = { onAbrir() }, uiSettings = MapUiSettings(scrollGesturesEnabled = false, zoomGesturesEnabled = false, tiltGesturesEnabled = false, rotationGesturesEnabled = false, zoomControlsEnabled = false, mapToolbarEnabled = false)) {
+        if (ruta.shape.size > 1) Polyline(ruta.shape, color = ruta.color, width = 8f)
+        ruta.paraderos.firstOrNull()?.let { Marker(state = MarkerState(it.coordinate), title = ruta.paradaInicioVisible, onClick = { onAbrir(); true }) }
+        ruta.paraderos.lastOrNull()?.let { Marker(state = MarkerState(it.coordinate), title = ruta.paradaFinVisible, onClick = { onAbrir(); true }) }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 390, heightDp = 844)
+@Composable
+private fun RutasActualizadasPreview() {
+    val ruta = RutaGTFS("preview", "C-01", "B", "Av. Miguel Grau → Av. Libertad", "El Cortijo", "00A850", Color(0xFF00A850), emptyList(), listOf(ParaderoGTFS("a", "Av. Miguel Grau", -8.1, -79.0), ParaderoGTFS("b", "Av. Libertad", -8.11, -79.02)), 48, 5, 2.5, 12.4, 150.0)
+    RutaUTPNativeTheme { RutasCatalogo(listOf(ruta, ruta.copy(id = "2", linea = "M-34", variante = "A", empresa = "Nuevo California", color = Color(0xFFEEB633))), emptyMap(), null, false, null, "", {}, {}, {}, {}, {}) }
 }

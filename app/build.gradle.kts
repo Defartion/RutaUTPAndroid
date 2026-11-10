@@ -8,6 +8,8 @@ plugins {
 
 // Firebase es opcional: una instalación sin proyecto sigue compilando y usando avisos locales.
 if (file("google-services.json").isFile) apply(plugin = "com.google.gms.google-services")
+val generarCapturas = providers.gradleProperty("capturas").orNull == "true"
+if (generarCapturas) apply(plugin = "com.android.compose.screenshot")
 
 // MQTT: las credenciales viven en local.properties (gitignored) o -P por
 // línea de comandos, NUNCA en el repo. Sin MQTT_HOST el canal queda
@@ -21,6 +23,7 @@ fun mqttProp(nombre: String): String =
     (localProps.getProperty(nombre) ?: project.findProperty(nombre) as? String ?: "").trim()
 
 android {
+    if (generarCapturas) experimentalProperties["android.experimental.enableScreenshotTest"] = true
     namespace = "com.example.rutautpnative"
     compileSdk = 36
 
@@ -28,8 +31,8 @@ android {
         applicationId = "com.example.rutautpnative"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
         manifestPlaceholders["MAPS_API_KEY"] = project.findProperty("MAPS_API_KEY") ?: ""
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -60,6 +63,11 @@ android {
     }
 }
 dependencies {
+    if (generarCapturas) {
+        add("screenshotTestImplementation", platform(libs.androidx.compose.bom))
+        add("screenshotTestImplementation", "com.android.tools.screenshot:screenshot-validation-api:0.0.1-alpha16")
+        add("screenshotTestImplementation", "androidx.compose.ui:ui-tooling")
+    }
     implementation("com.google.firebase:firebase-messaging:26.0.1")
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

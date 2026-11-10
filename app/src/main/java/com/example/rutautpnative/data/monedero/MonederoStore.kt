@@ -79,6 +79,10 @@ object MonederoStore {
 
     //----Consultas----
 
+    fun reintentarLectura() {
+        scope.launch { cargaInicial?.join(); operaciones.withLock { cargar() } }
+    }
+
     val saldo: Double get() = _saldoCentimos.value / 100.0
     val pasajesDisponibles: Int get() = (_saldoCentimos.value / TARIFA_CENTIMOS).toInt()
     val saldoTexto: String get() = "S/ %.2f".format(saldo)

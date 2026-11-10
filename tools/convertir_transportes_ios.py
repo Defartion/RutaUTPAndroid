@@ -5,6 +5,7 @@ Requiere usd-core y numpy solo para la conversión; la app no necesita esas libr
 """
 import argparse
 import gzip
+import json
 import os
 from pathlib import Path
 import struct
@@ -21,6 +22,8 @@ def convert(source: Path, output: Path):
         cache = UsdGeom.XformCache()
         z_up = UsdGeom.GetStageUpAxis(stage) == UsdGeom.Tokens.z
         triangles = []
+        body_ranges, outline_ranges = [], []
+        body_world = None
         for prim in stage.Traverse():
             if not prim.IsA(UsdGeom.Mesh):
                 continue
@@ -35,6 +38,11 @@ def convert(source: Path, output: Path):
             indices = mesh.GetFaceVertexIndicesAttr().Get()
             color = [0.7, 0.7, 0.7, 1.0]
             material = UsdShade.MaterialBindingAPI(prim).ComputeBoundMaterial()[0]
+            body = prim.GetName() == "Carroceria" or (material and material.GetPrim().GetName() == "Carroceria")
+            outline = prim.GetName() == "ContornoMarca" or (material and material.GetPrim().GetName() == "ContornoMarca")
+            first = len(triangles)
+            if body and body_world is None:
+                body_world = world
             if material:
                 for shader_prim in Usd.PrimRange(material.GetPrim()):
                     if shader_prim.IsA(UsdShade.Shader):
@@ -58,16 +66,29 @@ def convert(source: Path, output: Path):
                             normal = np.array([normal[0], normal[2], -normal[1]])
                         triangles.append([*point, *normal, *color])
                 cursor += count
+            if body:
+                body_ranges.append([first, len(triangles) - first])
+            if outline:
+                outline_ranges.append([first, len(triangles) - first])
         data = np.asarray(triangles, dtype=np.float32)
         if not len(data) or not np.isfinite(data).all():
             raise ValueError(f"Malla inválida: {path}")
         low, high = data[:, :3].min(axis=0), data[:, :3].max(axis=0)
-        data[:, :3] = (data[:, :3] - (low + high) / 2) * (4 / max(high - low))
+        center, scale = (low + high) / 2, float(4 / max(high - low))
+        data[:, :3] = (data[:, :3] - center) * scale
         name = ("detallado_" if "Detallado" in path.parts else "original_") + path.stem + ".mesh.gz"
         output.mkdir(parents=True, exist_ok=True)
         with gzip.GzipFile(filename=str(output / name), mode="wb", mtime=0) as stream:
             stream.write(b"RUT3" + struct.pack(">i", len(data)))
             stream.write(data.astype(">f4").tobytes())
+        if not body_ranges or body_world is None:
+            raise ValueError(f"Falta Carroceria para la identificación: {path}")
+        def axis_up(point):
+            return np.array([point[0], point[2], -point[1]]) if z_up else np.array(point)
+        origin = (axis_up(body_world.Transform(Gf.Vec3d(0, 0, 0))) - center) * scale
+        axes = [axis_up(body_world.TransformDir(Gf.Vec3d(*v))) * scale for v in [(1,0,0),(0,1,0),(0,0,1)]]
+        metadata = dict(carrocerias=body_ranges, contornos=outline_ranges, origen=origin.tolist(), ejes=[a.tolist() for a in axes])
+        (output / name.replace(".mesh.gz", ".partes.json")).write_text(json.dumps(metadata, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         print(name, "vértices", len(data), "bytes", (output / name).stat().st_size, flush=True)
 
 

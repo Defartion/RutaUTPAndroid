@@ -63,20 +63,20 @@ private val ColorCaminata = Secondary
 @Composable
 fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautpnative.navigation.AppRouter? = null, onCerrar: () -> Unit) {
     val context = LocalContext.current
-    val paraderos = remember(rutas) { ParaderosIluminados.seleccionar(rutas) }
+    val paraderos = remember(rutas) { rutas.flatMap { it.paraderos }.distinctBy { it.id } }
 
     var ubicacionUsuario by remember { mutableStateOf<LatLng?>(null) }
     var locating by remember { mutableStateOf(false) }
     var locationMessage by remember { mutableStateOf<String?>(null) }
 
     // La ancla (por defecto UTP, o la ubicación real del usuario si hay permiso+señal)
-    val anchor: LatLng = ubicacionUsuario ?: GTFSRepository.coordenadaUTP
+    val anchor: LatLng = ubicacionUsuario ?: com.example.rutautpnative.data.gtfs.TransporteApp.referenciaInicio
 
     val distancias = remember(paraderos, anchor) {
         paraderos.associate { it.id to GTFSRepository.distanciaMetros(it.coordinate, anchor) }
     }
-    val lineasPorParadero = remember(paraderos, rutas) {
-        paraderos.associate { p -> p.id to lineasDe(p, rutas) }
+    val lineasPorParadero by produceState<Map<String, List<String>>>(emptyMap(), paraderos, rutas) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { paraderos.associate { p -> p.id to lineasDe(p, rutas) } }
     }
 
     var query by remember { mutableStateOf("") }
@@ -109,6 +109,13 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
     val scope = rememberCoroutineScope()
     val cameraState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(anchor, 13f)
+    }
+    var mapaListo by remember { mutableStateOf(false) }
+    val marcadoresVisibles = remember(paraderosVisibles, cameraState.position, selectedId, mapaListo) {
+        val limites = if (mapaListo) cameraState.projection?.visibleRegion?.latLngBounds else null
+        val cercanos = paraderosVisibles.filter { limites?.contains(it.coordinate) != false }.take(250)
+        val elegido = paraderosVisibles.firstOrNull { it.id == selectedId }
+        if (elegido != null && cercanos.none { it.id == elegido.id }) cercanos + elegido else cercanos
     }
     val pagerState = rememberPagerState(pageCount = { maxOf(1, paraderosVisibles.size) })
 
@@ -227,6 +234,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
                 cameraPositionState = cameraState,
+                onMapLoaded = { mapaListo = true },
                 uiSettings = MapUiSettings(
                     compassEnabled = false,
                     mapToolbarEnabled = false,
@@ -244,7 +252,7 @@ fun ParaderosIluminadosScreen(rutas: List<RutaGTFS>, router: com.example.rutautp
                         MarcadorUTP()
                     }
                 }
-                paraderosVisibles.forEach { paradero ->
+                marcadoresVisibles.forEach { paradero ->
                     val seleccionado = paradero.id == selectedId
                     val esGuardado = guardados.any { g ->
                         g.coincideCon(paradero.nombre, paradero.lat, paradero.lon)

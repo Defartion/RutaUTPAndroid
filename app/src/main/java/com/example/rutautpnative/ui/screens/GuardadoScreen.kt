@@ -43,194 +43,14 @@ import kotlinx.coroutines.launch
 
 // Pantalla
 @Composable
-fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()) {
-    val lugares by viewModel.lugares.collectAsState()
-    val lineas by viewModel.lineas.collectAsState()
-    val lugaresInvalidos by com.example.rutautpnative.data.LugaresStore.datosInvalidos.collectAsState()
-    val lineasInvalidas by com.example.rutautpnative.data.LineasGuardadasStore.datosInvalidos.collectAsState()
-    val catalogo by viewModel.catalogo.collectAsState()
-    var selectedTab by remember { mutableStateOf(0) }
-    var showAddSheet by remember { mutableStateOf(false) }
-    var showAddLineaSheet by remember { mutableStateOf(false) }
-    var selectedLugar by remember { mutableStateOf<LugarGuardado?>(null) }
-    var editarLugar by remember { mutableStateOf<LugarGuardado?>(null) }
-    var selectedLinea by remember { mutableStateOf<RutaGTFS?>(null) }
-    var exploradorRuta by remember { mutableStateOf<RutaGTFS?>(null) }
-
-    LaunchedEffect(router.lugarGuardadoPendiente, lugares) {
-        val id = router.lugarGuardadoPendiente ?: return@LaunchedEffect
-        lugares.firstOrNull { it.id == id }?.let { selectedLugar = it; router.lugarGuardadoPendiente = null }
-    }
-    val borderColor = OutlineVariant.copy(alpha = 0.25f)
-    val tabs = listOf(L.t("Lugares", "Places"), L.t("Líneas", "Routes"))
-
-    Box(modifier = Modifier.fillMaxSize().background(AppBackground)) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .background(AppSurface)
-                    .drawBehind { drawLine(borderColor, Offset(0f, size.height), Offset(size.width, size.height), 1.dp.toPx()) }
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Filled.Bookmark, null, tint = AppPrimary, modifier = Modifier.size(28.dp))
-                Spacer(Modifier.width(12.dp))
-                Text(L.t("Guardado", "Saved"), style = HeadlineLg, color = AppPrimary, modifier = Modifier.weight(1f).signable("guardado.titulo"))
-                Box(
-                    // "+ Añadir" señable (Fase 6): la clave depende de la pestaña
-                    // activa (anadir_lugar / anadir_linea); tarjeta 3 s -> abrir.
-                    modifier = Modifier.clip(CircleShape).background(PrimaryContainer)
-                        .senableAccion(
-                            if (selectedTab == 0) "guardado.anadir_lugar" else "guardado.anadir_linea"
-                        ) { if (selectedTab == 0) showAddSheet = true else showAddLineaSheet = true }
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Icon(Icons.Filled.Add, null, tint = OnPrimaryContainer, modifier = Modifier.size(12.dp))
-                        Text(L.t("Añadir", "Add"), style = LabelCapsMd, color = OnPrimaryContainer)
-                    }
-                }
-            }
-
-            // Tabs (señables en bucle, Fase 6)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth().background(AppSurface)
-                    .drawBehind { drawLine(borderColor, Offset(0f, size.height), Offset(size.width, size.height), 0.5.dp.toPx()) }
-            ) {
-                tabs.forEachIndexed { idx, label ->
-                    Column(
-                        modifier = Modifier.weight(1f).clickable { selectedTab = idx }.padding(vertical = 12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Signable(
-                            clave = if (idx == 0) "guardado.lugares" else "guardado.lineas",
-                            es = label, en = label,
-                            style = BodyMdMedium,
-                            color = if (selectedTab == idx) AppPrimary else OnSurfaceVariant
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(if (selectedTab == idx) AppPrimary else Color.Transparent))
-                    }
-                }
-            }
-
-            if (lugaresInvalidos || lineasInvalidas) Text(L.t("No se pueden leer algunos datos guardados. Se conservan sin sobrescribirlos. Abre Perfil → Respaldos y recuperación.", "Some saved data cannot be read. It is preserved without overwriting. Open Profile → Backups and recovery."), style = BodySm, color = AppError, modifier = Modifier.padding(16.dp))
-            // Content
-            Column(
-                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
-            ) {
-                when (selectedTab) {
-                    0 -> {
-                        if (lugares.isEmpty()) {
-                            Box(modifier = Modifier.fillMaxWidth().padding(top = 60.dp), contentAlignment = Alignment.Center) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(Icons.Filled.BookmarkBorder, null, tint = OnSurfaceVariant, modifier = Modifier.size(48.dp))
-                                    Spacer(Modifier.height(14.dp))
-                                    Text(L.t("Aún no tienes lugares guardados", "You don't have any saved places yet"), style = BodyMdMedium, color = OnSurface)
-                                }
-                            }
-                        } else {
-                            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                                Spacer(Modifier.height(8.dp))
-                                Text(L.t("Toca un lugar para ver más opciones.", "Tap a place to see more options."), style = BodySm, color = OnSurfaceVariant)
-                                Spacer(Modifier.height(12.dp))
-                                lugares.forEach { lugar ->
-                                    LugarRow(lugar = lugar, onClick = { selectedLugar = lugar })
-                                    Spacer(Modifier.height(12.dp))
-                                }
-                            }
-                        }
-                    }
-                    1 -> {
-                        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(L.t("Líneas guardadas", "Saved routes"), style = BodyMdMedium, color = OnSurface, modifier = Modifier.weight(1f))
-                                IconButton(onClick = { showAddLineaSheet = true }) {
-                                    Icon(Icons.Filled.Add, null, tint = AppPrimary)
-                                }
-                            }
-                            Spacer(Modifier.height(8.dp))
-                            if (lineas.isEmpty()) {
-                                Text(L.t("Aún no guardas ninguna línea", "You haven't saved any routes yet"), style = BodySm, color = OnSurfaceVariant)
-                            } else {
-                                lineas.forEach { ruta ->
-                                    LineaRow(ruta = ruta, onClick = { selectedLinea = ruta })
-                                    Spacer(Modifier.height(12.dp))
-                                }
-                            }
-                        }
-                    }
-                }
-                // Holgura para la BottomNavBar superpuesta (~64 dp + insets).
-                Spacer(Modifier.height(120.dp))
-            }
-        }
-
-        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-            BottomNavBar(router)
-        }
-    }
-
-    // Sheets
-    selectedLugar?.let { lugar ->
-        LugarDetailSheet(
-            lugar = lugar,
-            router = router,
-            onEditar = { editarLugar = lugar; selectedLugar = null },
-            onEliminar = { viewModel.eliminar(lugar); selectedLugar = null },
-            onDismiss = { selectedLugar = null }
-        )
-    }
-
-    selectedLinea?.let { ruta ->
-        LineaDetailSheet(
-            ruta = ruta,
-            onQuitar = { viewModel.quitarLinea(ruta.id); selectedLinea = null },
-            onVerRutaCompleta = { exploradorRuta = ruta; selectedLinea = null },
-            onDismiss = { selectedLinea = null }
-        )
-    }
-
-    editarLugar?.let { lugar ->
-        AddLugarSheet(inicial = lugar, onSave = { viewModel.actualizar(it); editarLugar = null }, onDismiss = { editarLugar = null })
-    }
-    if (showAddSheet) {
-        AddLugarSheet(
-            onSave = { nuevo -> viewModel.agregar(nuevo); showAddSheet = false },
-            onDismiss = { showAddSheet = false }
-        )
-    }
-
-    if (showAddLineaSheet) {
-        AddLineaSheet(
-            catalogo = catalogo,
-            idsGuardados = lineas.map { it.id }.toSet(),
-            onAgregar = { ruta -> viewModel.agregarLinea(ruta) },
-            onDismiss = { showAddLineaSheet = false }
-        )
-    }
-
-    exploradorRuta?.let { ruta ->
-        ExploradorRutaScreen(ruta = ruta, onCerrar = { exploradorRuta = null })
-    }
-}
-
-@Composable
-private fun LugarRow(lugar: LugarGuardado, onClick: () -> Unit) {
+internal fun LugarRow(lugar: LugarGuardado, onClick: () -> Unit) {
     Card(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest),
         modifier = Modifier.fillMaxWidth().clickable { onClick() }
     ) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            val isUTP = lugar.nombre == "UTP"
+            val isUTP = lugar.esFijo
             Box(
                 modifier = Modifier.size(48.dp).clip(CircleShape).background(if (isUTP) AppPrimary else PrimaryContainer.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
@@ -279,7 +99,7 @@ private fun LineaRow(ruta: RutaGTFS, onClick: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LugarDetailSheet(lugar: LugarGuardado, router: AppRouter, onEditar: () -> Unit, onEliminar: () -> Unit, onDismiss: () -> Unit) {
+internal fun LugarDetailSheet(lugar: LugarGuardado, router: AppRouter, onEditar: () -> Unit, onEliminar: () -> Unit, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -359,7 +179,7 @@ private fun LugarDetailSheet(lugar: LugarGuardado, router: AppRouter, onEditar: 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LineaDetailSheet(ruta: RutaGTFS, onQuitar: () -> Unit, onVerRutaCompleta: () -> Unit, onDismiss: () -> Unit) {
+internal fun LineaDetailSheet(ruta: RutaGTFS, onQuitar: () -> Unit, onVerRutaCompleta: () -> Unit, onDismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -407,25 +227,21 @@ private fun LineaDetailSheet(ruta: RutaGTFS, onQuitar: () -> Unit, onVerRutaComp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddLineaSheet(
+internal fun AddLineaSheet(
     catalogo: List<RutaGTFS>,
     idsGuardados: Set<String>,
     onAgregar: (RutaGTFS) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    cargando: Boolean = false,
+    errorCatalogo: String? = null,
+    onReintentar: () -> Unit = {}
 ) {
     var textoBusqueda by remember { mutableStateOf("") }
 
+    val indices = remember(catalogo) { catalogo.associate { it.id to com.example.rutautpnative.data.gtfs.IndiceBusquedaRuta(it) } }
     val disponibles = remember(catalogo, idsGuardados, textoBusqueda) {
-        val q = textoBusqueda.trim()
-        catalogo
-            .filter { it.id !in idsGuardados }
-            .filter {
-                q.isEmpty() ||
-                    it.linea.contains(q, ignoreCase = true) ||
-                    it.empresa.contains(q, ignoreCase = true) ||
-                    it.recorrido.contains(q, ignoreCase = true) ||
-                    it.variante.contains(q, ignoreCase = true)
-            }
+        val consulta = com.example.rutautpnative.data.gtfs.ConsultaRuta(textoBusqueda, indices.values.map { it.letra }.toSet())
+        catalogo.filter { it.id !in idsGuardados && indices[it.id]?.coincide(consulta) == true }
     }
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
@@ -449,7 +265,13 @@ private fun AddLineaSheet(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(12.dp))
-            if (disponibles.isEmpty()) {
+            if (cargando) {
+                CircularProgressIndicator(Modifier.padding(20.dp))
+                Text(L.t("Cargando líneas…", "Loading routes…"), style = BodySm)
+            } else if (errorCatalogo != null) {
+                Text(L.t("No se pudo cargar el catálogo.", "Could not load the catalog."), color = AppError)
+                TextButton(onClick = onReintentar) { Text(L.t("Reintentar", "Try again")) }
+            } else if (disponibles.isEmpty()) {
                 Text(
                     if (textoBusqueda.isNotBlank()) L.t("No hay líneas que coincidan", "No matching routes") else L.t("No hay más líneas para agregar", "No more routes to add"),
                     style = BodySm,
@@ -463,7 +285,7 @@ private fun AddLineaSheet(
                         .verticalScroll(rememberScrollState())
                 ) {
                     disponibles.forEach { ruta ->
-                        LineaRow(ruta = ruta, onClick = { onAgregar(ruta) })
+                        com.example.rutautpnative.ui.components.RutaOpcionCard(ruta, accion = com.example.rutautpnative.ui.components.AccionTarjetaRuta.ANADIR) { onAgregar(ruta) }
                         Spacer(Modifier.height(10.dp))
                     }
                 }
@@ -484,7 +306,7 @@ private enum class EstadoDireccion {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddLugarSheet(onSave: (LugarGuardado) -> Unit, onDismiss: () -> Unit, inicial: LugarGuardado? = null) {
+internal fun AddLugarSheet(onSave: (LugarGuardado) -> Unit, onDismiss: () -> Unit, inicial: LugarGuardado? = null) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
