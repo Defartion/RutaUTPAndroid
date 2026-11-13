@@ -557,6 +557,8 @@ fun ContenidoSeleccionViaje(
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun DialogoConsentimientoContribucion(onAceptar: () -> Unit, onCancelar: () -> Unit) {
+    val contexto = LocalContext.current
+    var ubicacionDenegada by remember { mutableStateOf(false) }
     // Permisos juntos (ubicacion + actividad fisica): la baliza necesita la
     // ubicacion; la actividad degrada a "unknown", no bloquea.
     val lanzadorPermisos = rememberLauncherForActivityResult(
@@ -565,12 +567,26 @@ fun DialogoConsentimientoContribucion(onAceptar: () -> Unit, onCancelar: () -> U
         val ubicacion = permisos[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
             permisos[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         PassiveTrackingCoordinator.setContribucionActivada(ubicacion)
-        onAceptar()
+        if (!ubicacion) ubicacionDenegada = true
+        else {
+            val aviso = when {
+                permisos[Manifest.permission.ACCESS_FINE_LOCATION] != true -> L.t("La ubicación aproximada puede impedir detectar tu viaje. Puedes dar acceso preciso en Ajustes.", "Approximate location may prevent trip detection. You can allow precise location in Settings.")
+                android.os.Build.VERSION.SDK_INT >= 29 && permisos[Manifest.permission.ACTIVITY_RECOGNITION] != true -> L.t("Sin permiso de actividad física, la detección del viaje puede ser limitada.", "Without physical activity permission, trip detection may be limited.")
+                else -> null
+            }
+            aviso?.let { android.widget.Toast.makeText(contexto, it, android.widget.Toast.LENGTH_LONG).show() }
+            onAceptar()
+        }
     }
     AlertDialog(
         onDismissRequest = onCancelar,
         title = { Text(L.t("Ayudar con ubicaciones en tiempo real", "Help with real-time locations")) },
         text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+            if (ubicacionDenegada) {
+                Text(L.t("No se activaron los aportes porque falta permiso de ubicación. Puedes revisarlo en Ajustes.", "Contributions were not enabled because location permission is missing. You can review it in Settings."), color = AppError)
+                TextButton(onClick = { contexto.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:${contexto.packageName}"))) }) { Text(L.t("Abrir Ajustes", "Open Settings")) }
+            }
             Text(
                 L.t(
                     "La app usa tu ubicación y actividad física para detectar un viaje. Comparte sesión, ruta, coordenadas, hora, velocidad, rumbo, precisión y actividad con el servidor, mediante tu cuenta MQTT. No envía nombre ni correo, pero el broker y el backend pueden relacionar viajes. El envío se pausa en segundo plano. Terminar el viaje no borra los datos del servidor ni garantiza anonimato.",
@@ -578,11 +594,13 @@ fun DialogoConsentimientoContribucion(onAceptar: () -> Unit, onCancelar: () -> U
                 ),
                 style = BodySm
             )
+            }
         },
         confirmButton = {
             TextButton(onClick = {
                 lanzadorPermisos.launch(arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACTIVITY_RECOGNITION
                 ))
             }) {

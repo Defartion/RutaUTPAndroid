@@ -376,10 +376,8 @@ internal fun AddLugarSheet(onSave: (LugarGuardado) -> Unit, onDismiss: () -> Uni
             )
 
             Text(L.t("Categoría", "Category"), style = BodyMdMedium, modifier = Modifier.padding(top = 12.dp))
-            CategoriaLugar.entries.chunked(3).forEach { fila ->
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    fila.forEach { valor -> FilterChip(categoria == valor, { categoria = valor }, label = { Text(L.t(valor.label, valor.name.lowercase().replace('_', ' ')), maxLines = 1) }) }
-                }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                CategoriaLugar.entries.forEach { valor -> FilterChip(categoria == valor, { categoria = valor }, label = { Text(valor.etiqueta) }) }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(frecuente, { frecuente = it }); Text(L.t("Lugar frecuente", "Frequent place"))

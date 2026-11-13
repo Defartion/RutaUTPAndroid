@@ -412,9 +412,7 @@ fun ContenidoSedeTrabajo(
                         "Coming soon. There are no Popeyes workplaces available to select in Trujillo yet."
                     )
                 else
-                    L.t(
-                        "No hay sedes verificadas de ${empresa.nombre} disponibles para elegir en Trujillo por ahora.",
-                        "There are no verified ${empresa.nombre} workplaces available to select in Trujillo at present."
+                    L.f("No hay sedes verificadas de {0} disponibles para elegir en Trujillo por ahora.", "There are no verified {0} workplaces available to select in Trujillo at present.", (empresa.nombre).toString()
                     ),
                 style = BodySm, color = OnSurfaceVariant
             )
@@ -437,7 +435,7 @@ fun ContenidoSedeTrabajo(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        L.t("Aplicar colores de ${empresa.nombre}", "Apply ${empresa.nombre} colors"),
+                        L.f("Aplicar colores de {0}", "Apply {0} colors", (empresa.nombre).toString()),
                         style = BodyMdMedium, color = AppPrimary
                     )
                 }

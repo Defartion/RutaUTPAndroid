@@ -33,7 +33,7 @@ object PlacesService {
             CatalogoSedesTrabajo.todas.map { it.lat to it.lon }).also { area = it }
     }
     internal fun solicitud(consulta: String, area: CoberturaBusqueda): String = buildJsonObject {
-        put("textQuery", consulta); put("languageCode", "es"); put("pageSize", 5)
+        put("textQuery", consulta); put("languageCode", com.example.rutautpnative.ui.idioma.L.codigoGoogle); put("pageSize", 5)
         putJsonObject("locationRestriction") { putJsonObject("rectangle") {
             putJsonObject("low") { put("latitude",area.sur); put("longitude",area.oeste) }
             putJsonObject("high") { put("latitude",area.norte); put("longitude",area.este) }

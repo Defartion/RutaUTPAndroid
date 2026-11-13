@@ -42,9 +42,9 @@ fun ContactoEmergenciaSheet(onCerrar: () -> Unit) {
             Text(L.t("Contacto de emergencia", "Emergency contact"), style = HeadlineMd)
             OutlinedButton(onClick = { runCatching { telefono.launch(Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI)) } }) { Text(L.t("Elegir de contactos", "Choose from contacts")) }
             OutlinedTextField(nombre, { nombre = it.take(120) }, label = { Text(L.t("Nombre", "Name")) }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-            Parentesco.entries.chunked(2).forEach { fila -> Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                fila.forEach { valor -> FilterChip(parentesco == valor.clave, { parentesco = valor.clave }, label = { Text(valor.label) }) }
-            } }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Parentesco.entries.forEach { valor -> FilterChip(parentesco == valor.clave, { parentesco = valor.clave }, label = { Text(valor.label) }) }
+            }
             OutlinedTextField(numero, { numero = it.take(40) }, label = { Text(L.t("Número principal", "Primary phone")) }, modifier = Modifier.fillMaxWidth(), singleLine = true)
             OutlinedTextField(alternativo, { alternativo = it.take(40) }, label = { Text(L.t("Número alternativo (opcional)", "Alternative phone (optional)")) }, modifier = Modifier.fillMaxWidth(), singleLine = true)
             Text(L.t("Usa entre 7 y 15 dígitos, con código de país si hace falta. El número alternativo debe ser diferente.", "Use 7 to 15 digits, with country code if needed. The alternative number must be different."), style = BodyXs)

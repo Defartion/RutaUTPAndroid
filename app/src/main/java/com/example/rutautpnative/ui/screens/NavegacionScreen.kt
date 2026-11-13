@@ -422,7 +422,7 @@ internal fun NavegacionScreen(ruta: RutaGTFS, holder: NavegacionSessionViewModel
                     L.t("Estás en la ruta", "You're on the route"), subtituloProximo(vm))
                 EstadoNav.FUERA_RUTA -> Quad(Icons.Filled.LocationOff, NaranjaAdvertencia,
                     L.t("Fuera de la ruta", "Off the route"),
-                    L.t("Estás a ${vm.metrosFuera.toInt()} m del recorrido. Acércate para continuar.", "You're ${vm.metrosFuera.toInt()} m from the route. Get closer to continue."))
+                    L.f("Estás a {0} m del recorrido. Acércate para continuar.", "You're {0} m from the route. Get closer to continue.", (vm.metrosFuera.toInt()).toString()))
                 EstadoNav.CERCA_DESTINO -> Quad(Icons.Filled.DepartureBoard, VerdeExito,
                     L.t("Estás cerca de tu destino", "You're close to your destination"), subtituloProximo(vm))
                 EstadoNav.FINALIZADO -> Quad(Icons.Filled.CheckCircle, VerdeExito,

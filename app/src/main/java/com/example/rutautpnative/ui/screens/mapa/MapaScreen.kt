@@ -1302,17 +1302,13 @@ private fun ResumenItinerario(
                     Spacer(Modifier.height(10.dp))
                     PasoItinerario(
                         icon = Icons.Filled.DirectionsWalk,
-                        texto = L.t(
-                            "Camina ${plan.caminataBoardMetros.roundToInt()} m · ${plan.board.nombre}",
-                            "Walk ${plan.caminataBoardMetros.roundToInt()} m · ${plan.board.nombre}"
+                        texto = L.f("Camina {0} m · {1}", "Walk {0} m · {1}", (plan.caminataBoardMetros.roundToInt()).toString(), (plan.board.nombre).toString()
                         )
                     )
                     PasoItinerario(
                         icon = Icons.Filled.DirectionsBus,
                         color = plan.ruta.color,
-                        texto = L.t(
-                            "Toma la línea ${plan.ruta.linea} · ${plan.ruta.precioTexto}",
-                            "Take line ${plan.ruta.linea} · ${plan.ruta.precioTexto}"
+                        texto = L.f("Toma la línea {0} · {1}", "Take line {0} · {1}", (plan.ruta.linea).toString(), (plan.ruta.precioTexto).toString()
                         )
                     )
                     plan.transbordo?.let { t ->
@@ -1320,21 +1316,17 @@ private fun ResumenItinerario(
                         Text(L.t("1 transbordo", "1 transfer"), style = BodySmMedium, color = OnSurface)
                         PasoItinerario(
                             icon = Icons.Filled.Flag,
-                            texto = L.t("Baja en ${plan.firstAlight.nombre}", "Get off at ${plan.firstAlight.nombre}")
+                            texto = L.f("Baja en {0}", "Get off at {0}", (plan.firstAlight.nombre).toString())
                         )
                         PasoItinerario(
                             icon = Icons.Filled.DirectionsWalk,
-                            texto = L.t(
-                                "Camina ${t.caminataMetros.roundToInt()} m · ${t.board.nombre}",
-                                "Walk ${t.caminataMetros.roundToInt()} m · ${t.board.nombre}"
+                            texto = L.f("Camina {0} m · {1}", "Walk {0} m · {1}", (t.caminataMetros.roundToInt()).toString(), (t.board.nombre).toString()
                             )
                         )
                         PasoItinerario(
                             icon = Icons.Filled.SwapHoriz,
                             color = t.ruta.color,
-                            texto = L.t(
-                                "Luego toma la línea ${t.ruta.linea} · ${t.ruta.precioTexto}",
-                                "Then take line ${t.ruta.linea} · ${t.ruta.precioTexto}"
+                            texto = L.f("Luego toma la línea {0} · {1}", "Then take line {0} · {1}", (t.ruta.linea).toString(), (t.ruta.precioTexto).toString()
                             )
                         )
                         Text(
@@ -1347,13 +1339,11 @@ private fun ResumenItinerario(
                     }
                     PasoItinerario(
                         icon = Icons.Filled.Flag,
-                        texto = L.t("Baja en ${plan.alight.nombre}", "Get off at ${plan.alight.nombre}")
+                        texto = L.f("Baja en {0}", "Get off at {0}", (plan.alight.nombre).toString())
                     )
                     if (plan.caminataDestinoMetros.roundToInt() > 0) {
                         Text(
-                            L.t(
-                                "Luego camina ${plan.caminataDestinoMetros.roundToInt()} m hasta tu destino",
-                                "Then walk ${plan.caminataDestinoMetros.roundToInt()} m to your destination"
+                            L.f("Luego camina {0} m hasta tu destino", "Then walk {0} m to your destination", (plan.caminataDestinoMetros.roundToInt()).toString()
                             ),
                             style = BodySm, color = OnSurfaceVariant
                         )
@@ -1569,7 +1559,7 @@ private fun BusOccupancyPanel(vehicleId: String) {
         lectura?.let {
             Spacer(Modifier.height(4.dp))
             Text(
-                L.t("${it.confirmaciones} cuentas coinciden", "${it.confirmaciones} accounts agree") +
+                L.f("{0} cuentas coinciden", "{0} accounts agree", (it.confirmaciones).toString()) +
                     " · " + L.t("vence", "expires") + " ${it.venceTexto}",
                 style = BodyXs, color = OnSurfaceVariant
             )
@@ -1624,9 +1614,7 @@ private fun BusOccupancyPanel(vehicleId: String) {
             title = { Text(L.t("Confirmar ocupación", "Confirm occupancy")) },
             text = {
                 Text(
-                    L.t(
-                        "¿Estás en este bus y confirmas que está ${estado.etiqueta().lowercase()}?",
-                        "Are you on this bus and do you confirm it's ${estado.etiqueta().lowercase()}?"
+                    L.f("¿Estás en este bus y confirmas que está {0}?", "Are you on this bus and do you confirm it's {0}?", (estado.etiqueta().lowercase()).toString()
                     )
                 )
             },

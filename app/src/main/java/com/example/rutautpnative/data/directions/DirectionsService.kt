@@ -33,10 +33,10 @@ object DirectionsService {
         ServiciosGoogle.init(context)
     }
 
-    private data class Key(val origen: LatLng, val destino: LatLng, val revision: Int)
+    private data class Key(val origen: LatLng, val destino: LatLng, val revision: Int, val idioma: String)
     private val cache = RouteCalculationCache<Key, Resultado>({ it is Resultado.Exito })
     suspend fun rutaPeatonal(origen: LatLng, destino: LatLng): Resultado = try {
-        cache.get(Key(origen, destino, ConexionInstalacionStore.revisionWeb)) { withTimeout(4_000) { pedir(origen, destino) } }
+        cache.get(Key(origen, destino, ConexionInstalacionStore.revisionWeb, com.example.rutautpnative.ui.idioma.L.codigoGoogle)) { withTimeout(4_000) { pedir(origen, destino) } }
     } catch (_: TimeoutCancellationException) { Resultado.Error }
       catch (e: CancellationException) { throw e }
       catch (_: Exception) { Resultado.Error }
@@ -48,6 +48,7 @@ object DirectionsService {
             "?origin=${origen.latitude},${origen.longitude}" +
             "&destination=${destino.latitude},${destino.longitude}" +
             "&mode=walking" +
+            "&language=${com.example.rutautpnative.ui.idioma.L.codigoGoogle}" +
             "&key=${java.net.URLEncoder.encode(apiKey, "UTF-8")}"
 
         try {

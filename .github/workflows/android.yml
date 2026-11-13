@@ -45,6 +45,7 @@ jobs:
       - name: Verificar herramientas y referencia fija
         run: |
           python -m unittest discover -s tools/tests -p "test_*.py"
+          python tools/verificar_idiomas.py
           python tools/verificar_paridad.py
 
       # El runner no recibe credenciales MQTT, Firebase ni firma de producción.

@@ -268,7 +268,7 @@ fun DatosPersonalesSheet(onCerrar: () -> Unit) {
             onDismissRequest = { mostrarParentescoPicker = false },
             title = { Text(L.t("Parentesco", "Relationship")) },
             text = {
-                Column {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
                     Parentesco.entries.forEach { opcion ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,

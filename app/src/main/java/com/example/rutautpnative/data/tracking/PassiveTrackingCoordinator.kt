@@ -285,7 +285,7 @@ object PassiveTrackingCoordinator {
                 sesionID = sesion
                 publicador?.start(sesion, match.linea)
                 _mensajeEstado.value =
-                    L.t("Abordaje probable: línea ${match.linea}", "Likely boarding: line ${match.linea}")
+                    L.f("Abordaje probable: línea {0}", "Likely boarding: line {0}", (match.linea).toString())
             }
 
             decision.confirmoDescenso -> {
@@ -336,9 +336,9 @@ object PassiveTrackingCoordinator {
         EstadoDeteccionPasajero.IDLE -> L.t("Sin viaje detectado", "No ride detected")
         EstadoDeteccionPasajero.APPROACHING_STOP -> L.t("Cerca de un paradero", "Near a stop")
         EstadoDeteccionPasajero.BOARDING_CANDIDATE ->
-            L.t("Posible abordaje en $linea", "Possible boarding on $linea")
+            L.f("Posible abordaje en {0}", "Possible boarding on {0}", (linea).toString())
         EstadoDeteccionPasajero.ONBOARD ->
-            L.t("Viaje detectado en $linea", "Ride detected on $linea")
+            L.f("Viaje detectado en {0}", "Ride detected on {0}", (linea).toString())
         EstadoDeteccionPasajero.ALIGHTING_CANDIDATE ->
             L.t("Comprobando posible descenso", "Checking possible alighting")
     }
@@ -369,7 +369,7 @@ object PassiveTrackingCoordinator {
         val linea = _lineaConfirmada.value ?: return
         if (_estadoDeteccion.value != EstadoDeteccionPasajero.ONBOARD) return
         publicador?.start(sesion, linea)
-        _mensajeEstado.value = L.t("Viaje detectado en $linea", "Ride detected on $linea")
+        _mensajeEstado.value = L.f("Viaje detectado en {0}", "Ride detected on {0}", (linea).toString())
     }
 
     //----Viaje declarado (beginTrip / endTrip del iOS)----
@@ -398,9 +398,7 @@ object PassiveTrackingCoordinator {
         _puntoSubida.value = puntoSubida
         BoardingPlaceStore.guardar(appContext, ruta.routeId, ruta.linea, lugar ?: "", puntoSubida)
         esperandoNuevoViaje = false
-        _mensajeEstado.value = L.t(
-            "Esperando detectar el viaje en la línea ${ruta.linea}",
-            "Waiting to detect your trip on line ${ruta.linea}"
+        _mensajeEstado.value = L.f("Esperando detectar el viaje en la línea {0}", "Waiting to detect your trip on line {0}", (ruta.linea).toString()
         )
         if (ocupacion != null) actualizarOcupacionViaje(ocupacion)
     }

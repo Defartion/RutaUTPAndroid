@@ -164,7 +164,7 @@ fun NegocioDetailCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(negocio.nombre, style = HeadlineSm, color = OnSurface, maxLines = 1)
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(negocio.categoria.label, style = BodySm, color = OnSurfaceVariant)
+                        Text(negocio.categoria.etiqueta, style = BodySm, color = OnSurfaceVariant)
                         negocio.calificacion?.let { cal ->
                             Text("  ·  ", style = BodySm, color = OnSurfaceVariant)
                             Icon(Icons.Filled.Star, null, tint = Color(0xFFF9A825), modifier = Modifier.size(14.dp))

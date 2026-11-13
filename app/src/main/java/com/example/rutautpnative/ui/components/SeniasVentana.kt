@@ -63,7 +63,7 @@ fun SeniasVentana(presentacion: SeniasOverlay.Presentacion) {
             }
         }
 
-        val estado by produceState<EstadoSenia?>(initialValue = null, presentacion.clave) {
+        val estado by produceState<EstadoSenia?>(initialValue = null, presentacion.clave, L.codigo) {
             value = SeniasService.estado(presentacion.clave)
         }
 
@@ -261,14 +261,15 @@ private fun AvisoSeniaPendiente(centrada: Boolean, alCerrar: () -> Unit, modifie
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .background(AppSurface)
-            .padding(20.dp)
+            .padding(12.dp)
     ) {
         Text(
             L.t("Seña no disponible todavía", "Sign not available yet"),
-            style = BodySm, color = OnSurface
+            style = BodySm, color = OnSurface,
+            modifier = Modifier.padding(top = 48.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)
         )
         BotonCerrarSenia(
-            modifier = Modifier.align(Alignment.TopEnd).offset(x = 14.dp, y = (-14).dp),
+            modifier = Modifier.align(Alignment.TopEnd),
             alCerrar = alCerrar
         )
     }
@@ -278,7 +279,7 @@ private fun AvisoSeniaPendiente(centrada: Boolean, alCerrar: () -> Unit, modifie
 private fun BotonCerrarSenia(modifier: Modifier = Modifier, alCerrar: () -> Unit) {
     Box(
         modifier = modifier
-            .size(26.dp)
+            .size(48.dp)
             .clip(CircleShape)
             .background(Color.Black.copy(alpha = 0.55f))
             .clickable { alCerrar() },

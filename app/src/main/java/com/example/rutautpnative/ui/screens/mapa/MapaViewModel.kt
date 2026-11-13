@@ -70,7 +70,7 @@ data class BusAnimado(
 ) {
     // La variante del feed no se confunde con una matricula ni se traduce.
     val ramalTexto: String
-        get() = if (variante.isEmpty()) L.t("S/D", "N/A") else L.t("Ramal $variante", "Branch $variante")
+        get() = if (variante.isEmpty()) L.t("S/D", "N/A") else L.f("Ramal {0}", "Branch {0}", (variante).toString())
 
     // Simulado: "N MIN". Real: "~N MIN" (aproximado) o "SIN ETA" si el
     // estimador no puede (no se inventa).
@@ -552,12 +552,10 @@ class MapaViewModel(
                 if (plan == null) {
                     // Radio de busqueda del mapa: hasta 1600 m a pie en cada
                     // extremo (radioBusquedaRuta del iOS).
-                    mensajeRuta = L.t(
-                        "No encontramos una ruta directa ni con un transbordo con paraderos a menos de " +
-                            "${TransitPlanner.RADIO_PIE_METROS.toInt()} m de ambos extremos. Prueba otro destino.",
-                        "No direct or one-transfer route has stops within " +
-                            "${TransitPlanner.RADIO_PIE_METROS.toInt()} m of both ends. Try another destination."
-                    )
+                    mensajeRuta = L.f(
+                        "No encontramos una ruta directa ni con un transbordo con paraderos a menos de {0} m de ambos extremos. Prueba otro destino.",
+                        "No direct or one-transfer route has stops within {0} m of both ends. Try another destination.",
+                        TransitPlanner.RADIO_PIE_METROS.toInt().toString())
                 } else {
                     enfocarItinerario(plan)
                 }

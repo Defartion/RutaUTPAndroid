@@ -48,7 +48,7 @@ fun ConexionTransporteScreen(onCerrar: () -> Unit) {
                 Text(L.t("Usa la cuenta que el equipo te asignó para este teléfono. Se guarda solo en este dispositivo.", "Use the account assigned to this phone by your team. It is stored only on this device."), style = BodySm, color = OnSurfaceVariant)
                 if (!ConexionInstalacionStore.disponible) Text(L.t("No se puede abrir la configuración protegida. Puedes borrar la configuración de conexión y volver a introducir tus cuentas.", "Protected settings could not be opened. You can clear connection settings and enter your accounts again."), color = AppError)
                 if (ConexionInstalacionStore.autorizacionRechazada) Text(L.t("La cuenta no fue autorizada. Revisa los datos o solicita una nueva.", "The account was not authorized. Check the details or request a new one."), color = AppError)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(rol == RolConexion.LECTURA, { rol = RolConexion.LECTURA; mensaje = null }, { Text(L.t("Leer el mapa", "Read the map")) })
                     FilterChip(rol == RolConexion.CONTRIBUCION, { rol = RolConexion.CONTRIBUCION; mensaje = null }, { Text(L.t("Aportar ubicaciones", "Contribute locations")) })
                 }

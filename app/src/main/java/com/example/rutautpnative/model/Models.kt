@@ -19,7 +19,26 @@ enum class CategoriaLugar(val label: String, val icono: String) {
     RESTAURANTE("Restaurante","restaurant"),
     PLAZA("Plaza",            "account_balance"),
     PLAYA("Playa",            "water"),
-    OTRO("Otro",              "location_on")
+    OTRO("Otro",              "location_on");
+    val etiqueta: String get() = when (this) {
+        UNIVERSIDAD -> com.example.rutautpnative.ui.idioma.L.t("Universidad", "University")
+        HOGAR -> com.example.rutautpnative.ui.idioma.L.t("Hogar", "Home")
+        TRABAJO -> com.example.rutautpnative.ui.idioma.L.t("Trabajo", "Work")
+        ESTUDIOS -> com.example.rutautpnative.ui.idioma.L.t("Estudios", "Studies")
+        SALUD -> com.example.rutautpnative.ui.idioma.L.t("Salud", "Health")
+        MERCADO -> com.example.rutautpnative.ui.idioma.L.t("Mercado", "Market")
+        CENTRO_COMERCIAL -> com.example.rutautpnative.ui.idioma.L.t("Centro comercial", "Shopping mall")
+        CAFETERIA -> com.example.rutautpnative.ui.idioma.L.t("Cafetería", "Café")
+        PARQUE -> com.example.rutautpnative.ui.idioma.L.t("Parque", "Park")
+        GIMNASIO -> com.example.rutautpnative.ui.idioma.L.t("Gimnasio", "Gym")
+        PARADERO -> com.example.rutautpnative.ui.idioma.L.t("Paradero", "Bus stop")
+        PERSONALIZADO -> com.example.rutautpnative.ui.idioma.L.t("Personalizado", "Custom")
+        TIENDA -> com.example.rutautpnative.ui.idioma.L.t("Tienda", "Store")
+        RESTAURANTE -> com.example.rutautpnative.ui.idioma.L.t("Restaurante", "Restaurant")
+        PLAZA -> com.example.rutautpnative.ui.idioma.L.t("Plaza", "Square")
+        PLAYA -> com.example.rutautpnative.ui.idioma.L.t("Playa", "Beach")
+        OTRO -> com.example.rutautpnative.ui.idioma.L.t("Otro", "Other")
+    }
 }
 
 //----Lugares Guardados----
@@ -81,20 +100,12 @@ enum class TipoReporte(val label: String) {
 
     /// Etiqueta traducida (antes duplicada ×3: tipoLabelMapa, tipoReporteLabel,
     /// tipoParaLabel en MapaScreen, SeguridadScreen y PublicarComunidadSheet).
-    val etiqueta: String get() = com.example.rutautpnative.ui.idioma.L.t(
-        when (this) {
-            ALERTA     -> "ALERTA"
-            TRAFICO    -> "TRÁFICO"
-            SUGERENCIA -> "SUGERENCIA"
-            OTRO       -> "OTRO"
-        },
-        when (this) {
-            ALERTA     -> "ALERT"
-            TRAFICO    -> "TRAFFIC"
-            SUGERENCIA -> "SUGGESTION"
-            OTRO       -> "OTHER"
-        }
-    )
+    val etiqueta: String get() = when (this) {
+        ALERTA -> com.example.rutautpnative.ui.idioma.L.t("ALERTA", "ALERT")
+        TRAFICO -> com.example.rutautpnative.ui.idioma.L.t("TRÁFICO", "TRAFFIC")
+        SUGERENCIA -> com.example.rutautpnative.ui.idioma.L.t("SUGERENCIA", "SUGGESTION")
+        OTRO -> com.example.rutautpnative.ui.idioma.L.t("OTRO", "OTHER")
+    }
 
     val background: Color get() = when (this) {
         ALERTA     -> ErrorContainer
@@ -132,13 +143,9 @@ data class ReporteComunidad(
 
     val tiempoLocalizado: String
         get() {
-            if (!com.example.rutautpnative.ui.idioma.L.esIngles) return hace
-            val traducciones = mapOf(
-                "HACE 3 MIN" to "3 MIN AGO", "HACE 8 MIN" to "8 MIN AGO",
-                "HACE 12 MIN" to "12 MIN AGO", "HACE 20 MIN" to "20 MIN AGO",
-                "HACE 35 MIN" to "35 MIN AGO", "HACE 1 HORA" to "1 HOUR AGO",
-                "HACE 2 HORAS" to "2 HOURS AGO"
-            )
-            return traducciones[hace] ?: hace
+            val minutos = Regex("HACE ([0-9]+) MIN").matchEntire(hace)?.groupValues?.get(1)
+            if (minutos != null) return com.example.rutautpnative.ui.idioma.L.f("Hace {0} min", "{0} min ago", minutos)
+            val horas = Regex("HACE ([0-9]+) HORAS?").matchEntire(hace)?.groupValues?.get(1)
+            return if (horas != null) com.example.rutautpnative.ui.idioma.L.f("Hace {0} h", "{0} h ago", horas) else hace
         }
 }

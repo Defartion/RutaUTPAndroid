@@ -469,6 +469,7 @@ private fun AjustesSheet(onDismiss: () -> Unit) {
                     mostrarDialogoConsentimiento = false
                     lanzadorPermisos.launch(arrayOf(
                         android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION,
                         android.Manifest.permission.ACTIVITY_RECOGNITION
                     ))
                 }) {

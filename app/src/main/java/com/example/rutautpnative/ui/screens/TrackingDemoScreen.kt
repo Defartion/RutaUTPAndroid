@@ -358,9 +358,7 @@ internal class TrackingDemoVM(
                         L.t("Prueba un radio mayor u otro destino.", "Try a larger radius or another destination.")
                     else
                         L.t("Prueba otro destino.", "Try another destination.")
-                    mensajeErrorRuta = L.t(
-                        "No encontramos una ruta directa ni con un transbordo con paraderos a menos de ${radioParadero.toInt()} m de ambos extremos. ",
-                        "No direct or one-transfer route has stops within ${radioParadero.toInt()} m of both ends. "
+                    mensajeErrorRuta = L.f("No encontramos una ruta directa ni con un transbordo con paraderos a menos de {0} m de ambos extremos. ", "No direct or one-transfer route has stops within {0} m of both ends. ", (radioParadero.toInt()).toString()
                     ) + sugerencia
                 }
             } finally {
@@ -787,7 +785,7 @@ internal fun TrackingDemoScreen(router: AppRouter, holder: TrackingSessionViewMo
                             LatLng(pos.latitude, pos.longitude), LatLng(v.lat, v.lon)
                         )
                         Text(
-                            L.t("A ", " ") + formatoDistancia(distancia) + " " + L.t("de ti", "from you"),
+                            L.f("A {0} de ti", "{0} from you", formatoDistancia(distancia)),
                             style = BodySm, color = TextoOscuroVar
                         )
                     }
@@ -795,9 +793,9 @@ internal fun TrackingDemoScreen(router: AppRouter, holder: TrackingSessionViewMo
                     val antiguedadS = ((System.currentTimeMillis() / 1000.0) - v.timestamp).coerceAtLeast(0.0)
                     Text(
                         if (antiguedadS < 60)
-                            L.t("Actualizado hace ${antiguedadS.toInt()} s", "Updated ${antiguedadS.toInt()} s ago")
+                            L.f("Actualizado hace {0} s", "Updated {0} s ago", (antiguedadS.toInt()).toString())
                         else
-                            L.t("Actualizado hace ${(antiguedadS / 60).toInt()} min", "Updated ${(antiguedadS / 60).toInt()} min ago"),
+                            L.f("Actualizado hace {0} min", "Updated {0} min ago", ((antiguedadS / 60).toInt()).toString()),
                         style = BodyXs, color = TextoOscuroVar
                     )
                 }
@@ -994,7 +992,7 @@ internal fun TrackingDemoScreen(router: AppRouter, holder: TrackingSessionViewMo
                 )
                 Spacer(Modifier.height(8.dp))
                 // Resumen numerado (itinerarySummary del iOS).
-                PasoDemo(Icons.Filled.DirectionsWalk, L.t("1 · ${plan.board.nombre} · ${plan.caminataBoardMetros.roundToInt()} m a pie", "1 · ${plan.board.nombre} · ${plan.caminataBoardMetros.roundToInt()} m walk"))
+                PasoDemo(Icons.Filled.DirectionsWalk, L.f("1 · {0} · {1} m a pie", "1 · {0} · {1} m walk", (plan.board.nombre).toString(), (plan.caminataBoardMetros.roundToInt()).toString()))
                 PasoDemo(Icons.Filled.DirectionsBus, L.t("Micro", "Bus") + " ${plan.ruta.linea} · ${plan.ruta.precioTexto}", color = plan.ruta.color)
                 plan.transbordo?.let { t ->
                     Spacer(Modifier.height(2.dp))
@@ -1013,7 +1011,7 @@ internal fun TrackingDemoScreen(router: AppRouter, holder: TrackingSessionViewMo
                 PasoDemo(
                     Icons.Filled.Flag,
                     (if (plan.transbordo == null) "2 · " else "4 · ") +
-                        L.t("${plan.alight.nombre} · ${plan.caminataDestinoMetros.roundToInt()} m al destino", "${plan.alight.nombre} · ${plan.caminataDestinoMetros.roundToInt()} m to destination")
+                        L.f("{0} · {1} m al destino", "{0} · {1} m to destination", (plan.alight.nombre).toString(), (plan.caminataDestinoMetros.roundToInt()).toString())
                 )
 
                 // Progreso.

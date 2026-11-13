@@ -587,22 +587,21 @@ private fun BannerParaderosNocturno(posiciones: List<LatLng>) {
 // es una redacción breve razonable (el texto original no era crítico).
 private data class ZonaReferencia(
     val nombre: String,        // nombre propio del lugar (sin traducir: también alimenta la búsqueda en Places)
-    val descripcionEs: String,
-    val descripcionEn: String,
+    val descripcion: () -> String,
     val icono: ImageVector
 )
 
 private val zonasReferencia = listOf(
-    ZonaReferencia("Óvalo Papal", "Nodo vial principal hacia el norte de la ciudad.", "Main traffic junction toward the north of the city.", Icons.Filled.AltRoute),
-    ZonaReferencia("Avenida España 1450", "Tramo comercial con alto flujo de micros.", "Busy commercial stretch for city buses.", Icons.Filled.Signpost),
-    ZonaReferencia("Comisaría Víctor Larco", "Comisaría de referencia del distrito.", "Reference police station of the district.", Icons.Filled.LocalPolice),
-    ZonaReferencia("Real Plaza", "Centro comercial con gran afluencia diaria.", "Shopping mall with heavy daily foot traffic.", Icons.Filled.ShoppingBag),
-    ZonaReferencia("Plaza de Armas", "Centro histórico y principal punto de encuentro.", "Historic downtown and main meeting point.", Icons.Filled.AccountBalance),
-    ZonaReferencia("Mall Aventura", "Centro comercial frente al Óvalo Papal.", "Shopping mall across from Óvalo Papal.", Icons.Filled.Storefront),
-    ZonaReferencia("Paseo de los Héroes", "Avenida arbolada en zona residencial.", "Tree-lined avenue in a residential area.", Icons.Filled.Park),
-    ZonaReferencia("Hospital Belén", "Hospital de referencia para emergencias.", "Reference hospital for emergencies.", Icons.Filled.LocalHospital),
-    ZonaReferencia("Estadio Mansiche", "Estadio regional; eventos masivos.", "Regional stadium; large events.", Icons.Filled.Stadium),
-    ZonaReferencia("Cineplanet", "Cines dentro del Mall Aventura Plaza.", "Movie theaters inside Mall Aventura Plaza.", Icons.Filled.Movie)
+    ZonaReferencia("Óvalo Papal", { L.t("Nodo vial principal hacia el norte de la ciudad.", "Main traffic junction toward the north of the city.") }, Icons.Filled.AltRoute),
+    ZonaReferencia("Avenida España 1450", { L.t("Tramo comercial con alto flujo de micros.", "Busy commercial stretch for city buses.") }, Icons.Filled.Signpost),
+    ZonaReferencia("Comisaría Víctor Larco", { L.t("Comisaría de referencia del distrito.", "Reference police station of the district.") }, Icons.Filled.LocalPolice),
+    ZonaReferencia("Real Plaza", { L.t("Centro comercial con gran afluencia diaria.", "Shopping mall with heavy daily foot traffic.") }, Icons.Filled.ShoppingBag),
+    ZonaReferencia("Plaza de Armas", { L.t("Centro histórico y principal punto de encuentro.", "Historic downtown and main meeting point.") }, Icons.Filled.AccountBalance),
+    ZonaReferencia("Mall Aventura", { L.t("Centro comercial frente al Óvalo Papal.", "Shopping mall across from Óvalo Papal.") }, Icons.Filled.Storefront),
+    ZonaReferencia("Paseo de los Héroes", { L.t("Avenida arbolada en zona residencial.", "Tree-lined avenue in a residential area.") }, Icons.Filled.Park),
+    ZonaReferencia("Hospital Belén", { L.t("Hospital de referencia para emergencias.", "Reference hospital for emergencies.") }, Icons.Filled.LocalHospital),
+    ZonaReferencia("Estadio Mansiche", { L.t("Estadio regional; eventos masivos.", "Regional stadium; large events.") }, Icons.Filled.Stadium),
+    ZonaReferencia("Cineplanet", { L.t("Cines dentro del Mall Aventura Plaza.", "Movie theaters inside Mall Aventura Plaza.") }, Icons.Filled.Movie)
 )
 
 @Composable
@@ -656,7 +655,7 @@ private fun ZonaCard(numero: Int, zona: ZonaReferencia, onClick: () -> Unit) {
             Spacer(Modifier.height(10.dp))
             Text(zona.nombre, style = BodyMdMedium, color = OnSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(4.dp))
-            Text(L.t(zona.descripcionEs, zona.descripcionEn), style = BodySm, color = OnSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis, minLines = 2)
+            Text(zona.descripcion(), style = BodySm, color = OnSurfaceVariant, minLines = 2)
             Spacer(Modifier.height(10.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(L.t("Explorar ubicación", "Explore location"), style = LabelCapsSm, color = AppPrimary)
@@ -921,8 +920,8 @@ private fun DetalleReporteSheet(
             Spacer(Modifier.height(14.dp))
             // Votos.
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text(L.t("Útil ($utiles)", "Useful ($utiles)"), style = BodySmMedium, color = OnSurface)
-                Text(L.t("No útil ($noUtiles)", "Not useful ($noUtiles)"), style = BodySmMedium, color = OnSurfaceVariant)
+                Text(L.f("Útil ({0})", "Useful ({0})", (utiles).toString()), style = BodySmMedium, color = OnSurface)
+                Text(L.f("No útil ({0})", "Not useful ({0})", (noUtiles).toString()), style = BodySmMedium, color = OnSurfaceVariant)
             }
             Spacer(Modifier.height(14.dp))
             // Comentarios demo DETERMINISTAS (semilla por UUID del reporte).

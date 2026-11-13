@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.catch
 
 //----Idioma persistido ("es" por defecto)----
 // Mismo patrón que TemaStore/SeniasPrefs: preferencia global del usuario que
@@ -24,7 +25,9 @@ object IdiomaStore {
 
     fun observarCodigo(): Flow<String> {
         val ctx = appContext ?: return kotlinx.coroutines.flow.flowOf("es")
-        return ctx.idiomaDataStore.data.map { it[KEY] ?: "es" }
+        return ctx.idiomaDataStore.data.map { it[KEY] ?: "es" }.catch { error ->
+            if (error is java.io.IOException) emit("es") else throw error
+        }
     }
 
     suspend fun establecerCodigo(codigo: String) {

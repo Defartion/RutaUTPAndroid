@@ -33,7 +33,7 @@ def verificar(apk: Path, assets: Path):
             parts = json.loads(parts_data)
             if not parts["carrocerias"] or any(start < 0 or size <= 0 or start + size > count for start, size in parts["carrocerias"] + parts["contornos"]):
                 raise ValueError(f"Partes de identificación inválidas: {parts_source.name}")
-        for source in [assets / "referencias_transporte.json", assets / "traducciones.json"]:
+        for source in [assets / "referencias_transporte.json", assets / "traducciones.json", assets / "traducciones-android.json"]:
             if archive.read(f"assets/{source.name}") != source.read_bytes():
                 raise ValueError(f"Catálogo empaquetado distinto: {source.name}")
         dex = b"".join(archive.read(name) for name in archive.namelist() if name.endswith(".dex"))
@@ -42,6 +42,9 @@ def verificar(apk: Path, assets: Path):
         for screen in [b"Transportes3DScreenKt", b"NotificacionesScreenKt", b"AlternativasRutaSheetKt", b"RespaldosRecuperacionSheetKt", b"GuardadoPantallaKt", b"SeguridadAyudaKt", b"RutaOpcionCardKt", b"VisorFotoCarnetKt", b"PinturaTransporte3DKt"]:
             if screen not in dex:
                 raise ValueError(f"Pantalla ausente del APK: {screen.decode()}")
+        for component in [b"CatalogoIdiomas", b"CargaCatalogo", b"PresentadorSenias"]:
+            if component not in dex:
+                raise ValueError("Falta un componente de idiomas, catálogo o señas")
     print("APK comprobado: seis mallas accesibles, catálogos exactos y pantallas nuevas incluidas")
     print(f"SHA-256: {hashlib.sha256(apk.read_bytes()).hexdigest()}")
 

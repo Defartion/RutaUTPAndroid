@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.rutautpnative.data.gtfs.GTFSRepository
+import com.example.rutautpnative.data.gtfs.ResultadoCatalogo
 import com.example.rutautpnative.data.gtfs.TransporteApp
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
@@ -39,16 +40,16 @@ fun OfflineMapSheet(onCerrar: () -> Unit) {
     var comprobando by remember { mutableStateOf(true) }
     var numeroRutas by remember { mutableStateOf(0) }
     var revision by remember { mutableStateOf(0) }
-    var errorCarga by remember { mutableStateOf<String?>(null) }
+    var resultado by remember { mutableStateOf<ResultadoCatalogo?>(null) }
+    val errorCarga = if (resultado == ResultadoCatalogo.Error) L.t("No se pudieron cargar las rutas. Vuelve a intentarlo.", "Couldn't load routes. Try again.") else null
+    val carpeta = if (TransporteApp.busesUTPActivos) "gtfs-utp" else "gtfs"
 
-    LaunchedEffect(revision) {
+    LaunchedEffect(revision, carpeta) {
         comprobando = true
-        errorCarga = null
-        try {
-            numeroRutas = GTFSRepository.rutas().size
-        } catch (e: Exception) {
-            errorCarga = L.t("No se pudieron cargar las rutas. Vuelve a intentarlo.", "Couldn't load routes. Try again.")
-        }
+        resultado = null
+        numeroRutas = 0
+        resultado = GTFSRepository.resultadoRutas(reintentar = revision > 0, carpeta = carpeta)
+        numeroRutas = (resultado as? ResultadoCatalogo.Disponible)?.rutas?.size ?: 0
         comprobando = false
     }
 
@@ -86,7 +87,7 @@ fun OfflineMapSheet(onCerrar: () -> Unit) {
                     comprobando -> L.t("Comprobando datos locales…", "Checking local data…")
                     numeroRutas > 0 -> L.t("Rutas disponibles sin conexión", "Routes available offline")
                     errorCarga != null -> L.t("No se pudieron cargar las rutas", "Couldn't load routes")
-                    TransporteApp.rutasUTPPendientes -> L.t("Rutas UTP próximamente", "UTP routes coming soon")
+                    resultado == ResultadoCatalogo.InstitucionalPendiente -> L.t("Rutas UTP próximamente", "UTP routes coming soon")
                     else -> L.t("El catálogo no contiene rutas", "The catalog contains no routes")
                 },
                 style = HeadlineMd, color = OnSurface,
@@ -100,9 +101,7 @@ fun OfflineMapSheet(onCerrar: () -> Unit) {
                 )
             } else if (numeroRutas > 0) {
                 Text(
-                    L.t(
-                        "$numeroRutas rutas cargadas desde la app",
-                        "$numeroRutas routes loaded from the app"
+                    L.f("{0} rutas cargadas desde la app", "{0} routes loaded from the app", (numeroRutas).toString()
                     ),
                     style = BodySmMedium, color = OnSurface
                 )
@@ -116,7 +115,7 @@ fun OfflineMapSheet(onCerrar: () -> Unit) {
                 )
             } else {
                 Text(
-                    errorCarga ?: if (TransporteApp.rutasUTPPendientes) TransporteApp.mensajePendiente
+                    errorCarga ?: if (resultado == ResultadoCatalogo.InstitucionalPendiente) TransporteApp.mensajePendiente
                     else L.t(
                         "El catálogo local se cargó correctamente, pero no incluye rutas.",
                         "The local catalog loaded successfully but contains no routes."

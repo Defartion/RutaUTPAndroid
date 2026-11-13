@@ -38,9 +38,11 @@ object GTFSRepository {
     // Scope de larga duración para la carga: no se cancela si el ViewModel que
     // disparó la primera petición se limpia. Equivale al `Task` del actor Swift.
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val mutex = Mutex()
-    private val cache = mutableMapOf<String, List<RutaGTFS>>()
-    private val cargas = mutableMapOf<String, Deferred<List<RutaGTFS>>>()
+    private val cargador = CargaCatalogo(scope) { carpeta ->
+        val am = requireNotNull(assetManager)
+        if (carpeta == "gtfs-utp" && am.list(carpeta).isNullOrEmpty()) ResultadoCatalogo.InstitucionalPendiente
+        else ResultadoCatalogo.Disponible(parsear(am, carpeta))
+    }
     private val _errorCarga = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
     val errorCarga: kotlinx.coroutines.flow.StateFlow<String?> = _errorCarga
 
@@ -55,29 +57,16 @@ object GTFSRepository {
 
     /// Devuelve todas las rutas del feed, ordenadas por cercanía a UTP.
     suspend fun rutas(reintentar: Boolean = false, carpeta: String = if (TransporteApp.busesUTPActivos) "gtfs-utp" else "gtfs"): List<RutaGTFS> {
-        val am = assetManager ?: return emptyList()
-        val deferred = mutex.withLock {
-            if (reintentar) cache.remove(carpeta)
-            cache[carpeta]?.let { return it }
-            cargas[carpeta] ?: scope.async {
-                if (carpeta == "gtfs-utp" && am.list(carpeta).isNullOrEmpty()) emptyList()
-                else parsear(am, carpeta)
-            }.also { cargas[carpeta] = it }
-        }
-        return try {
-            val resultado = deferred.await()
-            mutex.withLock { cache[carpeta] = resultado; if (cargas[carpeta] === deferred) cargas.remove(carpeta) }
-            _errorCarga.value = null
-            resultado
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            mutex.withLock { if (cargas[carpeta] === deferred) cargas.remove(carpeta) }
-            _errorCarga.value = "No se pudo cargar el catálogo de rutas. Vuelve a intentarlo."
-            Log.w("GTFS", "Carga fallida en $carpeta", e)
-            // El fallo no se memoriza como un catálogo vacío: cualquier consumidor puede reintentar.
-            emptyList()
-        }
+        return (resultadoRutas(reintentar, carpeta) as? ResultadoCatalogo.Disponible)?.rutas.orEmpty()
+    }
+
+    suspend fun resultadoRutas(reintentar: Boolean = false, carpeta: String = if (TransporteApp.busesUTPActivos) "gtfs-utp" else "gtfs"): ResultadoCatalogo {
+        val resultado = cargador.cargar(carpeta, reintentar)
+        // Los consumidores históricos solo reciben el error del catálogo activo.
+        val activa = if (TransporteApp.busesUTPActivos) "gtfs-utp" else "gtfs"
+        if (carpeta == activa) _errorCarga.value = if (resultado == ResultadoCatalogo.Error)
+            com.example.rutautpnative.ui.idioma.L.t("No se pudo cargar el catálogo de rutas. Vuelve a intentarlo.", "Could not load the route catalog. Try again.") else null
+        return resultado
     }
 
     /// Las `n` rutas cuyo recorrido pasa más cerca del campus UTP.

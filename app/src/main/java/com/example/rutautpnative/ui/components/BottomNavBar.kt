@@ -28,19 +28,18 @@ import androidx.compose.foundation.selection.selectableGroup
 
 //Navtab — etiquetas se traducen inline al renderizar (L.t reactiva al idioma)
 private data class NavTab(
-    val labelEs: String,
-    val labelEn: String,
+    val label: () -> String,
     val iconOutlined: ImageVector,
     val iconFilled: ImageVector,
     val screen: AppScreen
 )
 
 private val tabs = listOf(
-    NavTab("Mapa",      "Map",    Icons.Outlined.Map,           Icons.Filled.Map,           AppScreen.MapaPrincipal),
-    NavTab("Rutas",     "Routes", Icons.Outlined.DirectionsBus, Icons.Filled.DirectionsBus, AppScreen.Rutas),
-    NavTab("Guardado",  "Saved",  Icons.Outlined.Bookmark,      Icons.Filled.Bookmark,      AppScreen.Guardado),
-    NavTab("Seguridad", "Safety", Icons.Outlined.Lock,          Icons.Filled.Lock,          AppScreen.Seguridad),
-    NavTab("Perfil",    "Profile",Icons.Outlined.Person,        Icons.Filled.Person,        AppScreen.Perfil),
+    NavTab({ L.t("Mapa", "Map") },    Icons.Outlined.Map,           Icons.Filled.Map,           AppScreen.MapaPrincipal),
+    NavTab({ L.t("Rutas", "Routes") }, Icons.Outlined.DirectionsBus, Icons.Filled.DirectionsBus, AppScreen.Rutas),
+    NavTab({ L.t("Guardado", "Saved") },  Icons.Outlined.Bookmark,      Icons.Filled.Bookmark,      AppScreen.Guardado),
+    NavTab({ L.t("Seguridad", "Safety") }, Icons.Outlined.Lock,          Icons.Filled.Lock,          AppScreen.Seguridad),
+    NavTab({ L.t("Perfil", "Profile") },Icons.Outlined.Person,        Icons.Filled.Person,        AppScreen.Perfil),
 )
 
 //boton de navbar
@@ -71,29 +70,29 @@ fun BottomNavBar(
     ) {
         tabs.forEach { tab ->
             val isActive = router.currentScreen == tab.screen
-            val label = L.t(tab.labelEs, tab.labelEn)
+            val label = tab.label()
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .weight(1f)
+                    .heightIn(min = 64.dp)
                     .selectable(selected = isActive, role = Role.Tab, onClick = { router.navigate(tab.screen) })
                     .padding(horizontal = 2.dp, vertical = 6.dp)
             ) {
                 Icon(
                     imageVector = if (isActive) tab.iconFilled else tab.iconOutlined,
                     contentDescription = null,
-                    tint = if (isActive) AcentoInterfaz else OnSurfaceVariant.copy(alpha = 0.65f),
+                    tint = if (isActive) AcentoInterfaz else OnSurfaceVariant,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.height(3.dp))
                 Text(
                     text = label,
                     style = BodyXs.copy(fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal),
-                    color = if (isActive) AcentoInterfaz else OnSurfaceVariant.copy(alpha = 0.65f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    softWrap = false,
-                    fontSize = 10.sp   // minimo accesible (antes 9sp, bajo el limite recomendado)
+                    color = if (isActive) AcentoInterfaz else OnSurfaceVariant,
+                    softWrap = true,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    fontSize = 12.sp
                 )
             }
         }

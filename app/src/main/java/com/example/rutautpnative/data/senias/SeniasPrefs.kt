@@ -58,6 +58,7 @@ object SeniasPrefs {
 
     //----Cambiar (persistido de inmediato; el espejo reacciona solo)----
     suspend fun establecerActivo(activo: Boolean) {
+        if (!activo) SeniasOverlay.cancelarPorNavegacion()
         val ctx = appContext ?: return
         ctx.seniasPrefsDataStore.edit { it[KEY_ACTIVO] = activo }
         activoActual = activo

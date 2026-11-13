@@ -17,10 +17,9 @@ fun cuponVigente(vence: String?): Boolean {
 
 // "2026-12-31" → "31 dic 2026" (ES) / "Dec 31, 2026" (EN), según el idioma activo.
 fun formatoVenceCupon(vence: String): String = try {
-    val locale = if (L.esIngles) java.util.Locale("en") else java.util.Locale("es")
-    val patron = if (L.esIngles) "MMM d, yyyy" else "d MMM yyyy"
+    val locale = java.util.Locale.forLanguageTag(L.codigo)
     java.time.LocalDate.parse(vence)
-        .format(java.time.format.DateTimeFormatter.ofPattern(patron, locale))
+        .format(java.time.format.DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.MEDIUM).withLocale(locale))
 } catch (e: Exception) {
     vence
 }

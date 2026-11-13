@@ -85,14 +85,18 @@ object SeniasService {
     //----Estado de una clave: Clip reproducible o Pendiente(motivo)----
     suspend fun estado(clave: String): EstadoSenia {
         val idioma = idiomaActivo()
-        val entrada = entradas().firstOrNull { it.clave == clave }
+        return resolverEstadoSenia(clave, idioma, entradas(), archivosDisponibles(idioma))
+    }
+}
+
+internal fun resolverEstadoSenia(clave: String, idioma: String, entradas: List<SeniaEntrada>, disponibles: Set<String>): EstadoSenia {
+        val entrada = entradas.firstOrNull { it.clave == clave }
             ?: return EstadoSenia.Pendiente("la clave no está en el manifiesto")
-        if (entrada.archivo !in archivosDisponibles(idioma)) {
+        if (entrada.archivo !in disponibles) {
             return EstadoSenia.Pendiente("el archivo ${entrada.archivo} no está en clips/$idioma")
         }
         return EstadoSenia.Clip(
-            uri = "asset:///$CARPETA/clips/$idioma/${entrada.archivo}",
+            uri = "asset:///senias/clips/$idioma/${entrada.archivo}",
             clave = clave
         )
-    }
 }

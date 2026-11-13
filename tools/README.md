@@ -5,7 +5,7 @@
 `python tools/verificar_paridad.py` comprueba los recursos fijados en
 `parity/reference.json`, los casos de comparación y el seguimiento F01–F15.
 `--require-results` exige además los resultados JUnit y lint de la compilación
-actual: al menos 212 pruebas, sin fallos ni omisiones, incluidos los once casos
+actual: al menos 235 pruebas, sin fallos ni omisiones, incluidos los once casos
 ETA, ocho de comparación de rutas y ocho de continuidad. Los casos pendientes
 se informan por separado.
 
@@ -19,6 +19,16 @@ Ver [el resultado y reproducción de fase 1](../docs/FASE_1_REFERENCIA_Y_VALIDAC
 La [fase 2](../docs/FASE_2_RUTAS_Y_LLEGADAS.md) activa los casos de ETA y transbordos.
 La [fase 4](../docs/FASE_4_MAPAS_BUSQUEDA_Y_CONEXION.md) documenta las cuentas
 por instalación y la comprobación efectiva de la configuración de mapas.
+
+`python tools/verificar_idiomas.py` comprueba llamadas Kotlin con comentarios,
+escapes y plantillas, además del contenido bilingüe de recursos y Comunidad.
+Rechaza traducciones o parámetros ausentes, argumentos faltantes y llamadas
+dinámicas nuevas sin cobertura explícita. El informe queda en
+`app/build/reports/parity/language-check.json`. Los cuatro puntos dinámicos
+conocidos se documentan en la [fase 5](../docs/FASE_5_IDIOMAS_ACCESIBILIDAD_Y_ERRORES.md).
+El catálogo compartido permanece intacto; el complemento propio es
+`app/src/main/assets/traducciones-android.json`. El verificador del APK coteja
+ambos catálogos contra los archivos realmente empaquetados.
 
 ## Comprobar el APK generado
 

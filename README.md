@@ -9,6 +9,7 @@ La referencia de esta actualización es main, commit 8145276 del 09/11/2026.
 - [Fase 2: reglas de rutas y llegadas](docs/FASE_2_RUTAS_Y_LLEGADAS.md)
 - [Fase 3: continuidad del viaje y contexto](docs/FASE_3_CONTINUIDAD_Y_CONTEXTO.md)
 - [Fase 4: mapas, búsqueda y conexión por teléfono](docs/FASE_4_MAPAS_BUSQUEDA_Y_CONEXION.md)
+- [Fase 5: idiomas, accesibilidad y errores](docs/FASE_5_IDIOMAS_ACCESIBILIDAD_Y_ERRORES.md)
 - [Configurar avisos remotos con Firebase](docs/FIREBASE_ANDROID.md)
 - [Almacenes y claves locales](PERSISTENCIA.md)
 - [Herramientas de desarrollo](tools/README.md)
@@ -26,6 +27,8 @@ El mínimo de instalación es Android 8 (API 26).
 El APK de desarrollo queda en `app/build/outputs/apk/debug/app-debug.apk`.
 Después de generarlo, `python tools/verificar_apk.py` comprueba los recursos
 que realmente quedaron empaquetados para instalar.
+`python tools/verificar_idiomas.py` revisa traducciones y plantillas usadas,
+incluidos los textos propios de Android y los recursos bilingües.
 Los tests unitarios no necesitan teléfono. Cámara, permisos, GPS, avisos del
 sistema y renderizado 3D deben revisarse también en un dispositivo Android.
 

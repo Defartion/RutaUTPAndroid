@@ -106,18 +106,20 @@
       "phases": [
         5
       ],
-      "status": "pending",
+      "status": "verified",
       "acceptance": "Claves y plantillas resuelven los seis idiomas",
-      "validation": "Barrido de cadenas y revisión de pantallas/errores por idioma."
+      "validation": "Verificado localmente el 13/11/2026: 376 entradas Android y 49 alias; 1299 claves distintas, 757 pares de recursos y 44 publicaciones demo sin claves ni parámetros faltantes. Selección rápida y continuidad probadas. Revisión lingüística y recorrido en seis idiomas con dispositivo pendientes.",
+      "evidence": "docs/FASE_5_IDIOMAS_ACCESIBILIDAD_Y_ERRORES.md"
     },
     {
       "id": "F12",
       "phases": [
         5
       ],
-      "status": "pending",
+      "status": "verified",
       "acceptance": "Feed vacío, ausente e ilegible tienen estados diferentes",
-      "validation": "Fallo de carga inyectado, reintento y modo offline."
+      "validation": "Verificado localmente el 13/11/2026: resultado explícito por catálogo, error no cacheado como vacío, reintento, cancelación y carga concurrente; CSV inválido y feed institucional pendiente diferenciados. Modo offline consume el resultado real. UI y prueba de archivos en dispositivo pendientes.",
+      "evidence": "docs/FASE_5_IDIOMAS_ACCESIBILIDAD_Y_ERRORES.md"
     },
     {
       "id": "F13",
@@ -136,8 +138,8 @@
       ],
       "status": "in_progress",
       "acceptance": "Comprobación automática de main/PR y cobertura de flujos",
-      "validation": "Workflow de main aprobado en GitHub el 13/11/2026 para 1ab4e38 (ejecución 43460750207). Fase 4 local: 212 pruebas Android y 25 de herramientas; referencia, lint y APK verificados; tres pruebas de cifrado compiladas sin dispositivo disponible. Ampliación del workflow todavía sin publicar; flujos instrumentales pendientes.",
-      "evidence": "docs/FASE_4_MAPAS_BUSQUEDA_Y_CONEXION.md"
+      "validation": "Workflow de main aprobado para 1ab4e38 (ejecución 43460750207). Fase 5 local: 235 pruebas Android y 35 de herramientas; comprobación de idiomas y recursos añadida al workflow. Dos pruebas nuevas de texto grande compiladas; ejecución en dispositivo pendiente. Los commits posteriores a 1ab4e38 aún no están publicados.",
+      "evidence": "docs/FASE_5_IDIOMAS_ACCESIBILIDAD_Y_ERRORES.md"
     },
     {
       "id": "F15",

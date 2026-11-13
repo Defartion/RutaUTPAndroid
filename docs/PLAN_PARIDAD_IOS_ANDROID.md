@@ -2,17 +2,20 @@
 
 Fecha: 10 de noviembre de 2026.
 
-Estado: **fases 1–4 implementadas localmente; fases 5–8 pendientes**.
+Estado: **fases 1–5 implementadas localmente; fases 6–8 pendientes**.
 Última validación local: 13 de noviembre de 2026. La fase 3 conserva pendientes
 las comprobaciones de interacción, rotación y GPS en dispositivo. La fase 4
 requiere validar Google Cloud, el broker y dos teléfonos para su cierre integral.
+La fase 5 conserva pendientes la revisión lingüística, TalkBack, texto grande
+y la matriz de permisos en dispositivo.
 Ver [resultado y reproducción de fase 1](FASE_1_REFERENCIA_Y_VALIDACION.md).
 Ver [correcciones y pruebas de fase 2](FASE_2_RUTAS_Y_LLEGADAS.md).
 Ver [continuidad y contexto de fase 3](FASE_3_CONTINUIDAD_Y_CONTEXTO.md).
 Ver [mapas, búsqueda y conexión de fase 4](FASE_4_MAPAS_BUSQUEDA_Y_CONEXION.md).
+Ver [idiomas, accesibilidad y errores de fase 5](FASE_5_IDIOMAS_ACCESIBILIDAD_Y_ERRORES.md).
 La fase 3 está publicada en main. El workflow de GitHub aprobó el commit
 [1ab4e38](https://github.com/Defartion/RutaUTPAndroid/actions/runs/43460750207);
-las ampliaciones de fase 4 aún no se han publicado.
+la fase 4 quedó guardada en el commit local 21cc604 y aún no se ha publicado.
 
 ## Objetivo y referencia
 
@@ -289,7 +292,7 @@ Una fase que requiera dispositivo o infraestructura no se marcará completa solo
 | 2 | Implementada | 146 pruebas Android aprobadas; 19 casos de referencia activos. Comprobación GPS y visual en dispositivo pendiente. |
 | 3 | Implementada y publicada | 180 pruebas Android y 18 del verificador en su entrega; 27 referencias activas. Interacción, rotación y GPS en dispositivo pendientes. |
 | 4 | Implementada localmente | 212 pruebas Android y 25 de herramientas; APK y análisis correctos. Tres pruebas de cifrado compiladas, pendientes de ejecutar en dispositivo. Google Cloud, broker, revocación y quorum con dos teléfonos pendientes. |
-| 5 | Pendiente | Pendiente |
+| 5 | Implementada localmente | 235 pruebas Android y 35 de herramientas; 1299 claves revisadas sin carencias detectadas. Dos pruebas de texto grande compiladas. Revisión lingüística, TalkBack, texto grande y permisos en dispositivo pendientes. |
 | 6 | Pendiente | Requiere capturas comparables y dispositivo. |
 | 7 | Pendiente | Requiere backend/Firebase y entrega real. |
 | 8 | Pendiente | Requiere dispositivo y resultados de las fases anteriores. |

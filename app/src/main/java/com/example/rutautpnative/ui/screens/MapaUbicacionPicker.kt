@@ -20,6 +20,10 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.rutautpnative.data.gtfs.GTFSRepository
@@ -113,7 +117,14 @@ fun MapaUbicacionPicker(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             GoogleMap(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().semantics {
+                    contentDescription = L.t("Ajustar el punto", "Adjust the point")
+                    customActions = listOf(
+                        CustomAccessibilityAction(L.t("Mover al norte", "Move north")) { centrarEn(LatLng(centro.latitude + .001, centro.longitude)); true },
+                        CustomAccessibilityAction(L.t("Mover al sur", "Move south")) { centrarEn(LatLng(centro.latitude - .001, centro.longitude)); true },
+                        CustomAccessibilityAction(L.t("Mover al este", "Move east")) { centrarEn(LatLng(centro.latitude, centro.longitude + .001)); true },
+                        CustomAccessibilityAction(L.t("Mover al oeste", "Move west")) { centrarEn(LatLng(centro.latitude, centro.longitude - .001)); true })
+                },
                 cameraPositionState = cameraPositionState
             )
 
@@ -138,7 +149,7 @@ fun MapaUbicacionPicker(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(42.dp)
+                        .size(48.dp)
                         .shadow(4.dp, CircleShape)
                         .clip(CircleShape)
                         .background(AppSurface)

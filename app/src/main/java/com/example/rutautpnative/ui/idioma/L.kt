@@ -21,7 +21,11 @@ object L {
     data class Idioma(val codigo: String, val nombre: String)
     val idiomas = listOf(Idioma("es", "Español"), Idioma("en", "English"), Idioma("fr", "Français"),
         Idioma("pt-BR", "Português (Brasil)"), Idioma("de", "Deutsch"), Idioma("zh-Hans", "中文（简体）"))
-    private var catalogo: kotlinx.serialization.json.JsonObject? = null
+    private var catalogo: CatalogoIdiomas? = null
+    private val seleccion = SeleccionIdioma("es")
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val escrituras = kotlinx.coroutines.channels.Channel<String>(kotlinx.coroutines.channels.Channel.CONFLATED)
+    val codigoGoogle: String get() = if (codigo == "zh-Hans") "zh-CN" else codigo
     val nombreIdioma: String get() = idiomas.firstOrNull { it.codigo == codigo }?.nombre ?: "Español"
     // Estado global reactivo. Se hidrata del disco al iniciar (ver init) y
     // se actualiza desde el interruptor de Perfil (ver establecer).
@@ -33,11 +37,10 @@ object L {
     fun t(es: String, en: String): String {
         if (codigo == "es") return es
         if (codigo == "en") return en
-        val entrada = catalogo?.get(es) as? kotlinx.serialization.json.JsonObject
-        return (entrada?.get(codigo) as? kotlinx.serialization.json.JsonPrimitive)?.content ?: es
+        return catalogo?.texto(es, en, codigo) ?: en
     }
     fun f(es: String, en: String, vararg argumentos: String): String =
-        Regex("\\{([0-9]+)\\}").replace(t(es, en)) { match -> argumentos.getOrNull(match.groupValues[1].toInt()) ?: match.value }
+        CatalogoIdiomas.formatear(t(es, en), argumentos.toList())
 
     // Igual que t(), pensada para textos que además son señables: la clave ya
     // existe en el catálogo de assets/senias/manifest.json. El texto devuelto
@@ -55,20 +58,32 @@ object L {
         iniciado = true
         IdiomaStore.init(context)
         catalogo = try {
-            kotlinx.serialization.json.Json.parseToJsonElement(context.assets.open("traducciones.json").bufferedReader().use { it.readText() }) as? kotlinx.serialization.json.JsonObject
+            CatalogoIdiomas(
+                context.assets.open("traducciones.json").bufferedReader().use { it.readText() },
+                context.assets.open("traducciones-android.json").bufferedReader().use { it.readText() })
         } catch (_: Exception) { null }
-        codigo = kotlinx.coroutines.runBlocking { IdiomaStore.observarCodigo().first() }.takeIf { guardado -> idiomas.any { it.codigo == guardado } } ?: "es"
-        CoroutineScope(SupervisorJob() + Dispatchers.Main).launch {
-            IdiomaStore.observarCodigo().collect { guardado -> codigo = guardado.takeIf { c -> idiomas.any { it.codigo == c } } ?: "es" }
+        val inicial = runCatching { kotlinx.coroutines.runBlocking { IdiomaStore.observarCodigo().first() } }.getOrDefault("es")
+        seleccion.recibir(inicial.takeIf { c -> idiomas.any { it.codigo == c } } ?: "es")
+        codigo = seleccion.codigo
+        scope.launch {
+            for (nuevo in escrituras) runCatching {
+                kotlinx.coroutines.withContext(Dispatchers.IO) { IdiomaStore.establecerCodigo(nuevo) }
+            }
+        }
+        scope.launch {
+            IdiomaStore.observarCodigo().collect { guardado ->
+                seleccion.recibir(guardado.takeIf { c -> idiomas.any { it.codigo == c } } ?: "es")
+                codigo = seleccion.codigo
+            }
         }
     }
 
     // Cambiado por el usuario (actualiza la UI al instante Y persiste).
     fun establecer(nuevoCodigo: String) {
         if (idiomas.none { it.codigo == nuevoCodigo } || nuevoCodigo == codigo) return
-        codigo = nuevoCodigo
-        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-            IdiomaStore.establecerCodigo(nuevoCodigo)
-        }
+        com.example.rutautpnative.data.senias.SeniasOverlay.cancelarPorNavegacion()
+        seleccion.seleccionar(nuevoCodigo)
+        codigo = seleccion.codigo
+        escrituras.trySend(nuevoCodigo)
     }
 }

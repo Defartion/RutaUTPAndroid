@@ -39,7 +39,21 @@ enum class CategoriaNegocio(val label: String, val color: Color) {
     @SerialName("pizza")      PIZZA      ("Pizza",      Color(0xFF00897B)),
     @SerialName("burger")     BURGER     ("Burger",     Color(0xFF5D4037)),
     @SerialName("cevicheria") CEVICHERIA ("Cevichería", Color(0xFF0277BD)),
-    @SerialName("empanadas")  EMPANADAS  ("Empanadas",  Color(0xFF8E24AA))
+    @SerialName("empanadas")  EMPANADAS  ("Empanadas",  Color(0xFF8E24AA));
+    val etiqueta: String get() = when (this) {
+        POLLERIA -> com.example.rutautpnative.ui.idioma.L.t("Pollería", "Chicken restaurant")
+        MENU -> com.example.rutautpnative.ui.idioma.L.t("Menú", "Set menu")
+        CAFETERIA -> com.example.rutautpnative.ui.idioma.L.t("Cafetería", "Café")
+        CHIFA -> com.example.rutautpnative.ui.idioma.L.t("Chifa", "Chifa")
+        SALCHIPAPAS -> com.example.rutautpnative.ui.idioma.L.t("Salchipapas", "Salchipapas")
+        PANADERIA -> com.example.rutautpnative.ui.idioma.L.t("Panadería", "Bakery")
+        HELADERIA -> com.example.rutautpnative.ui.idioma.L.t("Heladería", "Ice cream shop")
+        JUGUERIA -> com.example.rutautpnative.ui.idioma.L.t("Juguería", "Juice bar")
+        PIZZA -> com.example.rutautpnative.ui.idioma.L.t("Pizza", "Pizza")
+        BURGER -> com.example.rutautpnative.ui.idioma.L.t("Burger", "Burger")
+        CEVICHERIA -> com.example.rutautpnative.ui.idioma.L.t("Cevichería", "Ceviche restaurant")
+        EMPANADAS -> com.example.rutautpnative.ui.idioma.L.t("Empanadas", "Empanadas")
+    }
 }
 
 //----Negocio promocionado (data-driven desde el JSON de assets)----

@@ -163,7 +163,7 @@ fun RouteChangesSheet(
                             }
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                L.t("${alerta.confirmations} cuentas", "${alerta.confirmations} accounts") + " · " +
+                                L.f("{0} cuentas", "{0} accounts", (alerta.confirmations).toString()) + " · " +
                                     L.t("vigente hasta", "valid until") + " ${alerta.vigenteHastaTexto}",
                                 style = BodyXs, color = OnSurfaceVariant
                             )

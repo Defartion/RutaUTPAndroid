@@ -109,11 +109,11 @@ fun Transportes3DScreen(ruta: RutaGTFS? = null, onCerrar: () -> Unit) {
                 }
                 Text(L.t("Un dedo para girar; dos para ampliar o desplazar.", "One finger to rotate; two to zoom or pan."), style = BodySm)
                 // Los botones permiten operar el visor sin depender de gestos visuales.
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     OutlinedButton(onClick = { superficie?.mover(-15f, 0f) }) { Text(L.t("Izquierda", "Left")) }
                     OutlinedButton(onClick = { superficie?.mover(15f, 0f) }) { Text(L.t("Derecha", "Right")) }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     OutlinedButton(onClick = { superficie?.mover(0f, -10f) }) { Text(L.t("Arriba", "Up")) }
                     OutlinedButton(onClick = { superficie?.mover(0f, 10f) }) { Text(L.t("Abajo", "Down")) }
                     IconButton(onClick = { superficie?.zoom(0.8f) }) { Icon(Icons.Filled.ZoomIn, L.t("Acercar", "Zoom in")) }

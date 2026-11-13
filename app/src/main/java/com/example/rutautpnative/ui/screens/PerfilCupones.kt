@@ -77,7 +77,7 @@ private fun PerfilCuponCard(negocio: Negocio, onQuitar: () -> Unit, onVerPromoci
                 Spacer(Modifier.width(10.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(negocio.nombre, style = BodyMdMedium, color = OnSurface, maxLines = 1)
-                    Text(negocio.categoria.label, style = BodySm, color = OnSurfaceVariant)
+                    Text(negocio.categoria.etiqueta, style = BodySm, color = OnSurfaceVariant)
                 }
                 Icon(Icons.Filled.ChevronRight, null, tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
             }
