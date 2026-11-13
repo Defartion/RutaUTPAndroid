@@ -33,12 +33,13 @@ class MQTTTrackingProvider(private val config: MQTTConfiguration, context: andro
     private var cliente: MqttAsyncClient? = null
     private val porId = linkedMapOf<String, VehiclePosition>()
     private var corriendo = false
+    private var conectando = false
     private var generacion = 0L
     private var foreground = true
     private var gate = SimulationControlGate()
     private var checkpointDisponible = true
     private val checkpointFile = context?.let { ctx ->
-        val identity = "v1|${config.host.lowercase()}|${config.port}|${config.useTLS}"
+        val identity = "v1|${config.host.lowercase(java.util.Locale.ROOT).removeSuffix(".")}|${config.port}|${config.useTLS}"
         val key = java.security.MessageDigest.getInstance("SHA-256").digest(identity.toByteArray()).joinToString("") { "%02x".format(it) }
         android.util.AtomicFile(java.io.File(ctx.noBackupFilesDir, "tracking-control/$key.json"))
     }
@@ -102,6 +103,7 @@ class MQTTTrackingProvider(private val config: MQTTConfiguration, context: andro
         conectar()
     }
     fun stop() {
+        conectando = false
         corriendo = false
         generacion++
         handler.removeCallbacks(sweep)
@@ -115,6 +117,7 @@ class MQTTTrackingProvider(private val config: MQTTConfiguration, context: andro
     fun reanudar() {
         foreground = true
         gate.invalidate()
+        if (corriendo && cliente?.isConnected != true && !conectando && !com.example.rutautpnative.data.conexion.ConexionInstalacionStore.autorizacionRechazada) conectar()
         runCatching { if (cliente?.isConnected == true) cliente?.subscribe(VehicleTrackingWire.CONTROL_TOPIC, 1) }
     }
     /** Revalidar caducidad y control antes de reutilizar una posición al cambiar de destino. */
@@ -155,7 +158,12 @@ class MQTTTrackingProvider(private val config: MQTTConfiguration, context: andro
         refrescar()
     }
     private fun conectar() {
+        if (!corriendo || conectando || cliente?.isConnected == true) return
+        conectando = true
+        generacion++
         val token = generacion
+        val anterior = cliente; cliente = null
+        runCatching { anterior?.close() }
         try {
             val client = MqttAsyncClient(config.endpoint, "rutautp-android-${UUID.randomUUID()}", MemoryPersistence())
             cliente = client
@@ -164,6 +172,7 @@ class MQTTTrackingProvider(private val config: MQTTConfiguration, context: andro
                 override fun connectComplete(reconnect: Boolean, serverURI: String?) {
                     handler.post {
                         if (!vigente()) return@post
+                        conectando = false
                         gate.invalidate(); refrescar()
                         try { client.subscribe(arrayOf(topic, VehicleTrackingWire.CONTROL_TOPIC), intArrayOf(1, 1)) }
                         catch (e: Exception) { android.util.Log.w("MQTTTrack", "No se pudo suscribir", e) }
@@ -180,13 +189,15 @@ class MQTTTrackingProvider(private val config: MQTTConfiguration, context: andro
             val opciones = MqttConnectOptions().apply {
                 userName = config.username; password = config.password.toCharArray()
                 isCleanSession = true; isAutomaticReconnect = true; keepAliveInterval = 30
-                if (config.useTLS) socketFactory = MQTTTLS.socketFactory(config.caAsset, appContext)
+                MQTTTLS.aplicar(this, config, appContext)
             }
             client.connect(opciones, object : IMqttActionListener {
-                override fun onSuccess(token: IMqttToken?) = Unit
-                override fun onFailure(token: IMqttToken?, exception: Throwable?) { handler.post { if (vigente()) { gate.invalidate(); refrescar() } } }
+                override fun onSuccess(token: IMqttToken?) { handler.post { if (vigente()) conectando = false } }
+                override fun onFailure(token: IMqttToken?, exception: Throwable?) {
+                    config.informarFallo(exception)
+                    handler.post { if (vigente()) { conectando = false; gate.invalidate(); refrescar() } } }
             })
-        } catch (e: Exception) { android.util.Log.w("MQTTTrack", "Conexión fallida", e) }
+        } catch (e: Exception) { conectando = false; config.informarFallo(e); android.util.Log.w("MQTTTrack", "Conexión fallida") }
     }
     companion object { const val INTERVALO_BARRIDO_MS = 1_000L; private val checkpointLock = Any() }
 }

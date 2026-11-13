@@ -30,7 +30,7 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyA_xj0pSDuLGdASbmcYJkTvflKyfHV9fy0" />
+            android:value="${MAPS_API_KEY}" />
 
         <meta-data android:name="firebase_messaging_auto_init_enabled" android:value="false" />
         <service android:name=".data.notificaciones.RutaFirebaseMessagingService" android:exported="false">

@@ -31,10 +31,11 @@ interface ControlCamaraMapa {
 
 internal class CamaraGoogle(private val estado: CameraPositionState) : ControlCamaraMapa {
     override suspend fun centrar(punto: LatLng, zoom: Float) {
+        if (!com.example.rutautpnative.data.google.ServiciosGoogle.mapaConfigurado) return
         estado.animate(CameraUpdateFactory.newLatLngZoom(punto, zoom))
     }
     override suspend fun encuadrar(puntos: List<LatLng>) {
-        if (puntos.isEmpty()) return
+        if (puntos.isEmpty() || !com.example.rutautpnative.data.google.ServiciosGoogle.mapaConfigurado) return
         val bounds = LatLngBounds.builder()
         puntos.forEach(bounds::include)
         estado.animate(CameraUpdateFactory.newLatLngBounds(bounds.build(), 120))

@@ -168,6 +168,9 @@ class MapaViewModel(
     var sugerencias by mutableStateOf<List<SugerenciaLugar>>(emptyList())
         private set
 
+    var mensajeBusqueda: String? by mutableStateOf(null)
+        private set
+
     var buscandoSugerencias by mutableStateOf(false)
         private set
 
@@ -178,6 +181,7 @@ class MapaViewModel(
     /// no dispara consultas.
     fun actualizarTextoBusqueda(texto: String, campoEnfocado: Boolean) {
         textoBusqueda = texto
+        mensajeBusqueda = null
         sugerenciasJob?.cancel()
         val tokenSugerencias = revisionSugerencias.invalidar()
         val revisionSeleccion = seleccion.revision
@@ -197,7 +201,15 @@ class MapaViewModel(
                     sugerencias = r.sugerencias.map {
                         SugerenciaLugar(it.nombre, it.direccion, it.lat, it.lon)
                     }
-                else -> sugerencias = emptyList()
+                else -> {
+                    sugerencias = emptyList()
+                    mensajeBusqueda = when (r) {
+                        PlacesService.ResultadoSugerencias.SinConfiguracion -> L.t("Configura la búsqueda en Perfil → Conexión de transporte.", "Set up search in Profile → Transport connection.")
+                        PlacesService.ResultadoSugerencias.NoAutorizado -> L.t("No se pudo autorizar el servicio de búsqueda.", "The search service could not be authorized.")
+                        PlacesService.ResultadoSugerencias.Error -> L.t("No se pudo buscar. Revisa tu conexión e inténtalo de nuevo.", "Search failed. Check your connection and try again.")
+                        else -> null
+                    }
+                }
             }
             buscandoSugerencias = false
         }
@@ -471,6 +483,7 @@ class MapaViewModel(
     }
 
     private fun aplicarDestino(destino: DestinoChip) {
+        mensajeBusqueda = null
         textoBusqueda = destino.label
         refrescarLlegadas()
         enfocarPunto(LatLng(destino.lat, destino.lon), 15f)
@@ -595,7 +608,14 @@ class MapaViewModel(
                     val chip = DestinoChip(("ext|" + r.nombre + "|" + r.lat + "|" + r.lon).hashCode(), r.nombre, Icons.Filled.Place, r.lat, r.lon)
                     if (seleccion.aceptar(token, chip)) aplicarDestino(chip)
                 }
-                else -> Unit  // sin resultados: el usuario sigue viendo el dropdown
+                else -> if (seleccion.vigente(token)) {
+                    mensajeBusqueda = when (r) {
+                        PlacesService.Resultado.SinConfiguracion -> L.t("Configura la búsqueda en Perfil → Conexión de transporte.", "Set up search in Profile → Transport connection.")
+                        PlacesService.Resultado.NoAutorizado -> L.t("No se pudo autorizar el servicio de búsqueda.", "The search service could not be authorized.")
+                        PlacesService.Resultado.Error -> L.t("No se pudo buscar. Revisa tu conexión e inténtalo de nuevo.", "Search failed. Check your connection and try again.")
+                        else -> L.t("No encontramos ese lugar en el área de servicio.", "That place was not found in the service area.")
+                    }
+                }
             }
         }
     }
@@ -603,6 +623,7 @@ class MapaViewModel(
     fun limpiar() {
         invalidarTrabajos()
         textoBusqueda = ""
+        mensajeBusqueda = null
         seleccion.limpiar()
         limpiarSugerencias()
         detenerAnimacion()

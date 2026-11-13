@@ -60,7 +60,7 @@ fun RouteChangesSheet(
     rutaInicial: String? = null
 ) {
     // El servicio vive y muere con el sheet (como el panel de ocupacion).
-    val config = remember { MQTTConfiguration.desdeBuildConfig() }
+    val config = remember(com.example.rutautpnative.data.conexion.ConexionInstalacionStore.revision) { MQTTConfiguration.paraReportes() }
     val contexto = androidx.compose.ui.platform.LocalContext.current.applicationContext
     val servicio = remember(config, contexto) { config?.let { RouteChangesService(it, contexto) } }
 
@@ -91,7 +91,7 @@ fun RouteChangesSheet(
     val scope = rememberCoroutineScope()
 
     val rutaElegida = rutaElegidaId?.let { rutaPorId(it) }
-    val puedeEnviar = listo && !enviando && rutaElegidaId != null && punto != null && lugar.trim().length >= 3
+    val puedeEnviar = config?.puedeContribuir == true && listo && !enviando && rutaElegidaId != null && punto != null && lugar.trim().length >= 3
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = AppSurface) {
         Column(
@@ -113,6 +113,7 @@ fun RouteChangesSheet(
                     when {
                         !RouteChangesService.configurado ->
                             L.t("Canal MQTT no configurado en esta compilación.", "MQTT channel not configured in this build.")
+                        config?.puedeContribuir == false -> L.t("Cuenta de solo lectura. Puedes consultar los reportes.", "Read-only account. You can view reports.")
                         listo -> L.t("Reportes compartidos en línea.", "Reports shared online.")
                         else -> L.t("Conectando… Puedes preparar el reporte sin conexión.", "Connecting… You can prepare the report offline.")
                     },

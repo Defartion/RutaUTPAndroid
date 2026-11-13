@@ -1,61 +1,39 @@
 package com.example.rutautpnative.data.tracking
 
 import com.example.rutautpnative.BuildConfig
+import com.example.rutautpnative.data.conexion.*
 
-//----Configuracion del canal MQTT (puerto del MQTTConfiguration.swift)----
-// Las credenciales NO viven en el repo: llegan por local.properties / -P en
-// tiempo de compilacion (BuildConfig), igual que iOS las lee del Scheme de
-// Xcode. Sin MQTT_HOST + usuario + contrasena, `configurada` es null y toda
-// la contribucion queda deshabilitada (la UI muestra "Canal MQTT no
-// configurado").
+/** Endpoint público separado de las cuentas aprovisionadas en este teléfono. */
 data class MQTTConfiguration(
-    val host: String,
-    val port: Int,
-    val username: String,
-    val password: String,
-    val useTLS: Boolean,
-    val caAsset: String,  // asset PEM/DER con la CA propia; "" = confianza del sistema
-    val readOnly: Boolean = false
+    val host: String, val port: Int, val username: String, val password: String,
+    val useTLS: Boolean, val caAsset: String, val readOnly: Boolean = false, val caPem: String = ""
 ) {
     val puedeContribuir: Boolean get() = !readOnly && username !in setOf("backend", "observer", "presentation-reader") && !username.startsWith("sim-")
-    /// Identidad que la ACL del broker obliga a incluir en el topico.
     val principal: String get() = username
-
-    val endpoint: String
-        get() = "${if (useTLS) "ssl" else "tcp"}://$host:$port"
-
-    companion object {
-        private val PUERTO_PLANO = 1883
-        private val PUERTO_TLS = 8883
-        private val flagsTLS = setOf("1", "true", "yes")
-
-        /// Resuelve la configuracion desde BuildConfig; null si falta algo
-        /// obligatorio (host vacio, credenciales incompletas, puerto absurdo).
-        fun desdeBuildConfig(): MQTTConfiguration? {
-            val host = BuildConfig.MQTT_HOST.trim()
-            val username = BuildConfig.MQTT_USERNAME.trim()
-            val password = BuildConfig.MQTT_PASSWORD
-            if (host.isEmpty() || username.isEmpty() || password.isEmpty()) return null
-
-            val useTLS = BuildConfig.MQTT_TLS.trim().lowercase() in flagsTLS
-
-            // Puerto explicito obligatorio si se declara: un error visible no
-            // debe redirigir la conexion a otro puerto (misma regla del iOS).
-            val puertoConfigurado = BuildConfig.MQTT_PORT.trim().toIntOrNull()
-            if (BuildConfig.MQTT_PORT.isNotBlank() && puertoConfigurado == null) return null
-            if (puertoConfigurado != null && puertoConfigurado !in 1..65535) return null
-
-            val port = puertoConfigurado ?: if (useTLS) PUERTO_TLS else PUERTO_PLANO
-
-            return MQTTConfiguration(
-                host = host,
-                port = port,
-                username = username,
-                password = password,
-                useTLS = useTLS,
-                caAsset = BuildConfig.MQTT_CA_ASSET.trim(),
-                readOnly = BuildConfig.MQTT_READ_ONLY.trim().lowercase() in flagsTLS
-            )
+    val endpoint: String get() = CanalConexion(host, port, useTLS).identidad
+    override fun toString() = "MQTTConfiguration(endpoint=$endpoint, readOnly=$readOnly, credenciales=ocultas)"
+    fun informarFallo(error: Throwable?) {
+        var actual = error
+        repeat(8) {
+            if (actual is org.eclipse.paho.client.mqttv3.MqttException &&
+                (actual as org.eclipse.paho.client.mqttv3.MqttException).reasonCode in listOf(4, 5)) {
+                ConexionInstalacionStore.rechazar(CuentaConexion(CanalConexion(host, port, useTLS, caAsset, caPem),
+                    if (readOnly) RolConexion.LECTURA else RolConexion.CONTRIBUCION, username, password))
+                return
+            }
+            actual = actual?.cause
         }
+    }
+    companion object {
+        fun actual(): MQTTConfiguration? = ConexionInstalacionStore.receptor()?.aConfiguracion()
+        fun paraReportes(): MQTTConfiguration? = paraContribucion() ?: actual()
+        fun paraContribucion(): MQTTConfiguration? = ConexionInstalacionStore.contribucion()?.aConfiguracion()
+        private fun CuentaConexion.aConfiguracion() = MQTTConfiguration(canal.host, canal.puerto, usuario, clave,
+            canal.tls, canal.caAsset, rol == RolConexion.LECTURA, canal.caPem)
+        fun canalPublico(): CanalConexion? = runCatching {
+            val tls = when (BuildConfig.MQTT_TLS.trim().lowercase()) { "", "1", "true", "yes" -> true; "0", "false", "no" -> false; else -> error("TLS no válido") }
+            val port = if (BuildConfig.MQTT_PORT.isBlank()) (if (tls) 8883 else 1883) else BuildConfig.MQTT_PORT.toInt()
+            CanalConexion(BuildConfig.MQTT_HOST.trim(), port, tls, BuildConfig.MQTT_CA_ASSET.trim()).also { it.validar(BuildConfig.DEBUG) }
+        }.getOrNull()
     }
 }

@@ -13,7 +13,7 @@
       "commit": "7ba57cbe73f97e83fd112584a9e8ff89623ac4c1"
     }
   },
-  "minimumUnitTests": 180,
+  "minimumUnitTests": 212,
   "originalUnitTests": 119,
   "requiredBaselineCaseIds": [
     "ETA-01",

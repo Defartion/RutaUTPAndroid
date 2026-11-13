@@ -85,7 +85,7 @@ internal fun AvisosLineasSeguridad(router: AppRouter, rutas: List<RutaGTFS>) {
     val activa by PassiveTrackingCoordinator.rutaViajeSeleccionada.collectAsState()
     val iniciada by PassiveTrackingCoordinator.viajeIniciadoEn.collectAsState()
     val ids = (if (invalidas) emptySet() else referencias.map { it.routeId }.toSet()) + if (iniciada != null) setOfNotNull(activa?.routeId) else emptySet()
-    val config = remember { MQTTConfiguration.desdeBuildConfig() }
+    val config = remember(com.example.rutautpnative.data.conexion.ConexionInstalacionStore.revision) { MQTTConfiguration.paraReportes() }
     val servicio = remember(config) { config?.let { RouteChangesService(it, contexto) } }
     val listo by (servicio?.listo ?: remember { MutableStateFlow(false) }).collectAsState()
     val alertas by (servicio?.alertas ?: remember { MutableStateFlow(emptyList<RouteChangesService.AlertaCambio>()) }).collectAsState()

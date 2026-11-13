@@ -49,6 +49,7 @@ fun PerfilScreen(router: AppRouter) {
     val cupones by produceState<List<Negocio>>(emptyList()) {
         CuponesStore.observarIds().collect { ids -> value = NegociosService.todos().filter { it.cupon != null && it.id in ids }.sortedBy { it.nombre } }
     }
+    var conexionTransporte by remember { mutableStateOf(false) }
     var idiomas by remember { mutableStateOf(false) }
     var notificaciones by remember { mutableStateOf(false) }
     var datos by remember { mutableStateOf(false) }
@@ -119,6 +120,11 @@ fun PerfilScreen(router: AppRouter) {
                 SeparadorPerfil()
                 FilaPerfil(Icons.Filled.Notifications, L.t("Notificaciones", "Notifications"), if (!PreferenciasPerfilStore.notificaciones) L.t("Desactivadas", "Off") else if (!NotificacionesService.permitido(contexto)) L.t("Sin permiso", "Permission needed") else L.t("Activadas", "On")) { notificaciones = true }
                 SeparadorPerfil()
+                FilaPerfil(Icons.Filled.CloudSync, L.t("Conexión de transporte", "Transport connection"),
+                    com.example.rutautpnative.data.conexion.ConexionInstalacionStore.revision.let {
+                        if (com.example.rutautpnative.data.conexion.ConexionInstalacionStore.receptor() == null) L.t("Sin cuenta en este teléfono", "No account on this phone") else L.t("Cuenta guardada", "Account saved")
+                    }) { conexionTransporte = true }
+                SeparadorPerfil()
                 FilaPerfil(Icons.Filled.CloudOff, L.t("Modo offline", "Offline mode")) { offline = true }
             }
             SeccionPerfil(L.t("Accesibilidad", "Accessibility")) {
@@ -141,6 +147,7 @@ fun PerfilScreen(router: AppRouter) {
             }
         }
     }
+    if (conexionTransporte) ConexionTransporteScreen { conexionTransporte = false }
     if (idiomas) com.example.rutautpnative.ui.components.SelectorIdiomaSheet { idiomas = false }
     if (credenciales) ModalBottomSheet(onDismissRequest = { credenciales = false }, containerColor = AppSurface) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {

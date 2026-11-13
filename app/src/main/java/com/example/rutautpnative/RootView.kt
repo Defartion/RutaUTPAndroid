@@ -37,7 +37,7 @@ import com.example.rutautpnative.ui.theme.AppBackground
 fun RootView(router: AppRouter = viewModel(), modelos: ModelosCatalogo = viewModel()) {
     val app = LocalContext.current.applicationContext as Application
     val factory = remember(app) { ViewModelProvider.AndroidViewModelFactory.getInstance(app) }
-    val owner = modelos.obtener(TransporteApp.busesUTPActivos, factory)
+    val owner = modelos.obtener(TransporteApp.busesUTPActivos, factory, com.example.rutautpnative.data.conexion.ConexionInstalacionStore.revision)
     val estados = rememberSaveableStateHolder()
     LaunchedEffect(TransporteApp.busesUTPDisponibles) {
         if (!TransporteApp.busesUTPDisponibles) TransporteApp.establecerBusesUTP(false)
@@ -45,7 +45,10 @@ fun RootView(router: AppRouter = viewModel(), modelos: ModelosCatalogo = viewMod
     LaunchedEffect(owner) {
         modelos.consumirCambio()?.let { anterior ->
             router.invalidarCatalogo()
-            PassiveTrackingCoordinator.actualizarModoTransporte()
+            if (modelos.consumirCambioCuenta()) {
+                PassiveTrackingCoordinator.actualizarCuentaConexion()
+                com.example.rutautpnative.data.notificaciones.PushRutasService.alCambiarCuenta()
+            } else PassiveTrackingCoordinator.actualizarModoTransporte()
             listOf("bienvenida", "mapa", "rutas", "guardado", "seguridad", "perfil", "tracking")
                 .forEach { estados.removeState(anterior.toString() + ":" + it) }
         }

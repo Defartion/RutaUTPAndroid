@@ -509,6 +509,12 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
 
         // Ui Flotante
         Column(modifier = Modifier.fillMaxSize()) {
+            if (!com.example.rutautpnative.data.google.ServiciosGoogle.mapaConfigurado) {
+                Text(L.t("El mapa no está configurado en esta versión.", "The map is not configured in this version."), modifier = Modifier.fillMaxWidth().statusBarsPadding().background(AppSurface).padding(12.dp), color = OnSurface)
+            }
+            if (com.example.rutautpnative.data.conexion.ConexionInstalacionStore.autorizacionRechazada) {
+                Text(L.t("La cuenta de transporte no fue autorizada. Revísala en Perfil.", "The transport account was not authorized. Review it in Profile."), modifier = Modifier.fillMaxWidth().background(AppSurface).padding(12.dp), color = AppError)
+            }
             if (!viajeActivo && !modoColocarMarcador) {
                 // Header: "Mapa" o "Buses UTP" según el modo de transporte;
                 // con flota real, badge de frescura de las posiciones.
@@ -1089,6 +1095,9 @@ private fun SearchPanel(
                 }
             }
 
+            vm.mensajeBusqueda?.let { mensaje ->
+                Text(mensaje, style = BodySm, color = OnSurfaceVariant, modifier = Modifier.padding(10.dp))
+            }
             // Sugerencias de autocompletado (Places, hasta 5 — como el
             // MKLocalSearchCompleter del iOS). Solo con el campo enfocado.
             if (campoEnfocado && (vm.sugerencias.isNotEmpty() || vm.buscandoSugerencias)) {
@@ -1518,7 +1527,7 @@ private fun BusDetailPopup(
 private fun BusOccupancyPanel(vehicleId: String) {
     // El servicio vive y muere con el panel (onAppear/onDisappear del iOS):
     // una conexion MQTT propia, apagada al cerrar el popup.
-    val config = remember { MQTTConfiguration.desdeBuildConfig() }
+    val config = remember(com.example.rutautpnative.data.conexion.ConexionInstalacionStore.revision) { MQTTConfiguration.paraReportes() }
     val contexto = LocalContext.current.applicationContext
     val servicio = remember(config, contexto) { config?.let { OccupancyService(it, contexto) } }
 
@@ -1570,7 +1579,7 @@ private fun BusOccupancyPanel(vehicleId: String) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(
                 onClick = { estadoPendiente = OccupancyService.EstadoOcupacion.VACIO },
-                enabled = listo && !enviando,
+                enabled = config?.puedeContribuir == true && listo && !enviando,
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(10.dp)
             ) {
@@ -1580,7 +1589,7 @@ private fun BusOccupancyPanel(vehicleId: String) {
             }
             OutlinedButton(
                 onClick = { estadoPendiente = OccupancyService.EstadoOcupacion.LLENO },
-                enabled = listo && !enviando,
+                enabled = config?.puedeContribuir == true && listo && !enviando,
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(10.dp)
             ) {

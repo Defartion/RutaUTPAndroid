@@ -7,6 +7,8 @@ La referencia de esta actualización es main, commit 8145276 del 09/11/2026.
 - [Plan de actualización por fases](docs/PLAN_PARIDAD_IOS_ANDROID.md)
 - [Fase 1: referencia y comprobaciones automáticas](docs/FASE_1_REFERENCIA_Y_VALIDACION.md)
 - [Fase 2: reglas de rutas y llegadas](docs/FASE_2_RUTAS_Y_LLEGADAS.md)
+- [Fase 3: continuidad del viaje y contexto](docs/FASE_3_CONTINUIDAD_Y_CONTEXTO.md)
+- [Fase 4: mapas, búsqueda y conexión por teléfono](docs/FASE_4_MAPAS_BUSQUEDA_Y_CONEXION.md)
 - [Configurar avisos remotos con Firebase](docs/FIREBASE_ANDROID.md)
 - [Almacenes y claves locales](PERSISTENCIA.md)
 - [Herramientas de desarrollo](tools/README.md)
@@ -41,14 +43,20 @@ lugares y paraderos; Seguridad separa Ayuda y Comunidad.
 
 ## Servicios externos
 
-Maps, Places y Directions usan la configuración Google Maps del manifiesto.
+El SDK de mapas usa `MAPS_API_KEY`, resuelta desde una propiedad Gradle,
+una variable de entorno o `local.properties`, en ese orden. Places y Directions
+usan una clave web separada, guardada desde Perfil → Conexión de transporte.
+Las restricciones y los servicios habilitados en Google Cloud deben comprobarse
+con las identidades de firma de cada distribución; ver la guía de fase 4.
 Las rutas GTFS, clips de señas y mallas 3D son recursos locales.
 El feed institucional gtfs-utp aún no contiene rutas, igual que el origen iOS.
 
-MQTT se configura mediante local.properties (ignorado por Git) o propiedades
-Gradle: MQTT_HOST, MQTT_PORT, MQTT_USERNAME, MQTT_PASSWORD, MQTT_TLS,
-MQTT_CA_ASSET y MQTT_READ_ONLY. Sin configuración no se publica ubicación.
-Las credenciales de la app deben pertenecer a su propia instalación. El backend
+Las cuentas MQTT se introducen por teléfono en Perfil → Conexión de transporte
+y se guardan cifradas con Android Keystore. El equipo debe asignar cuentas
+distintas a cada instalación y roles distintos para lectura y contribución.
+El APK solo admite valores públicos de canal (`MQTT_HOST`, `MQTT_PORT`,
+`MQTT_TLS` y `MQTT_CA_ASSET`); usuario y contraseña de compilación ya no se usan.
+Sin cuenta contribuyente ni consentimiento no se publica ubicación. El backend
 y sus permisos de broker se administran en el repositorio compartido iOS.
 
 No hace falta Firebase para compilar ni para programar recordatorios locales.

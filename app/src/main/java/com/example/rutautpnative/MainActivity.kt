@@ -62,6 +62,7 @@ class MainActivity : ComponentActivity() {
         // visibilidad de los carnets por empresa.
         com.example.rutautpnative.data.PreferenciasPerfilStore.init(this)
         com.example.rutautpnative.data.PreferenciasVisualesPerfilStore.init(this)
+        com.example.rutautpnative.data.conexion.ConexionInstalacionStore.init(this)
         GTFSRepository.init(this)
         LugaresStore.init(this)
         SeguridadTilesStore.init(this)

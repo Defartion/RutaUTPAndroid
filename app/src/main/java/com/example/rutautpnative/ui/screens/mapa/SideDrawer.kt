@@ -376,8 +376,8 @@ private fun AjustesSheet(onDismiss: () -> Unit) {
                         Spacer(Modifier.height(6.dp))
                         Text(
                             L.t(
-                                "Canal MQTT no configurado. Añade MQTT_HOST, MQTT_USERNAME y MQTT_PASSWORD en local.properties y vuelve a compilar.",
-                                "MQTT channel not configured. Add MQTT_HOST, MQTT_USERNAME and MQTT_PASSWORD to local.properties and rebuild."
+                                "Configura una cuenta para este teléfono en Perfil → Conexión de transporte.",
+                                "Set up an account for this phone in Profile → Transport connection."
                             ),
                             style = BodyXs, color = OnSurfaceVariant
                         )

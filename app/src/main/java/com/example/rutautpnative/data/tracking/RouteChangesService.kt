@@ -133,7 +133,7 @@ class RouteChangesService(private val config: MQTTConfiguration, context: androi
         const val TIMEOUT_RECIBO_S = 12.0
         const val INTERVALO_REFRESCO_MS = 1_000L
 
-        val configurado: Boolean get() = MQTTConfiguration.desdeBuildConfig() != null
+        val configurado: Boolean get() = MQTTConfiguration.actual() != null
     }
 
     //----Ciclo de vida (el sheet lo enciende/apaga)----
@@ -168,7 +168,7 @@ class RouteChangesService(private val config: MQTTConfiguration, context: androi
     //----Envio (guard: listo && !enviando, como el iOS)----
 
     fun enviar(routeId: String, motivo: MotivoCambio, lat: Double, lon: Double, place: String) {
-        if (!corriendo || !_listo.value || _enviando.value) return
+        if (!config.puedeContribuir || !corriendo || !_listo.value || _enviando.value) return
         val id = UUID.randomUUID().toString()
         requestIdPendiente = id
         enviadoEnS = System.currentTimeMillis() / 1000.0
@@ -361,18 +361,16 @@ class RouteChangesService(private val config: MQTTConfiguration, context: androi
                 isCleanSession = true
                 isAutomaticReconnect = true
                 keepAliveInterval = 30
-                if (config.useTLS) {
-                    socketFactory = MQTTTLS.socketFactory(config.caAsset, appContext)
-                }
+                MQTTTLS.aplicar(this, config, appContext)
             }
 
             this.cliente = cliente
             cliente.connect(opciones, object : IMqttActionListener {
                 override fun onSuccess(token: IMqttToken?) = Unit
-                override fun onFailure(token: IMqttToken?, exception: Throwable?) = Unit
+                override fun onFailure(token: IMqttToken?, exception: Throwable?) { config.informarFallo(exception) }
             })
         } catch (e: Exception) {
-            android.util.Log.w("RouteChanges", "conexion fallo", e)
+            android.util.Log.w("RouteChanges", "Conexión fallida")
         }
     }
 }

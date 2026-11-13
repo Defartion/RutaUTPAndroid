@@ -11,16 +11,15 @@ if (file("google-services.json").isFile) apply(plugin = "com.google.gms.google-s
 val generarCapturas = providers.gradleProperty("capturas").orNull == "true"
 if (generarCapturas) apply(plugin = "com.android.compose.screenshot")
 
-// MQTT: las credenciales viven en local.properties (gitignored) o -P por
-// línea de comandos, NUNCA en el repo. Sin MQTT_HOST el canal queda
-// "no configurado" y la baliza del pasajero se desactiva sola (igual que iOS,
-// que las lee del Scheme de Xcode).
+// Solo configuración pública en el APK. Las cuentas se aprovisionan por teléfono.
 val localProps = Properties().apply {
     val f = rootProject.file("local.properties")
     if (f.exists()) f.inputStream().use { load(it) }
 }
 fun mqttProp(nombre: String): String =
-    (localProps.getProperty(nombre) ?: project.findProperty(nombre) as? String ?: "").trim()
+    (project.findProperty(nombre) as? String ?: System.getenv(nombre) ?: localProps.getProperty(nombre) ?: "").trim()
+
+fun cadenaBuild(value: String): String = "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") + "\""
 
 android {
     if (generarCapturas) experimentalProperties["android.experimental.enableScreenshotTest"] = true
@@ -33,16 +32,13 @@ android {
         targetSdk = 36
         versionCode = 3
         versionName = "1.2"
-        manifestPlaceholders["MAPS_API_KEY"] = project.findProperty("MAPS_API_KEY") ?: ""
+        manifestPlaceholders["MAPS_API_KEY"] = mqttProp("MAPS_API_KEY")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "MQTT_HOST", "\"${mqttProp("MQTT_HOST")}\"")
-        buildConfigField("String", "MQTT_PORT", "\"${mqttProp("MQTT_PORT")}\"")
-        buildConfigField("String", "MQTT_USERNAME", "\"${mqttProp("MQTT_USERNAME")}\"")
-        buildConfigField("String", "MQTT_PASSWORD", "\"${mqttProp("MQTT_PASSWORD")}\"")
-        buildConfigField("String", "MQTT_TLS", "\"${mqttProp("MQTT_TLS")}\"")
-        buildConfigField("String", "MQTT_READ_ONLY", "\"${mqttProp("MQTT_READ_ONLY")}\"")
-        buildConfigField("String", "MQTT_CA_ASSET", "\"${mqttProp("MQTT_CA_ASSET")}\"")
+        buildConfigField("String", "MQTT_HOST", cadenaBuild(mqttProp("MQTT_HOST")))
+        buildConfigField("String", "MQTT_PORT", cadenaBuild(mqttProp("MQTT_PORT")))
+        buildConfigField("String", "MQTT_TLS", cadenaBuild(mqttProp("MQTT_TLS")))
+        buildConfigField("String", "MQTT_CA_ASSET", cadenaBuild(mqttProp("MQTT_CA_ASSET")))
     }
 
     buildTypes {

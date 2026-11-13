@@ -57,9 +57,10 @@
       "phases": [
         4
       ],
-      "status": "pending",
+      "status": "in_progress",
       "acceptance": "Cuenta MQTT distinta por instalación sin recompilar APK",
-      "validation": "Dos instalaciones reales, TLS, revocación y quorum."
+      "validation": "Implementación local verificada el 13/11/2026: cuentas por canal/rol, escritura atómica, independencia entre repositorios, rechazo de roles, TLS y retiro de modelos. Keystore y sus tres pruebas instrumentales compilados. Broker, revocación, reconexión y quorum con dos teléfonos pendientes.",
+      "evidence": "docs/FASE_4_MAPAS_BUSQUEDA_Y_CONEXION.md"
     },
     {
       "id": "F07",
@@ -75,18 +76,20 @@
       "phases": [
         4
       ],
-      "status": "pending",
+      "status": "in_progress",
       "acceptance": "La configuración Google elegida es efectiva",
-      "validation": "Inspección del manifiesto empaquetado y prueba de mapa/búsqueda/caminata."
+      "validation": "Propiedad MAPS_API_KEY cotejada en el APK con marcador sintético y APK habitual restaurado; credencial web separada, paquete y SHA-1 incluidos. Restricciones, cuotas, mapa/búsqueda/caminatas y rechazo de identidades incorrectas en Google Cloud pendientes.",
+      "evidence": "docs/FASE_4_MAPAS_BUSQUEDA_Y_CONEXION.md"
     },
     {
       "id": "F09",
       "phases": [
         4
       ],
-      "status": "pending",
+      "status": "verified",
       "acceptance": "Búsqueda cubre el ámbito acordado del GTFS y sedes",
-      "validation": "Consultas en los extremos del área de servicio."
+      "validation": "Verificado localmente el 13/11/2026: cobertura calculada desde los 4067 paraderos y sedes más 1600 m; extremos, ampliación del catálogo, coordenadas inválidas y filtrado de resultados externos probados. Consultas reales del proveedor pendientes con F08.",
+      "evidence": "docs/FASE_4_MAPAS_BUSQUEDA_Y_CONEXION.md"
     },
     {
       "id": "F10",
@@ -133,7 +136,8 @@
       ],
       "status": "in_progress",
       "acceptance": "Comprobación automática de main/PR y cobertura de flujos",
-      "validation": "Workflow, resultados JUnit/lint/APK y pruebas instrumentales."
+      "validation": "Workflow de main aprobado en GitHub el 13/11/2026 para 1ab4e38 (ejecución 43460750207). Fase 4 local: 212 pruebas Android y 25 de herramientas; referencia, lint y APK verificados; tres pruebas de cifrado compiladas sin dispositivo disponible. Ampliación del workflow todavía sin publicar; flujos instrumentales pendientes.",
+      "evidence": "docs/FASE_4_MAPAS_BUSQUEDA_Y_CONEXION.md"
     },
     {
       "id": "F15",

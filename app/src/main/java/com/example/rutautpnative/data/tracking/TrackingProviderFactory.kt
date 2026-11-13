@@ -14,5 +14,5 @@ object TrackingProviderFactory {
     /// Flota real si el canal MQTT esta configurado; null para seguir con la
     /// simulada (mismo criterio que makeDefault() del iOS).
     fun crearReal(): MQTTTrackingProvider? =
-        MQTTConfiguration.desdeBuildConfig()?.let { MQTTTrackingProvider(it, context) }
+        MQTTConfiguration.actual()?.let { MQTTTrackingProvider(it, context) }
 }

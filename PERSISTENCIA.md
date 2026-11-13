@@ -49,6 +49,12 @@ credencial MQTT. No se incluyen credenciales de servicio Firebase en Android.
 
 ## Archivos y cifrado
 
+- `noBackupFilesDir/conexion-v1/credenciales.bin`: configuración versionada de
+  cuentas MQTT por canal y rol, y clave web de búsqueda. Archivo atómico cifrado
+  con AES-256/GCM y clave `rutautp.conexion.aes.v1.conexion-v1` de Android Keystore.
+  No se incluye en copia ni transferencia del sistema. Si falta la clave o el
+  contenido es ilegible, se conserva el archivo y se bloquea la escritura normal;
+  el usuario puede borrar explícitamente esta configuración desde Perfil.
 - `rutautp_tarjetas.xml`, mediante EncryptedSharedPreferences y Android Keystore:
   clave `local` con nombre, red y últimos cuatro dígitos ASCII. Nunca PAN ni CVV.
   Se excluye de copia y transferencia del sistema. Si no hay cifrado disponible,

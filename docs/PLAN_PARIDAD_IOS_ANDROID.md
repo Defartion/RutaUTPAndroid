@@ -2,13 +2,17 @@
 
 Fecha: 10 de noviembre de 2026.
 
-Estado: **fases 1–3 implementadas y verificadas localmente; fases 4–8 pendientes**.
+Estado: **fases 1–4 implementadas localmente; fases 5–8 pendientes**.
 Última validación local: 13 de noviembre de 2026. La fase 3 conserva pendientes
-las comprobaciones de interacción, rotación y GPS en dispositivo.
+las comprobaciones de interacción, rotación y GPS en dispositivo. La fase 4
+requiere validar Google Cloud, el broker y dos teléfonos para su cierre integral.
 Ver [resultado y reproducción de fase 1](FASE_1_REFERENCIA_Y_VALIDACION.md).
 Ver [correcciones y pruebas de fase 2](FASE_2_RUTAS_Y_LLEGADAS.md).
 Ver [continuidad y contexto de fase 3](FASE_3_CONTINUIDAD_Y_CONTEXTO.md).
-La primera ejecución del workflow en GitHub queda pendiente de publicar los cambios.
+Ver [mapas, búsqueda y conexión de fase 4](FASE_4_MAPAS_BUSQUEDA_Y_CONEXION.md).
+La fase 3 está publicada en main. El workflow de GitHub aprobó el commit
+[1ab4e38](https://github.com/Defartion/RutaUTPAndroid/actions/runs/43460750207);
+las ampliaciones de fase 4 aún no se han publicado.
 
 ## Objetivo y referencia
 
@@ -277,14 +281,14 @@ Cada fase terminará con:
 
 Una fase que requiera dispositivo o infraestructura no se marcará completa solo con compilación y pruebas unitarias. Se registrará por separado la implementación terminada y la validación pendiente.
 
-## Seguimiento inicial
+## Seguimiento actualizado
 
 | Fase | Implementación | Validación |
 |---|---|---|
-| 1 | Implementada | 125 pruebas Android y 15 del verificador; compilación, análisis, referencia y APK correctos. Workflow preparado; primera ejecución GitHub pendiente de publicación. |
+| 1 | Implementada | Referencia y verificadores activos; workflow de main aprobado en GitHub el 13/11/2026. |
 | 2 | Implementada | 146 pruebas Android aprobadas; 19 casos de referencia activos. Comprobación GPS y visual en dispositivo pendiente. |
-| 3 | Pendiente | Pendiente |
-| 4 | Pendiente | Pendiente de configuración y ensayo con dos instalaciones. |
+| 3 | Implementada y publicada | 180 pruebas Android y 18 del verificador en su entrega; 27 referencias activas. Interacción, rotación y GPS en dispositivo pendientes. |
+| 4 | Implementada localmente | 212 pruebas Android y 25 de herramientas; APK y análisis correctos. Tres pruebas de cifrado compiladas, pendientes de ejecutar en dispositivo. Google Cloud, broker, revocación y quorum con dos teléfonos pendientes. |
 | 5 | Pendiente | Pendiente |
 | 6 | Pendiente | Requiere capturas comparables y dispositivo. |
 | 7 | Pendiente | Requiere backend/Firebase y entrega real. |

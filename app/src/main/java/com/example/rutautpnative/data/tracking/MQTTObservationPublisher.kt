@@ -21,13 +21,7 @@ import org.eclipse.paho.client.mqttv3.MqttCallback
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
-import java.io.InputStream
-import java.security.KeyStore
-import java.security.SecureRandom
 import java.util.UUID
-import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLSocketFactory
-import javax.net.ssl.TrustManagerFactory
 
 //----Baliza del pasajero (puerto del MQTTObservationPublisher.swift)----
 // Publica observaciones ANONIMAS de un pasajero probablemente a bordo. Una
@@ -105,6 +99,7 @@ class MQTTObservationPublisher(
 
     /// Abre (o reabre con el MISMO sessionId al reanudar) la sesion de viaje.
     fun start(sessionID: String, linea: String) {
+        if (!config.puedeContribuir) return
         sessionId = sessionID
         lineaActual = linea
         detenidoPorUsuario = false
@@ -163,6 +158,7 @@ class MQTTObservationPublisher(
 
     /// Cierra la sesion: limpia todo y desconecta.
     fun stop() {
+        if (!config.puedeContribuir) return
         detenidoPorUsuario = true
         sessionId = null
         lineaActual = null
@@ -259,9 +255,7 @@ class MQTTObservationPublisher(
                 isCleanSession = true
                 isAutomaticReconnect = true
                 keepAliveInterval = 30
-                if (config.useTLS) {
-                    socketFactory = MQTTTLS.socketFactory(config.caAsset, context)
-                }
+                MQTTTLS.aplicar(this, config, context)
             }
 
             this.cliente = cliente
@@ -277,6 +271,7 @@ class MQTTObservationPublisher(
                 }
 
                 override fun onFailure(token: IMqttToken?, exception: Throwable?) {
+                    config.informarFallo(exception)
                     handler.post {
                         if (!detenidoPorUsuario) _estado.value = EstadoPublicador.FALLO
                     }
@@ -284,31 +279,6 @@ class MQTTObservationPublisher(
             })
         } catch (e: Exception) {
             _estado.value = EstadoPublicador.FALLO
-        }
-    }
-
-    //----TLS con CA propia (asset PEM/DER), como trustedCACertificates del iOS----
-    private fun socketFactory(nombreAsset: String): SSLSocketFactory? {
-        return try {
-            val trustStore = KeyStore.getInstance(KeyStore.getDefaultType()).apply {
-                load(null, null)
-            }
-            if (nombreAsset.isNotEmpty()) {
-                val certificado = context.assets.open(nombreAsset).use { stream: InputStream ->
-                    val factory = java.security.cert.CertificateFactory.getInstance("X.509")
-                    factory.generateCertificate(stream)
-                }
-                trustStore.setCertificateEntry("ca-rutautp", certificado)
-            }
-            val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply {
-                init(trustStore)
-            }
-            SSLContext.getInstance("TLS").apply {
-                init(null, tmf.trustManagers, SecureRandom())
-            }.socketFactory
-        } catch (_: Exception) {
-            // CA ilegible: falla cerrado (no se baja la validacion).
-            null
         }
     }
 

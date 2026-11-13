@@ -5,8 +5,9 @@
 `python tools/verificar_paridad.py` comprueba los recursos fijados en
 `parity/reference.json`, los casos de comparación y el seguimiento F01–F15.
 `--require-results` exige además los resultados JUnit y lint de la compilación
-actual: al menos 146 pruebas, sin fallos ni omisiones, incluidos los once casos
-ETA y ocho casos de comparación de rutas. Los casos pendientes se informan por separado.
+actual: al menos 212 pruebas, sin fallos ni omisiones, incluidos los once casos
+ETA, ocho de comparación de rutas y ocho de continuidad. Los casos pendientes
+se informan por separado.
 
 `python -m unittest discover -s tools/tests -p "test_*.py"` ejecuta las pruebas
 del verificador. El informe queda en
@@ -16,6 +17,8 @@ No necesita acceso al broker ni credenciales.
 
 Ver [el resultado y reproducción de fase 1](../docs/FASE_1_REFERENCIA_Y_VALIDACION.md).
 La [fase 2](../docs/FASE_2_RUTAS_Y_LLEGADAS.md) activa los casos de ETA y transbordos.
+La [fase 4](../docs/FASE_4_MAPAS_BUSQUEDA_Y_CONEXION.md) documenta las cuentas
+por instalación y la comprobación efectiva de la configuración de mapas.
 
 ## Comprobar el APK generado
 
@@ -24,6 +27,14 @@ mallas y catálogos dentro del APK y la presencia de las pantallas nuevas. AAPT
 descomprime los assets con sufijo `.gz`: los modelos se abren como `.mesh` en
 el dispositivo. Las pruebas sobre los archivos fuente no detectan por sí solas
 una diferencia entre esas rutas de empaquetado y las que abre el visor.
+
+`python tools/verificar_configuracion.py` inspecciona el manifiesto y los DEX
+sin mostrar claves: comprueba el placeholder resuelto, la ausencia de campos
+MQTT de credenciales y la presencia del almacén protegido. Guarda el informe
+en `app/build/reports/parity/configuration-check.json`. La opción
+`--expected-map-key` se reserva a marcadores sintéticos de CI; no pasar claves
+reales por la línea de comandos. `--forbid MARCADOR` comprueba que una
+credencial sintética de compilación no se haya empaquetado.
 
 ## Recursos 3D
 

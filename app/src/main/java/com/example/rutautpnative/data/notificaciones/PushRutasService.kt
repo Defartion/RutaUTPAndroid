@@ -49,6 +49,13 @@ object PushRutasService {
         estado = if (disponible) L.t("Avisos de cambios desactivados", "Route change notifications disabled")
             else L.t("Falta configurar Firebase para los avisos remotos.", "Firebase must be configured for remote notifications.")
     }
+    fun alCambiarCuenta() {
+        sincronizacion?.cancel(); desconectar()
+        activadas = false; registroConfirmado = false
+        context?.getSharedPreferences(PREFS, 0)?.edit()?.putBoolean("notificaciones.push.rutas.v1", false)?.apply()
+        if (disponible) FirebaseMessaging.getInstance().isAutoInitEnabled = false
+        estado = L.t("Activa los avisos de nuevo para esta cuenta.", "Enable notifications again for this account.")
+    }
     fun cambiar(value: Boolean) {
         if (value && !disponible) return
         activadas = value
@@ -81,7 +88,7 @@ object PushRutasService {
                 .addOnFailureListener { tokenPendiente = false; estado = L.t("No se pudo registrar el dispositivo en Firebase.", "Could not register the device with Firebase.") }
             return
         }
-        val config = MQTTConfiguration.desdeBuildConfig()?.takeIf { it.puedeContribuir }
+        val config = MQTTConfiguration.paraContribucion()?.takeIf { it.puedeContribuir }
         if (config == null || !config.useTLS) {
             estado = L.t("Configura una cuenta MQTT propia con TLS para registrar avisos.", "Configure your own MQTT account with TLS to register notifications."); return
         }
@@ -160,7 +167,7 @@ object PushRutasService {
                 })
                 val opts = MqttConnectOptions().apply {
                     userName = config.username; password = config.password.toCharArray(); isCleanSession = true
-                    socketFactory = MQTTTLS.socketFactory(config.caAsset, ctx); connectionTimeout = 10
+                    MQTTTLS.aplicar(this, config, ctx); connectionTimeout = 10
                 }
                 client.connect(opts)
                 timeout = Runnable {

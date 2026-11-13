@@ -113,6 +113,7 @@ object PassiveTrackingCoordinator {
     private var gpsJob: Job? = null
     private var motionJob: Job? = null
     private var startJob: Job? = null
+    private var publicadorEstadoJob: Job? = null
 
     // Testigos de generacion (StartGuard del iOS): invalidan arranques
     // obsoletos que quedaron en vuelo tras una revocacion.
@@ -130,7 +131,7 @@ object PassiveTrackingCoordinator {
         appContext = context.applicationContext
         prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-        val config = MQTTConfiguration.desdeBuildConfig()?.takeIf { it.puedeContribuir }
+        val config = MQTTConfiguration.paraContribucion()?.takeIf { it.puedeContribuir }
         publicador = config?.let { MQTTObservationPublisher(it, context) }
         _publicadorConfigurado.value = publicador != null
         ocupacionViaje = config?.let { OccupancyService(it, context) }
@@ -145,7 +146,7 @@ object PassiveTrackingCoordinator {
         _consentimiento.value = consentPrevio && publicador != null
 
         // El estado del publicador se propaga al instante (no por sondeo).
-        scope.launch {
+        publicadorEstadoJob = scope.launch {
             publicador?.estado?.collect { _estadoPublicador.value = it }
         }
         scope.launch {
@@ -467,6 +468,20 @@ object PassiveTrackingCoordinator {
         _lineaConfirmada.value = null
         rutaAbordajeID = null
         _mensajeEstado.value = L.t("Contribución desactivada", "Contribution disabled")
+    }
+
+    fun actualizarCuentaConexion() {
+        detener()
+        publicadorEstadoJob?.cancel()
+        _consentimiento.value = false
+        prefs?.edit()?.putBoolean(LLAVE_CONSENTIMIENTO, false)?.apply()
+        val config = MQTTConfiguration.paraContribucion()?.takeIf { it.puedeContribuir }
+        publicador = appContext?.let { ctx -> config?.let { MQTTObservationPublisher(it, ctx) } }
+        ocupacionViaje = appContext?.let { ctx -> config?.let { OccupancyService(it, ctx) } }
+        _publicadorConfigurado.value = publicador != null
+        _estadoPublicador.value = MQTTObservationPublisher.EstadoPublicador.INACTIVO
+        publicadorEstadoJob = scope.launch { publicador?.estado?.collect { _estadoPublicador.value = it } }
+        rutasDeteccion = emptyList()
     }
 
     fun actualizarModoTransporte() {

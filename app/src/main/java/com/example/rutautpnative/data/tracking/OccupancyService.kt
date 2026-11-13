@@ -140,6 +140,7 @@ class OccupancyService(private val config: MQTTConfiguration, context: android.c
 
     /// Conserva solo la eleccion actual; nunca renueva automaticamente su edad.
     fun prepararReporteViaje(routeId: String, estado: EstadoOcupacion) {
+        if (!config.puedeContribuir) return
         reporteViaje = ReporteViaje(routeId, estado, System.currentTimeMillis() / 1000.0)
         requestIdPendiente = null
         _enviando.value = false
@@ -172,7 +173,7 @@ class OccupancyService(private val config: MQTTConfiguration, context: android.c
         const val INTERVALO_REINTENTO_VIAJE_S = 30.0 // reintento del reporte del viaje
 
         /// Hay canal solo si el broker esta configurado.
-        val configurado: Boolean get() = MQTTConfiguration.desdeBuildConfig() != null
+        val configurado: Boolean get() = MQTTConfiguration.actual() != null
     }
 
     //----Ciclo de vida (el panel lo enciende con onAppear, como el iOS)----
@@ -222,7 +223,7 @@ class OccupancyService(private val config: MQTTConfiguration, context: android.c
         estado: EstadoOcupacion,
         timestamp: Double
     ) {
-        if (!corriendo || _enviando.value || !_listo.value) return
+        if (!config.puedeContribuir || !corriendo || _enviando.value || !_listo.value) return
         val ahora = System.currentTimeMillis() / 1000.0
         // El reporte del viaje vence a los 3 min: caducado no se envia.
         if (routeId != null && ahora - timestamp >= VIDA_MAX_REPORTE_S) return
@@ -460,18 +461,16 @@ class OccupancyService(private val config: MQTTConfiguration, context: android.c
                 isCleanSession = true
                 isAutomaticReconnect = true
                 keepAliveInterval = 30
-                if (config.useTLS) {
-                    socketFactory = MQTTTLS.socketFactory(config.caAsset, appContext)
-                }
+                MQTTTLS.aplicar(this, config, appContext)
             }
 
             this.cliente = cliente
             cliente.connect(opciones, object : IMqttActionListener {
                 override fun onSuccess(token: IMqttToken?) = Unit
-                override fun onFailure(token: IMqttToken?, exception: Throwable?) = Unit
+                override fun onFailure(token: IMqttToken?, exception: Throwable?) { config.informarFallo(exception) }
             })
         } catch (e: Exception) {
-            android.util.Log.w("Occupancy", "conexion fallo", e)
+            android.util.Log.w("Occupancy", "Conexión fallida")
         }
     }
 }

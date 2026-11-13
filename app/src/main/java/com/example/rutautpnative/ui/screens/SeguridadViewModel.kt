@@ -136,7 +136,7 @@ class SeguridadViewModel : ViewModel() {
             val evento = when (resultado) {
                 is PlacesService.Resultado.Exito -> ZonaEvento.Exito(resultado.nombre, resultado.lat, resultado.lon)
                 PlacesService.Resultado.SinResultados -> ZonaEvento.SinResultados
-                PlacesService.Resultado.Error -> ZonaEvento.Fallo
+                PlacesService.Resultado.Error, PlacesService.Resultado.SinConfiguracion, PlacesService.Resultado.NoAutorizado -> ZonaEvento.Fallo
             }
             _zonaEventos.emit(evento)
         }
