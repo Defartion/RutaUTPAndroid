@@ -74,7 +74,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.example.rutautpnative.ui.components.AlEstarVisible
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -106,8 +107,8 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
         vm.actualizarSedeTrabajo()
     }
 
-    LaunchedEffect(router.cambioRutaPendiente) {
-        if (router.cambioRutaPendiente != null) mostrarCambiosRuta = true
+    LaunchedEffect(router.cambioRutaPendiente, router.consultaCambiosPendiente) {
+        if (router.cambioRutaPendiente != null || router.consultaCambiosPendiente) mostrarCambiosRuta = true
     }
     // "Elegir en el mapa": picker a pantalla completa + geocodificación inversa.
     val scope = rememberCoroutineScope()
@@ -196,9 +197,7 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
     //----Destinos guardados del drawer de búsqueda (Fase 5)----
     var mostrarDestinosGuardados by remember { mutableStateOf(false) }
     // Panel de cercanos colapsable: el estado vive en el ViewModel (sobrevive
-    // al cambio de pestaña, igual que la flota — "persistido en pantalla"
-    // del iOS; rememberSaveable NO sirve aqui porque Crossfade descarta el
-    // estado al salir de composicion).
+    // al cambio de pestaña, igual que la flota, como el estado de pantalla de iOS).
 
     //----Flujo "¿Ya subiste? Confirma tu línea" (Fase 9)----
     // Puerto del bloque de recordatorio del MapaView.swift iOS: pregunta
@@ -295,12 +294,10 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
         val observador = LifecycleEventObserver { _, evento ->
             when (evento) {
                 Lifecycle.Event.ON_STOP -> {
-                    vm.pausarFlota()
                     tareaPregunta?.cancel()
                     tareaPregunta = null
                 }
                 Lifecycle.Event.ON_START -> {
-                    vm.reanudarFlota()
                     if (fechaRecordatorio != null) iniciarEsperaPregunta(3)
                 }
                 else -> {}
@@ -310,23 +307,9 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
         onDispose { cicloVida.lifecycle.removeObserver(observador) }
     }
 
-    // Enciende el GPS en cuanto haya permiso (al concederlo o al entrar con
-    // permiso ya dado). El conteo de consumidores apaga el hardware al salir.
+    AlEstarVisible(vm::reanudar, vm::pausarPantalla)
     LaunchedEffect(autorizadoGPS) {
-        if (autorizadoGPS) vm.iniciarGPS()
-    }
-
-    // Al volver de otra pestaña (p.ej. tras "Ver Ruta Completa") el bucle de
-    // la flota quedo detenido en onDispose: reanudar flota + GPS aqui.
-    LaunchedEffect(Unit) {
-        vm.reanudar()
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            vm.detenerAnimacion()
-            vm.detenerGPS()
-        }
+        if (autorizadoGPS && cicloVida.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) vm.iniciarGPS()
     }
 
     // Consumir un destino pendiente publicado por otra pestaña (p.ej. zonas de
@@ -868,7 +851,7 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
     // Cambios de ruta (Fase 8): obras/cierre/desvio confirmados por la
     // comunidad via MQTT (dos cuentas, 15 min de vigencia).
     if (mostrarCambiosRuta) {
-        RouteChangesSheet(rutaInicial = router.cambioRutaPendiente, onDismiss = { mostrarCambiosRuta = false; router.cambioRutaPendiente = null })
+        RouteChangesSheet(rutaInicial = router.cambioRutaPendiente, onDismiss = { mostrarCambiosRuta = false; router.cambioRutaPendiente = null; router.consultaCambiosPendiente = false })
     }
 
     //----"Elegir en el mapa" (Fase 4): picker a pantalla completa +----

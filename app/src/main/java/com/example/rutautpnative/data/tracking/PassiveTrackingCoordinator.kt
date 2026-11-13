@@ -125,6 +125,8 @@ object PassiveTrackingCoordinator {
     //----Ciclo de vida----
 
     fun init(context: Context) {
+        // La actividad se recrea al girar; los colectores pertenecen al proceso.
+        if (appContext != null) return
         appContext = context.applicationContext
         prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
@@ -387,6 +389,8 @@ object PassiveTrackingCoordinator {
         _estadoDeteccion.value = EstadoDeteccionPasajero.IDLE
         _lineaConfirmada.value = null
         _rutaViajeSeleccionada.value = ruta
+        com.example.rutautpnative.navigation.ViajesActivos.estado.actualizar(
+            com.example.rutautpnative.navigation.TipoViaje.DECLARADO, true)
         _viajeIniciadoEn.value = System.currentTimeMillis() / 1000.0
         val lugar = BoardingPlaceStore.normalizado(lugarSubida ?: "")
         _lugarSubida.value = lugar
@@ -411,6 +415,8 @@ object PassiveTrackingCoordinator {
     /// "Finalizar viaje" (o contribucion desactivada): corta la sesion,
     /// descarta pendientes y espera otro viaje declarado.
     fun terminarViajeDeclarado() {
+        com.example.rutautpnative.navigation.ViajesActivos.estado.actualizar(
+            com.example.rutautpnative.navigation.TipoViaje.DECLARADO, false)
         terminarSesion()
         _rutaViajeSeleccionada.value = null
         _viajeIniciadoEn.value = null
@@ -437,6 +443,8 @@ object PassiveTrackingCoordinator {
     //----Detencion total----
 
     fun detener() {
+        com.example.rutautpnative.navigation.ViajesActivos.estado.actualizar(
+            com.example.rutautpnative.navigation.TipoViaje.DECLARADO, false)
         startJob?.cancel()
         guardia.incrementAndGet()   // invalida arranques en vuelo
         detenerViajeDemo()
@@ -459,6 +467,12 @@ object PassiveTrackingCoordinator {
         _lineaConfirmada.value = null
         rutaAbordajeID = null
         _mensajeEstado.value = L.t("Contribución desactivada", "Contribution disabled")
+    }
+
+    fun actualizarModoTransporte() {
+        detener()
+        rutasDeteccion = emptyList()
+        if (_consentimiento.value && enPrimerPlano) arrancar()
     }
 
     //----Viaje de prueba (puerto-comodin del MQTT_FORCE_ONBOARD del iOS)----

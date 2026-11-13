@@ -2,9 +2,12 @@
 
 Fecha: 10 de noviembre de 2026.
 
-Estado: **fases 1 y 2 implementadas y verificadas localmente; fases 3–8 pendientes**.
+Estado: **fases 1–3 implementadas y verificadas localmente; fases 4–8 pendientes**.
+Última validación local: 13 de noviembre de 2026. La fase 3 conserva pendientes
+las comprobaciones de interacción, rotación y GPS en dispositivo.
 Ver [resultado y reproducción de fase 1](FASE_1_REFERENCIA_Y_VALIDACION.md).
 Ver [correcciones y pruebas de fase 2](FASE_2_RUTAS_Y_LLEGADAS.md).
+Ver [continuidad y contexto de fase 3](FASE_3_CONTINUIDAD_Y_CONTEXTO.md).
 La primera ejecución del workflow en GitHub queda pendiente de publicar los cambios.
 
 ## Objetivo y referencia

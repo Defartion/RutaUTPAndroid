@@ -6,6 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,10 +52,11 @@ fun RutasScreen(router: AppRouter, viewModel: RutasViewModel = viewModel()) {
     val busqueda by viewModel.textoBusqueda.collectAsState()
     val filtro by viewModel.rutasFiltradas.collectAsState()
     val cerca by viewModel.lugarCercano.collectAsState()
-    var seleccionada by remember { mutableStateOf<RutaGTFS?>(null) }
-    var galeria by remember { mutableStateOf(false) }
-    var modelo by remember { mutableStateOf<RutaGTFS?>(null) }
-    var navegando by remember { mutableStateOf<RutaGTFS?>(null) }
+    var seleccionada by viewModel::seleccionada
+    val lista = rememberLazyListState()
+    var galeria by viewModel::galeria
+    var modelo by viewModel::modelo
+    var navegando by viewModel::navegando
     LaunchedEffect(router.rutaPendiente, rutas) {
         val id = router.rutaPendiente ?: return@LaunchedEffect
         (rutas.firstOrNull { it.id == id } ?: rutas.firstOrNull { it.linea == id })?.let {
@@ -68,7 +71,7 @@ fun RutasScreen(router: AppRouter, viewModel: RutasViewModel = viewModel()) {
         AnimatedContent(seleccionada, modifier = Modifier.fillMaxSize().padding(padding).statusBarsPadding(), label = "ruta_detalle") { ruta ->
             if (ruta == null) RutasCatalogo(filtro.rutas, filtro.distancias, cerca, cargando, error, busqueda,
                 viewModel::actualizarBusqueda, { viewModel.cargar(true) }, { viewModel.filtrarCercaDe(null) },
-                { seleccionada = it }, { galeria = true })
+                { seleccionada = it }, { galeria = true }, lista)
             else DetalleRutaActual(ruta, { seleccionada = null }, { navegando = ruta }, { modelo = ruta })
         }
     }
@@ -80,7 +83,7 @@ fun RutasScreen(router: AppRouter, viewModel: RutasViewModel = viewModel()) {
 @Composable
 fun RutasCatalogo(rutas: List<RutaGTFS>, distancias: Map<String, Int>, cerca: DestinoPendiente?, cargando: Boolean,
     error: String?, texto: String, onBusqueda: (String) -> Unit, onReintentar: () -> Unit, onQuitarCerca: () -> Unit,
-    onRuta: (RutaGTFS) -> Unit, on3D: () -> Unit) {
+    onRuta: (RutaGTFS) -> Unit, on3D: () -> Unit, lista: LazyListState = rememberLazyListState()) {
     val foco = LocalFocusManager.current
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp).heightIn(min = 60.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -105,7 +108,7 @@ fun RutasCatalogo(rutas: List<RutaGTFS>, distancias: Map<String, Int>, cerca: De
                 IconButton(onClick = onQuitarCerca) { Icon(Icons.Filled.Cancel, L.t("Quitar filtro de cercanía", "Clear nearby filter")) }
             }
         }
-        LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 24.dp),
+        LazyColumn(Modifier.weight(1f), state = lista, contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)) {
             item { Card(onClick = on3D, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = SuperficieAgrupada)) {
                 Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {

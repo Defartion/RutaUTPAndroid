@@ -1,5 +1,8 @@
 package com.example.rutautpnative.ui.screens
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.rutautpnative.data.gtfs.IndiceBusquedaRuta
@@ -28,6 +31,10 @@ import kotlinx.coroutines.launch
 // junto con la búsqueda por texto y el filtro "líneas cerca de un lugar"
 // (lugarCercanoPendiente del router, radio 300 m — mismo criterio que iOS).
 class RutasViewModel : ViewModel() {
+    var seleccionada by mutableStateOf<RutaGTFS?>(null)
+    var galeria by mutableStateOf(false)
+    var modelo by mutableStateOf<RutaGTFS?>(null)
+    var navegando by mutableStateOf<RutaGTFS?>(null)
 
     companion object {
         // Radio del filtro "transporte cerca de este lugar" (iOS: 300 m).

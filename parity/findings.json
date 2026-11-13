@@ -27,27 +27,30 @@
       "phases": [
         3
       ],
-      "status": "pending",
+      "status": "verified",
       "acceptance": "Una respuesta antigua no sustituye un destino posterior",
-      "validation": "STATE-01 y STATE-02 con servicio de búsqueda controlado."
+      "validation": "Verificado localmente el 13/11/2026. STATE-01/02 sobre MapaViewModel, sugerencias y líneas fuera de orden; respuesta y cámara controladas. UI y GPS en dispositivo pendientes.",
+      "evidence": "docs/FASE_3_CONTINUIDAD_Y_CONTEXTO.md"
     },
     {
       "id": "F04",
       "phases": [
         3
       ],
-      "status": "pending",
+      "status": "verified",
       "acceptance": "Cambiar catálogo retira flota y contexto anteriores",
-      "validation": "STATE-03 con y sin MQTT; catálogo UTP ausente."
+      "validation": "Verificado localmente el 13/11/2026. STATE-03 y retiro/reuso de ViewModelStore; UTP ausente no abre proveedor. Filtrado de flota real revisado; prueba con broker y teléfono pendiente.",
+      "evidence": "docs/FASE_3_CONTINUIDAD_Y_CONTEXTO.md"
     },
     {
       "id": "F05",
       "phases": [
         3
       ],
-      "status": "pending",
+      "status": "verified",
       "acceptance": "Avisos respetan todos los tipos de viaje activo",
-      "validation": "STATE-04, STATE-05 y STATE-08; toque consumido una vez."
+      "validation": "Verificado localmente el 13/11/2026. STATE-04/05/08, caducidad remota, identidad de configuración local, cola, deduplicación, cambios de contexto y protección del resumen. Entrega/toque real pendientes.",
+      "evidence": "docs/FASE_3_CONTINUIDAD_Y_CONTEXTO.md"
     },
     {
       "id": "F06",
@@ -90,9 +93,10 @@
       "phases": [
         3
       ],
-      "status": "pending",
+      "status": "verified",
       "acceptance": "Pestañas y tracking conservan el contexto acordado",
-      "validation": "STATE-06 y STATE-07; rotación y recreación."
+      "validation": "Verificado localmente el 13/11/2026. STATE-06/07 sobre modelos retenidos; pausa y reanudación de navegación sin reiniciar progreso. Rotación y posición visual en dispositivo pendientes.",
+      "evidence": "docs/FASE_3_CONTINUIDAD_Y_CONTEXTO.md"
     },
     {
       "id": "F11",
@@ -136,9 +140,10 @@
       "phases": [
         3
       ],
-      "status": "pending",
+      "status": "in_progress",
       "acceptance": "IDs urbanos e institucionales separados antes del feed real",
-      "validation": "Dos catálogos sintéticos con IDs repetidos; coordinación backend."
+      "validation": "Preparación local de fase 3 verificada el 13/11/2026. Prefijo utp: en seis campos y parseo de dos feeds homónimos con relaciones/tarifas conservadas. Coordinación con feed y backend pendiente.",
+      "evidence": "docs/FASE_3_CONTINUIDAD_Y_CONTEXTO.md"
     }
   ]
 }

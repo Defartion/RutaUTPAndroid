@@ -62,8 +62,9 @@ data class FareRuleRow(
 // (equivale al `guard ... else { continue }` del parseo Swift).
 object GTFSParser {
 
-    fun routeRows(texto: String): List<RouteRow> {
-        val t = GTFSCSV.parsear(texto)
+    fun routeRows(texto: String): List<RouteRow> = routeRows(GTFSCSV.parsear(texto))
+
+    internal fun routeRows(t: GTFSCSV.Tabla): List<RouteRow> {
         t.exigir("route_id", "agency_id", "route_short_name", "route_long_name", "route_color")
         return (0 until t.rowCount).map { i ->
             RouteRow(
@@ -76,8 +77,9 @@ object GTFSParser {
         }
     }
 
-    fun tripRows(texto: String): List<TripRow> {
-        val t = GTFSCSV.parsear(texto)
+    fun tripRows(texto: String): List<TripRow> = tripRows(GTFSCSV.parsear(texto))
+
+    internal fun tripRows(t: GTFSCSV.Tabla): List<TripRow> {
         t.exigir("trip_id", "route_id", "shape_id")
         return (0 until t.rowCount).map { i ->
             TripRow(
@@ -88,8 +90,9 @@ object GTFSParser {
         }
     }
 
-    fun shapeRows(texto: String): List<ShapeRow> {
-        val t = GTFSCSV.parsear(texto)
+    fun shapeRows(texto: String): List<ShapeRow> = shapeRows(GTFSCSV.parsear(texto))
+
+    internal fun shapeRows(t: GTFSCSV.Tabla): List<ShapeRow> {
         t.exigir("shape_id", "shape_pt_lat", "shape_pt_lon", "shape_pt_sequence")
         return (0 until t.rowCount).mapNotNull { i ->
             val lat = t.valor(i, "shape_pt_lat").toDoubleOrNull() ?: return@mapNotNull null
@@ -100,8 +103,9 @@ object GTFSParser {
         }
     }
 
-    fun stopRows(texto: String): List<StopRow> {
-        val t = GTFSCSV.parsear(texto)
+    fun stopRows(texto: String): List<StopRow> = stopRows(GTFSCSV.parsear(texto))
+
+    internal fun stopRows(t: GTFSCSV.Tabla): List<StopRow> {
         t.exigir("stop_id", "stop_name", "stop_lat", "stop_lon")
         return (0 until t.rowCount).mapNotNull { i ->
             val lat = t.valor(i, "stop_lat").toDoubleOrNull() ?: return@mapNotNull null
@@ -116,8 +120,9 @@ object GTFSParser {
         }
     }
 
-    fun stopTimeRows(texto: String): List<StopTimeRow> {
-        val t = GTFSCSV.parsear(texto)
+    fun stopTimeRows(texto: String): List<StopTimeRow> = stopTimeRows(GTFSCSV.parsear(texto))
+
+    internal fun stopTimeRows(t: GTFSCSV.Tabla): List<StopTimeRow> {
         t.exigir("trip_id", "stop_sequence", "stop_id", "departure_time")
         return (0 until t.rowCount).mapNotNull { i ->
             val seq = t.valor(i, "stop_sequence").toIntOrNull() ?: return@mapNotNull null
@@ -130,8 +135,9 @@ object GTFSParser {
         }
     }
 
-    fun frequencyRows(texto: String): List<FrequencyRow> {
-        val t = GTFSCSV.parsear(texto)
+    fun frequencyRows(texto: String): List<FrequencyRow> = frequencyRows(GTFSCSV.parsear(texto))
+
+    internal fun frequencyRows(t: GTFSCSV.Tabla): List<FrequencyRow> {
         t.exigir("trip_id", "headway_secs")
         return (0 until t.rowCount).mapNotNull { i ->
             val headway = t.valor(i, "headway_secs").toIntOrNull() ?: return@mapNotNull null
@@ -139,8 +145,9 @@ object GTFSParser {
         }
     }
 
-    fun fareAttributeRows(texto: String): List<FareAttributeRow> {
-        val t = GTFSCSV.parsear(texto)
+    fun fareAttributeRows(texto: String): List<FareAttributeRow> = fareAttributeRows(GTFSCSV.parsear(texto))
+
+    internal fun fareAttributeRows(t: GTFSCSV.Tabla): List<FareAttributeRow> {
         t.exigir("fare_id", "price")
         return (0 until t.rowCount).map { i ->
             FareAttributeRow(
@@ -150,8 +157,9 @@ object GTFSParser {
         }
     }
 
-    fun fareRuleRows(texto: String): List<FareRuleRow> {
-        val t = GTFSCSV.parsear(texto)
+    fun fareRuleRows(texto: String): List<FareRuleRow> = fareRuleRows(GTFSCSV.parsear(texto))
+
+    internal fun fareRuleRows(t: GTFSCSV.Tabla): List<FareRuleRow> {
         t.exigir("fare_id", "route_id")
         return (0 until t.rowCount).map { i ->
             FareRuleRow(

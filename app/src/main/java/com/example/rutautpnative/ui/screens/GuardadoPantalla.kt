@@ -21,7 +21,7 @@ import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.*
 
 @Composable
-fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()) {
+fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel(), estado: EstadoGuardadoViewModel = viewModel()) {
     val lugares by viewModel.lugares.collectAsState()
     val lineas by viewModel.lineas.collectAsState()
     val catalogo by viewModel.catalogo.collectAsState()
@@ -29,7 +29,7 @@ fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()
     val errorCatalogo by viewModel.errorCatalogo.collectAsState()
     val lugaresInvalidos by LugaresStore.datosInvalidos.collectAsState()
     val lineasInvalidas by LineasGuardadasStore.datosInvalidos.collectAsState()
-    var tab by remember { mutableIntStateOf(0) }
+    var tab by estado::pestana
     var anadirLugar by remember { mutableStateOf(false) }
     var anadirLinea by remember { mutableStateOf(false) }
     var seleccionado by remember { mutableStateOf<LugarGuardado?>(null) }
@@ -61,7 +61,7 @@ fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()
                     Icon(Icons.Filled.Add, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(if (tab == 0) L.t("Añadir lugar", "Add place") else L.t("Añadir línea", "Add line"))
                 }
             }
-            LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            LazyColumn(Modifier.weight(1f), state = estado.lista, contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (lugaresInvalidos || lineasInvalidas) item {
                     Column {
                         Text(L.t("No se pueden leer algunos datos guardados. Los originales se conservan. Revisa Perfil → Respaldos guardados.", "Some saved data could not be read. Originals are preserved. Open Profile → Saved backups."), color = AppError, style = BodySm)

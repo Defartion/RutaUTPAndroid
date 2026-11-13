@@ -13,7 +13,7 @@
       "commit": "7ba57cbe73f97e83fd112584a9e8ff89623ac4c1"
     }
   },
-  "minimumUnitTests": 146,
+  "minimumUnitTests": 180,
   "originalUnitTests": 119,
   "requiredBaselineCaseIds": [
     "ETA-01",
@@ -34,7 +34,15 @@
     "ROUTE-05",
     "ROUTE-06",
     "ROUTE-07",
-    "ROUTE-08"
+    "ROUTE-08",
+    "STATE-01",
+    "STATE-02",
+    "STATE-03",
+    "STATE-04",
+    "STATE-05",
+    "STATE-06",
+    "STATE-07",
+    "STATE-08"
   ],
   "minimumFixtureCases": {
     "eta": 11,

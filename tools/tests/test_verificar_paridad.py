@@ -56,7 +56,8 @@ class ReferenceGuardTest(unittest.TestCase):
 
     def test_pendientes_no_se_presentan_como_pruebas_aprobadas(self):
         report = CHECK.verify(self.root)
-        self.assertEqual(8, report["pendingBehaviorCases"])
+        self.assertEqual(0, report["pendingBehaviorCases"])
+        self.assertEqual(8, len(report["fixtureCases"]["travel-state"]["baseline"]))
         self.assertEqual(11, len(report["fixtureCases"]["eta"]["baseline"]))
         self.assertFalse(report["resultsVerified"])
 
@@ -107,7 +108,8 @@ class ReferenceGuardTest(unittest.TestCase):
     def test_resultados_exigen_los_casos_ios_y_el_minimo_original(self):
         self.reports()
         report = CHECK.verify(self.root, require_results=True)
-        self.assertEqual(146, report["checks"]["unitTests"]["tests"])
+        self.assertEqual(180, report["checks"]["unitTests"]["tests"])
+        self.assertEqual(8, report["checks"]["referenceStateCasesExecuted"])
         self.assertEqual(11, report["checks"]["referenceEtaCasesExecuted"])
         self.assertEqual(8, report["checks"]["referenceRouteCasesExecuted"])
 
@@ -136,7 +138,7 @@ class ReferenceGuardTest(unittest.TestCase):
         suite.getroot().remove(suite.getroot().find("testcase"))
         suite.getroot().set("tests", str(len(suite.getroot().findall("testcase"))))
         suite.write(file)
-        with self.assertRaisesRegex(ValueError, "menos de 146"):
+        with self.assertRaisesRegex(ValueError, "menos de 180"):
             CHECK.verify(self.root, require_results=True)
 
     def test_casos_de_comparacion_exigen_su_ejecutor_real(self):
@@ -148,13 +150,28 @@ class ReferenceGuardTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "No se ejecutó el caso"):
             CHECK.verify(self.root, require_results=True)
 
-    def test_estado_no_se_promueve_sin_un_ejecutor(self):
+    def test_casos_de_estado_exigen_su_ejecutor_real(self):
+        self.reports()
+        file = self.root / "app/build/test-results/testDebugUnitTest/TEST-com.example.rutautpnative.IosTravelStateReferenceTest.xml"
+        suite = ET.parse(file)
+        suite.getroot().find("testcase").set("name", "otraPrueba")
+        suite.write(file)
+        with self.assertRaisesRegex(ValueError, "No se ejecutó el caso"):
+            CHECK.verify(self.root, require_results=True)
+
+    def test_caso_pendiente_no_se_cuenta_como_aprobado(self):
         path = "app/src/test/resources/parity/travel-state.json"
         data = CHECK.load_json(self.root / path)
-        data["cases"][0]["status"] = "baseline"
+        case = data["cases"][0]
+        case["status"] = "pending"
         self.save(path, data)
-        with self.assertRaisesRegex(ValueError, "Falta un ejecutor"):
-            CHECK.verify(self.root)
+        ref = CHECK.load_json(self.root / "parity/reference.json")
+        ref["requiredBaselineCaseIds"].remove(case["id"])
+        self.save("parity/reference.json", ref)
+        report = CHECK.verify(self.root)
+        self.assertEqual(1, report["pendingBehaviorCases"])
+        self.assertEqual(7, len(report["fixtureCases"]["travel-state"]["baseline"]))
+        self.assertFalse(report["resultsVerified"])
 
     def test_rechaza_prueba_omitida(self):
         self.reports()

@@ -22,6 +22,15 @@ data class ConfiguracionNotificaciones(val version: Int = 1, val recordatorio: R
         inicioSilencio in 0..1439 && finSilencio in 0..1439 && cantidadDiaria in 1..3 &&
         inicioDiario in 0..1439 && finDiario in 1..1439 && finDiario - inicioDiario >= cantidadDiaria &&
         (pausaHasta == null || pausaHasta in 0..4_102_444_800_000L)
+    /** El aviso pertenece a la configuración que sigue vigente, igual que en iOS. */
+    fun aceptaAviso(id: String?, destino: String?, diario: Int?): Boolean {
+        if (!valida() || id.isNullOrBlank()) return false
+        return when {
+            destino != null -> recordatorio?.let { it.id == id && it.destinoID == destino } == true
+            diario != null -> diariosActivos && diarioID == id && diario in 0..3
+            else -> false
+        }
+    }
     fun permite(instante: Instant, zona: ZoneId): Boolean {
         val fecha = instante.atZone(zona)
         val dia = fecha.dayOfWeek.value % 7 + 1

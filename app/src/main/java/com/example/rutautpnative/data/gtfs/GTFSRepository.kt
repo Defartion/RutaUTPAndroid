@@ -99,43 +99,49 @@ object GTFSRepository {
 
     //----Parseo del feed----
 
-    private fun parsear(am: AssetManager, carpeta: String): List<RutaGTFS> = parsearFuente { leer(am, carpeta, it) }
+    private fun parsear(am: AssetManager, carpeta: String): List<RutaGTFS> =
+        parsearFuente(carpeta == "gtfs-utp") { leer(am, carpeta, it) }
 
-    internal fun parsearFuente(leerTabla: (String) -> String): List<RutaGTFS> {
+    internal fun parsearFuente(leerTabla: (String) -> String): List<RutaGTFS> = parsearFuente(false, leerTabla)
+
+    internal fun parsearFuente(institucional: Boolean, leerTabla: (String) -> String): List<RutaGTFS> {
+        fun tabla(nombre: String): GTFSCSV.Tabla = GTFSCSV.parsear(leerTabla(nombre)).let {
+            if (institucional) it.conIdentificadoresInstitucionales() else it
+        }
         // 1. Agencias (agency_id → nombre)
-        val agency = GTFSCSV.parsear(leerTabla("agency"))
+        val agency = tabla("agency")
         val nombresAgencia = diccionario(agency.columna("agency_id"), agency.columna("agency_name"))
 
         // 2. Rutas
-        val routeRows = GTFSParser.routeRows(leerTabla("routes"))
+        val routeRows = GTFSParser.routeRows(tabla("routes"))
 
         // 3. Trips (en este feed: 1 trip por ruta, trip_id == route_id)
-        val tripRows = GTFSParser.tripRows(leerTabla("trips"))
+        val tripRows = GTFSParser.tripRows(tabla("trips"))
         val tripShape = tripRows.associate { it.tripId to it.shapeId }
         val routeTrip = tripRows.associate { it.routeId to it.tripId }
 
         // 4. Shapes agrupados por id y ordenados por secuencia
-        val shapeRows = GTFSParser.shapeRows(leerTabla("shapes"))
+        val shapeRows = GTFSParser.shapeRows(tabla("shapes"))
         val shapesPorId = shapeRows
             .groupBy { it.shapeId }
             .mapValues { (_, pts) -> pts.sortedBy { it.sequence }.map { LatLng(it.lat, it.lon) } }
 
         // 5. Paraderos (stop_id → ParaderoGTFS)
-        val stopRows = GTFSParser.stopRows(leerTabla("stops"))
+        val stopRows = GTFSParser.stopRows(tabla("stops"))
         val paraderosPorId = stopRows.associate { it.stopId to ParaderoGTFS(it.stopId, it.stopName, it.lat, it.lon) }
 
         // 6. Stop times agrupados por trip
-        val stopTimeRows = GTFSParser.stopTimeRows(leerTabla("stop_times"))
+        val stopTimeRows = GTFSParser.stopTimeRows(tabla("stop_times"))
         val paradasPorTrip = stopTimeRows.groupBy { it.tripId }
 
         // 7. Frecuencias (headway) por trip
-        val frequencyRows = GTFSParser.frequencyRows(leerTabla("frequencies"))
+        val frequencyRows = GTFSParser.frequencyRows(tabla("frequencies"))
         val headwayPorTrip = frequencyRows.associate { it.tripId to it.headwaySecs }
 
         // 8. Tarifas: route_id → precio
-        val fareAttributeRows = GTFSParser.fareAttributeRows(leerTabla("fare_attributes"))
+        val fareAttributeRows = GTFSParser.fareAttributeRows(tabla("fare_attributes"))
         val precioPorFare = fareAttributeRows.associate { it.fareId to it.price }
-        val fareRuleRows = GTFSParser.fareRuleRows(leerTabla("fare_rules"))
+        val fareRuleRows = GTFSParser.fareRuleRows(tabla("fare_rules"))
         val precioPorRuta = HashMap<String, Double>()
         for (rule in fareRuleRows) {
             precioPorFare[rule.fareId]?.let { precioPorRuta[rule.routeId] = it }

@@ -68,6 +68,7 @@ object NotificacionesService {
     }
     private fun pendiente(ctx: Context, id: Int, aviso: AvisoProgramado? = null): PendingIntent {
         val intent = Intent(ctx, AvisoReceiver::class.java).setAction("rutautp.AVISO.$id")
+        aviso?.let { intent.putExtra("configuracionID", if (it.destinoID != null) configuracion.recordatorio?.id else configuracion.diarioID) }
         aviso?.destinoID?.let { intent.putExtra("destinoID", it) }
         aviso?.tipoDiario?.let { intent.putExtra("diario", it) }
         return PendingIntent.getBroadcast(ctx, id, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
@@ -106,10 +107,15 @@ object NotificacionesService {
         catch (_: Exception) { error = L.t("No se pudo completar la programación.", "Could not complete scheduling.") }
         finally { prefs.edit().putStringSet("notificaciones.alarmas.v1", nuevos).commit(); programadas = nuevos.size }
     }
-    fun mostrar(ctx: Context, destino: String?, diario: Int?, prueba: Boolean = false) {
+    fun mostrar(ctx: Context, destino: String?, diario: Int?, prueba: Boolean = false, configuracionID: String? = null) {
         if (!permitido(ctx)) return
         if (!prueba && (!ctx.getSharedPreferences(PREFS, 0).getBoolean("perfil_notificaciones", false) || datosInvalidos || !configuracion.permite(Instant.now(), ZoneId.systemDefault()))) return
+        if (!prueba && !configuracion.aceptaAviso(configuracionID, destino, diario)) return
         val intent = Intent(ctx, MainActivity::class.java).setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        intent.putExtra("notificacionAccionID", "local:" + java.util.UUID.randomUUID())
+            // Los locales dependen de configuración y destino vigentes, no de un TTL inventado.
+            .putExtra("notificacionVenceEn", Double.MAX_VALUE)
+            .putExtra("notificacionConfiguracionID", configuracionID)
         if (destino != null) intent.putExtra("notificacionDestinoID", destino)
         if (diario != null) intent.putExtra("notificacionDiaria", diario)
         val titulo = when (diario) {
@@ -142,7 +148,7 @@ class AvisoReceiver : BroadcastReceiver() {
                     com.example.rutautpnative.data.SedeTrabajoStore.init(context)
                     NotificacionesService.init(context, programar = false)
                     if (intent.action?.startsWith("rutautp.AVISO.") == true) {
-                        NotificacionesService.mostrar(context, intent.getStringExtra("destinoID"), intent.takeIf { it.hasExtra("diario") }?.getIntExtra("diario", 0))
+                        NotificacionesService.mostrar(context, intent.getStringExtra("destinoID"), intent.takeIf { it.hasExtra("diario") }?.getIntExtra("diario", 0), configuracionID = intent.getStringExtra("configuracionID"))
                     }
                     NotificacionesService.reprogramar()
                 }

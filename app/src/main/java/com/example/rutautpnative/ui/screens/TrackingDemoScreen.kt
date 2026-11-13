@@ -1,5 +1,12 @@
 package com.example.rutautpnative.ui.screens
 
+import androidx.activity.compose.BackHandler
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.example.rutautpnative.ui.components.AlEstarVisible
+import com.example.rutautpnative.navigation.ViajesActivos
+import com.example.rutautpnative.navigation.TipoViaje
 import android.Manifest
 import android.content.Context
 import androidx.compose.animation.animateContentSize
@@ -90,6 +97,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.ensureActive
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -104,7 +112,7 @@ import kotlin.math.roundToInt
 //
 // Entrada: item "Tracking Demo" del drawer (iOS lo marca TEMPORAL).
 
-private enum class EstadoDemo { ESPERANDO_GPS, SIN_PERMISO, LISTO, EN_RUTA, FUERA_RUTA, CERCA_DESTINO, FINALIZADO }
+internal enum class EstadoDemo { ESPERANDO_GPS, SIN_PERMISO, LISTO, EN_RUTA, FUERA_RUTA, CERCA_DESTINO, FINALIZADO }
 
 // Las fases del viaje son las del TransitPlanner (JourneyLeg del iOS): a pie
 // a la subida, primer micro, transbordo, segundo micro y caminata final.
@@ -128,9 +136,11 @@ private val TextoOscuroVar = TextoOscuroVariante
 private val Verde = VerdeExito
 private val Naranja = NaranjaAdvertencia
 
-private class TrackingDemoVM(
-    private val context: Context,
-    private val scope: CoroutineScope
+internal class TrackingDemoVM(
+    private val scope: CoroutineScope,
+    private val ajustes: AjustesTracking,
+    private val cargarRutas: suspend () -> List<RutaGTFS> = { GTFSRepository.rutas() },
+    private val caminatas: TransitPlanner.CaminatasReales = TransitPlanner.CaminatasReales { a, b -> TransitPlanner.caminataReal(a, b) }
 ) {
     //----Fuente de vehiculos: SIEMPRE SIMULADA en la demo (paridad iOS)----
     // El RouteTrackingViewModel del iOS recibe SimulatedTrackingProvider() por
@@ -141,14 +151,14 @@ private class TrackingDemoVM(
     val providerReal: MQTTTrackingProvider? = null
 
     //----Preferencias del demo (persistidas, claves del iOS)----
-    var radioParadero by mutableStateOf(TrackingDemoPrefs.leerRadio(context))
+    var radioParadero by mutableStateOf(ajustes.radio)
         private set
-    var multiplicadorVelocidad by mutableStateOf(TrackingDemoPrefs.leerVelocidad(context))
+    var multiplicadorVelocidad by mutableStateOf(ajustes.velocidad)
         private set
 
     fun cambiarRadio(radio: Double) {
         radioParadero = radio
-        TrackingDemoPrefs.guardarRadio(context, radio)
+        ajustes.guardarRadio(radio)
         // Cambiar el radio invalida el ultimo error (el usuario esta probando
         // otro valor; el mensaje ya no corresponde).
         mensajeErrorRuta = null
@@ -156,7 +166,7 @@ private class TrackingDemoVM(
 
     fun cambiarVelocidad(mult: Int) {
         multiplicadorVelocidad = mult
-        TrackingDemoPrefs.guardarVelocidad(context, mult)
+        ajustes.guardarVelocidad(mult)
     }
 
     //----Estado del viaje----
@@ -279,7 +289,7 @@ private class TrackingDemoVM(
 
     private fun refrescarParaderoCercano(pos: LatLng) {
         scope.launch {
-            val rutas = GTFSRepository.rutas()
+            val rutas = cargarRutas()
             var mejor: ParaderoGTFS? = null
             var mejorD = Double.MAX_VALUE
             for (ruta in rutas) {
@@ -295,24 +305,26 @@ private class TrackingDemoVM(
 
     //----Inicio / recalculo / detencion del viaje----
 
-    fun iniciarViaje(titulo: String, destino: LatLng) {
+    fun iniciarViaje(titulo: String, destino: LatLng): Job? {
         destinoTitulo = titulo
         this.destino = destino
         val origen = posicion
-        if (origen == null) { estado = EstadoDemo.ESPERANDO_GPS; return }
-        calcularRuta(origen, destino, esRecalculo = false)
+        if (origen == null) { estado = EstadoDemo.ESPERANDO_GPS; return null }
+        return calcularRuta(origen, destino, esRecalculo = false)
     }
 
-    private fun calcularRuta(origen: LatLng, destino: LatLng, esRecalculo: Boolean) {
+    private fun calcularRuta(origen: LatLng, destino: LatLng, esRecalculo: Boolean): Job {
         calcJob?.cancel()
         if (esRecalculo) recalculando = true
         calculandoRuta = true
         mensajeErrorRuta = null
         calcJob = scope.launch {
             try {
-                val rutas = GTFSRepository.rutas()
-                val plan = TransitPlanner.plan(origen, destino, rutas, radioParadero) { a, b -> TransitPlanner.caminataReal(a, b) }
+                val rutas = cargarRutas()
+                val plan = TransitPlanner.plan(origen, destino, rutas, radioParadero, caminatas)
+                coroutineContext.ensureActive()
                 if (plan != null) {
+                    ViajesActivos.estado.actualizar(TipoViaje.TRACKING, true)
                     itinerario = plan
                     caminataAproximada = plan.caminataAproximada
                     rutaCombinada = RutaCombinada(plan)
@@ -352,13 +364,14 @@ private class TrackingDemoVM(
                     ) + sugerencia
                 }
             } finally {
-                calculandoRuta = false
-                if (esRecalculo) {
+                if (kotlinx.coroutines.currentCoroutineContext().isActive) calculandoRuta = false
+                if (esRecalculo && kotlinx.coroutines.currentCoroutineContext().isActive) {
                     recalculando = false
                     ultimoRecalculoMs = System.currentTimeMillis()
                 }
             }
         }
+        return checkNotNull(calcJob)
     }
 
     /// Recalculo tras desvio sostenido: replanifica desde la posicion actual.
@@ -370,6 +383,7 @@ private class TrackingDemoVM(
     }
 
     private fun finalizarSesion() {
+        // El resumen sigue perteneciendo al viaje hasta que el usuario lo cierre.
         val ses = sesion ?: return
         ses.estado = EstadoViaje.COMPLETADO
         ses.endedAt = System.currentTimeMillis() / 1000.0
@@ -377,6 +391,9 @@ private class TrackingDemoVM(
     }
 
     fun detenerViaje(cancelado: Boolean = true) {
+        calcJob?.cancel()
+        calculandoRuta = false
+        ViajesActivos.estado.actualizar(TipoViaje.TRACKING, false)
         detenerDemo()
         val ses = sesion
         if (ses != null && ses.estado == EstadoViaje.EN_PROGRESO) {
@@ -444,13 +461,15 @@ private class TrackingDemoVM(
 
     init {
         scope.launch {
-            catalogo = GTFSRepository.rutas().associateBy { it.id }
+            catalogo = cargarRutas().associateBy { it.id }
         }
     }
 
     fun colorDeLinea(routeId: String): Color = catalogo[routeId]?.color ?: AppPrimary
 
     fun iniciarVehiculos(ancla: LatLng, rutaPreferida: String? = null) {
+        anclaFlota = ancla; rutaFlota = rutaPreferida
+        if (!pantallaVisible) return
         // La flota nace alrededor del ANCLA (la posicion del usuario), no de
         // un punto fijo: las lineas mas cercanas a donde este el pasajero.
         providerSimulado.follow(rutaPreferida, ancla)
@@ -508,7 +527,30 @@ private class TrackingDemoVM(
 
     private var collectJob: Job? = null
 
+    private var pantallaVisible = false
+    private var reanudarDemo = false
+    private var anclaFlota: LatLng? = null
+    private var rutaFlota: String? = null
+
+    fun suspenderPantalla() {
+        pantallaVisible = false
+        gpsJob?.cancel(); gpsJob = null
+        reanudarDemo = reanudarDemo || demoActivo
+        detenerDemo()
+        collectJob?.cancel(); collectJob = null
+        providerSimulado.stop()
+    }
+
+    fun reanudarPantalla() {
+        pantallaVisible = true
+        if (LocationService.estaAutorizado) iniciarGPS()
+        anclaFlota?.let { iniciarVehiculos(it, rutaFlota) }
+        if (reanudarDemo && conViaje && estado != EstadoDemo.FINALIZADO) iniciarDemo()
+        reanudarDemo = false
+    }
+
     fun detener() {
+        ViajesActivos.estado.actualizar(TipoViaje.TRACKING, false)
         gpsJob?.cancel()
         demoJob?.cancel()
         calcJob?.cancel()
@@ -521,26 +563,26 @@ private class TrackingDemoVM(
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun TrackingDemoScreen(router: AppRouter) {
+internal fun TrackingDemoScreen(router: AppRouter, holder: TrackingSessionViewModel = viewModel()) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val vm = remember { TrackingDemoVM(context.applicationContext, scope) }
+    val vm = holder.obtener { TrackingDemoVM(it, AjustesTrackingAndroid(context.applicationContext)) }
     val permiso = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
 
     var mostrarBuscador by remember { mutableStateOf(false) }
     var confirmarDetener by remember { mutableStateOf(false) }
 
-    DisposableEffect(Unit) {
-        onDispose { vm.detener() }
-    }
+    BackHandler { router.navigate(AppScreen.MapaPrincipal) }
+    AlEstarVisible(vm::reanudarPantalla, vm::suspenderPantalla)
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
 
     // GPS al entrar; la FLOTA nace con el primer fix, alrededor del USUARIO
     // (antes anclaba a la UTP y los buses quedaban lejos de quien miraba).
     var flotaIniciada by remember { mutableStateOf(false) }
     LaunchedEffect(permiso.status.isGranted) {
-        if (permiso.status.isGranted) {
+        if (permiso.status.isGranted && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
             vm.iniciarGPS()
-        } else {
+        } else if (!permiso.status.isGranted) {
             vm.estado = EstadoDemo.SIN_PERMISO
         }
     }

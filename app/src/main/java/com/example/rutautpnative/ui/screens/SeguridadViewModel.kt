@@ -93,7 +93,6 @@ class SeguridadViewModel : ViewModel() {
                 _tiles.value = SeguridadTilesStore.reconstruir(nuevos, _elegidos.value, _orden.value)
             }
         }
-        iniciarRelojComunidad()
     }
 
     //----Persiste la selección hecha en el sheet (qué lugares mostrar)----
@@ -174,8 +173,14 @@ class SeguridadViewModel : ViewModel() {
         r.dislikes + (if (_votosComunidad.value[r.id] == VotoComunidad.NO_UTIL) 1 else 0)
 
     //----Reloj: despierta justo en el siguiente borde de 240 s del reloj real----
-    private fun iniciarRelojComunidad() {
-        viewModelScope.launch {
+    private var reloj: Job? = null
+    fun pausarPantalla() {
+        reloj?.cancel(); reloj = null
+        busquedaZonaJob?.cancel(); _buscandoZona.value = false
+    }
+    fun iniciarRelojComunidad() {
+        if (reloj?.isActive == true) return
+        reloj = viewModelScope.launch {
             while (isActive) {
                 _ventanaComunidad.value = ventanaActual()
                 val ahoraMs = System.currentTimeMillis()

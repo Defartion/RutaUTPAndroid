@@ -2,55 +2,159 @@
   "schemaVersion": 1,
   "referenceIosCommit": "8145276bb6fc72a168cc78119def2727578ec0bb",
   "source": "RutaUTP/Navigation/RootView.swift",
-  "execution": "Escenarios de aceptación pendientes de adaptador de estado o prueba instrumental en fase 3.",
+  "execution": "IosTravelStateReferenceTest ejecuta los ocho escenarios sobre MapaViewModel, AppRouter, ModelosCatalogo y los modelos retenidos de Guardado y Tracking. La comprobación visual y de sensores requiere dispositivo.",
   "cases": [
     {
-      "id": "STATE-01", "status": "pending", "phase": 3, "finding": "F03",
-      "given": {"destination": null, "searchInFlight": "A"},
-      "events": ["select_destination_B", "receive_search_A"],
-      "expected": {"destination": "B", "applySearchA": false}
+      "id": "STATE-01",
+      "status": "baseline",
+      "phase": 3,
+      "finding": "F03",
+      "given": {
+        "destination": null,
+        "searchInFlight": "A"
+      },
+      "events": [
+        "select_destination_B",
+        "receive_search_A"
+      ],
+      "expected": {
+        "destination": "B",
+        "applySearchA": false
+      }
     },
     {
-      "id": "STATE-02", "status": "pending", "phase": 3, "finding": "F03",
-      "given": {"destination": null, "searchInFlight": "A"},
-      "events": ["clear_map", "receive_search_A"],
-      "expected": {"destination": null, "applySearchA": false}
+      "id": "STATE-02",
+      "status": "baseline",
+      "phase": 3,
+      "finding": "F03",
+      "given": {
+        "destination": null,
+        "searchInFlight": "A"
+      },
+      "events": [
+        "clear_map",
+        "receive_search_A"
+      ],
+      "expected": {
+        "destination": null,
+        "applySearchA": false
+      }
     },
     {
-      "id": "STATE-03", "status": "pending", "phase": 3, "finding": "F04",
-      "given": {"catalog": "urban", "reference": "UTP", "fleet": ["urban-1"], "institutionalFeedAvailable": false},
-      "events": ["enable_UTP_buses"],
-      "expected": {"catalog": "institutional", "fleet": [], "selectedVehicle": null, "itinerary": null, "feedState": "pending"}
+      "id": "STATE-03",
+      "status": "baseline",
+      "phase": 3,
+      "finding": "F04",
+      "given": {
+        "catalog": "urban",
+        "reference": "UTP",
+        "fleet": [
+          "urban-1"
+        ],
+        "institutionalFeedAvailable": false
+      },
+      "events": [
+        "enable_UTP_buses"
+      ],
+      "expected": {
+        "catalog": "institutional",
+        "fleet": [],
+        "selectedVehicle": null,
+        "itinerary": null,
+        "feedState": "pending"
+      }
     },
     {
-      "id": "STATE-04", "status": "pending", "phase": 3, "finding": "F05",
-      "given": {"activeTrip": "tracking", "destination": "A"},
-      "events": ["tap_reminder_for_B"],
-      "expected": {"destination": "A", "activeTrip": "tracking", "showTripInProgress": true}
+      "id": "STATE-04",
+      "status": "baseline",
+      "phase": 3,
+      "finding": "F05",
+      "given": {
+        "activeTrip": "tracking",
+        "destination": "A"
+      },
+      "events": [
+        "tap_reminder_for_B"
+      ],
+      "expected": {
+        "destination": "A",
+        "activeTrip": "tracking",
+        "showTripInProgress": true
+      }
     },
     {
-      "id": "STATE-05", "status": "pending", "phase": 3, "finding": "F05",
-      "given": {"activeTrip": "line_navigation", "destination": "A"},
-      "events": ["tap_route_change_notification"],
-      "expected": {"destination": "A", "activeTrip": "line_navigation", "showTripInProgress": true}
+      "id": "STATE-05",
+      "status": "baseline",
+      "phase": 3,
+      "finding": "F05",
+      "given": {
+        "activeTrip": "line_navigation",
+        "destination": "A"
+      },
+      "events": [
+        "tap_route_change_notification"
+      ],
+      "expected": {
+        "destination": "A",
+        "activeTrip": "line_navigation",
+        "showTripInProgress": true
+      }
     },
     {
-      "id": "STATE-06", "status": "pending", "phase": 3, "finding": "F10",
-      "given": {"tab": "saved", "savedSubtab": "lines", "listAnchor": "route-10"},
-      "events": ["open_map_tab", "open_saved_tab"],
-      "expected": {"tab": "saved", "savedSubtab": "lines", "listAnchor": "route-10"}
+      "id": "STATE-06",
+      "status": "baseline",
+      "phase": 3,
+      "finding": "F10",
+      "given": {
+        "tab": "saved",
+        "savedSubtab": "lines",
+        "listAnchor": "route-10"
+      },
+      "events": [
+        "open_map_tab",
+        "open_saved_tab"
+      ],
+      "expected": {
+        "tab": "saved",
+        "savedSubtab": "lines",
+        "listAnchor": "route-10"
+      }
     },
     {
-      "id": "STATE-07", "status": "pending", "phase": 3, "finding": "F10",
-      "given": {"activeTrip": "tracking", "destination": "A", "progressMeters": 400},
-      "events": ["open_profile_tab", "return_to_tracking"],
-      "expected": {"activeTrip": "tracking", "destination": "A", "progressMeters": 400}
+      "id": "STATE-07",
+      "status": "baseline",
+      "phase": 3,
+      "finding": "F10",
+      "given": {
+        "activeTrip": "tracking",
+        "destination": "A",
+        "progressMeters": 400
+      },
+      "events": [
+        "open_profile_tab",
+        "return_to_tracking"
+      ],
+      "expected": {
+        "activeTrip": "tracking",
+        "destination": "A",
+        "progressMeters": 400
+      }
     },
     {
-      "id": "STATE-08", "status": "pending", "phase": 3, "finding": "F05",
-      "given": {"activeTrip": "declared"},
-      "events": ["tap_daily_notification"],
-      "expected": {"activeTrip": "declared", "allowNavigationFromTip": false}
+      "id": "STATE-08",
+      "status": "baseline",
+      "phase": 3,
+      "finding": "F05",
+      "given": {
+        "activeTrip": "declared"
+      },
+      "events": [
+        "tap_daily_notification"
+      ],
+      "expected": {
+        "activeTrip": "declared",
+        "allowNavigationFromTip": false
+      }
     }
   ]
 }

@@ -1,6 +1,5 @@
 package com.example.rutautpnative.ui.screens.mapa
 
-import android.os.SystemClock
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.runtime.getValue
@@ -9,7 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.rutautpnative.data.directions.DirectionsService
+import com.example.rutautpnative.navigation.ControlSeleccion
 import com.example.rutautpnative.data.geo.PolylineMatching
 import com.example.rutautpnative.data.gtfs.GTFSRepository
 import com.example.rutautpnative.data.gtfs.RutaGTFS
@@ -17,19 +16,17 @@ import com.example.rutautpnative.data.gtfs.TransporteApp
 import com.example.rutautpnative.data.places.PlacesService
 import com.example.rutautpnative.data.routing.TransitPlanner
 import com.example.rutautpnative.data.tracking.MQTTTrackingProvider
-import com.example.rutautpnative.data.tracking.TrackingProviderFactory
 import com.example.rutautpnative.data.tracking.VehicleETAEstimator
 import com.example.rutautpnative.data.tracking.VehiclePosition
 import com.example.rutautpnative.data.ubicacion.LocationService
 import com.example.rutautpnative.ui.idioma.L
 import com.example.rutautpnative.ui.theme.AppPrimary
-import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.CameraPositionState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.max
@@ -105,11 +102,20 @@ data class SugerenciaLugar(
 // NOTA (convención del proyecto): este ViewModel usa mutableStateOf de Compose
 // (fue de los primeros escritos). Los ViewModels nuevos usan StateFlow puro
 // (ver GuardadoViewModel/SeguridadViewModel). Migrar solo si hay refactor mayor.
-class MapaViewModel : ViewModel() {
+class MapaViewModel(
+    private val servicios: ServiciosMapa = ServiciosMapa(),
+    camara: ControlCamaraMapa? = null
+) : ViewModel() {
 
     var cameraPositionState = CameraPositionState(
-        position = CameraPosition.fromLatLngZoom(GTFSRepository.coordenadaUTP, 14f)
+        position = CameraPosition.fromLatLngZoom(TransporteApp.referenciaInicio, 14f)
     )
+    private val controlCamara = camara ?: CamaraGoogle(cameraPositionState)
+    private val seleccion = ControlSeleccion<DestinoChip>()
+    private val revisionSugerencias = ControlSeleccion<Unit>()
+    private var busquedaJob: Job? = null
+    private var cercanasJob: Job? = null
+    private var camaraJob: Job? = null
 
     //----Flota animada sobre shapes GTFS (Fase 2)----
     // flotaBuses: estado vivo NO publicado (muta a 20 Hz).
@@ -173,6 +179,8 @@ class MapaViewModel : ViewModel() {
     fun actualizarTextoBusqueda(texto: String, campoEnfocado: Boolean) {
         textoBusqueda = texto
         sugerenciasJob?.cancel()
+        val tokenSugerencias = revisionSugerencias.invalidar()
+        val revisionSeleccion = seleccion.revision
         val t = texto.trim()
         if (!campoEnfocado || t.length < 3) {
             sugerencias = emptyList()
@@ -182,7 +190,9 @@ class MapaViewModel : ViewModel() {
         buscandoSugerencias = true
         sugerenciasJob = viewModelScope.launch {
             delay(400)   // debounce
-            when (val r = PlacesService.buscarSugerencias(t)) {
+            val r = servicios.sugerir(t)
+            if (!revisionSugerencias.vigente(tokenSugerencias) || !seleccion.vigente(revisionSeleccion)) return@launch
+            when (r) {
                 is PlacesService.ResultadoSugerencias.Exito ->
                     sugerencias = r.sugerencias.map {
                         SugerenciaLugar(it.nombre, it.direccion, it.lat, it.lon)
@@ -194,6 +204,7 @@ class MapaViewModel : ViewModel() {
     }
 
     fun limpiarSugerencias() {
+        revisionSugerencias.invalidar()
         sugerenciasJob?.cancel()
         sugerencias = emptyList()
         buscandoSugerencias = false
@@ -206,10 +217,32 @@ class MapaViewModel : ViewModel() {
         seleccionarLugarExterno(titulo = s.titulo, lat = s.lat, lon = s.lon)
     }
 
-    var destinoSeleccionado by mutableStateOf<DestinoChip?>(null)
-        private set
+    val destinoSeleccionado: DestinoChip? get() = seleccion.seleccion
+
+    private fun invalidarTrabajos(): Long {
+        val token = seleccion.invalidar()
+        busquedaJob?.cancel()
+        cercanasJob?.cancel()
+        camaraJob?.cancel()
+        itinerarioJob?.cancel()
+        alternativaJob?.cancel()
+        limpiarSugerencias()
+        calculandoItinerario = false
+        seleccionandoAlternativa = false
+        itinerario = null
+        alternativas = emptyList()
+        destacadas = emptyList()
+        mensajeAlternativa = null
+        rutasCercanas = emptyList()
+        busSeleccionado = null
+        if (providerReal == null) {
+            detenerAnimacion(); flotaBuses = emptyList(); busesAnimados = emptyList()
+        }
+        return token
+    }
 
     private var animacionJob: Job? = null
+    private var visible = false
 
     // Destinos conocidos
     // Los iconos se asignan en MapaScreen para evitar dependencia de Compose aquí
@@ -238,17 +271,13 @@ class MapaViewModel : ViewModel() {
         val nueva = TransporteApp.sedeVisible
         val campus = TransporteApp.utpComoReferencia
         if (sedeTrabajo?.id == nueva?.id && utpComoReferencia == campus) return
+        invalidarTrabajos()
         sedeTrabajo = nueva
         utpComoReferencia = campus
         refrescarLlegadas()
-        viewModelScope.launch {
-            cameraPositionState.animate(
-                CameraUpdateFactory.newLatLngZoom(coordenadaInicio, 14f)
-            )
-        }
-        viewModelScope.launch {
-            actualizarRutasCercanas(coordenadaInicio)
-        }
+        if (destinoSeleccionado == null) enfocarPunto(coordenadaInicio, 14f)
+        recargarCercanas(destinoSeleccionado?.let { LatLng(it.lat, it.lon) } ?: coordenadaInicio)
+        destinoSeleccionado?.let { calcularRutaHacia(LatLng(it.lat, it.lon)) }
     }
 
     //----Itinerario a pie + bus (Fase 3)----
@@ -279,12 +308,14 @@ class MapaViewModel : ViewModel() {
         if (plan.optionID == itinerario?.optionID || alternativas.none { it.optionID == plan.optionID }) return
         alternativaJob?.cancel()
         val destino = destinoSeleccionado?.id
+        val token = seleccion.revision
         alternativaJob = viewModelScope.launch {
             seleccionandoAlternativa = true
             mensajeAlternativa = null
             try {
-                val verificada = TransitPlanner.conCaminatasReales(plan) { a, b -> TransitPlanner.caminataReal(a, b) }
-                if (destinoSeleccionado?.id != destino) return@launch
+                val verificada = TransitPlanner.conCaminatasReales(plan, servicios.caminar)
+                coroutineContext.ensureActive()
+                if (!seleccion.vigente(token) || destinoSeleccionado?.id != destino) return@launch
                 if (verificada.caminataBoardMetros > TransitPlanner.RADIO_PIE_METROS || verificada.caminataDestinoMetros > TransitPlanner.RADIO_PIE_METROS || !verificada.dentroDeLimiteTransbordo) {
                     mensajeAlternativa = L.t("La caminata de esta ruta supera el límite. Elige otra opción.", "This route's walk exceeds the limit. Choose another option.")
                 } else {
@@ -292,7 +323,7 @@ class MapaViewModel : ViewModel() {
                     alternativas = alternativas.map { if (it.optionID == plan.optionID) verificada else it }
                     enfocarItinerario(verificada)
                 }
-            } finally { seleccionandoAlternativa = false }
+            } finally { if (isActive && seleccion.vigente(token)) seleccionandoAlternativa = false }
         }
     }
 
@@ -333,11 +364,7 @@ class MapaViewModel : ViewModel() {
     fun recenterOnUser() {
         val pos = userRealCoordinate
         if (pos != null) {
-            viewModelScope.launch {
-                cameraPositionState.animate(
-                    com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(pos, 16f)
-                )
-            }
+            enfocarPunto(pos, 16f)
         } else {
             iniciarGPS()
         }
@@ -350,8 +377,8 @@ class MapaViewModel : ViewModel() {
             // La decision de fuente va ANTES de recargar lineas (mismo orden
             // que el iOS): si la real toma el control, el resultado simulado
             // no debe pisarla.
-            iniciarFlotaRealSiConfigurada()
-            actualizarRutasCercanas(coordenadaInicio)
+            if (!servicios.utpPendiente()) iniciarFlotaRealSiConfigurada()
+            recargarCercanas(coordenadaInicio)
         }
     }
 
@@ -363,14 +390,17 @@ class MapaViewModel : ViewModel() {
     /// traen geometria VACIA a proposito: la posicion la fija cada mensaje
     /// del broker, la animacion local no los toca.
     private fun iniciarFlotaRealSiConfigurada() {
-        val provider = TrackingProviderFactory.crearReal() ?: return
+        val provider = servicios.proveedor() ?: return
         providerReal = provider
         viewModelScope.launch {
             // El catalogo se carga antes de arrancar el consumo para poder
             // resolver desde el primer mensaje.
-            catalogoPorId = GTFSRepository.rutas().associateBy { it.id }
+            val catalogo = servicios.rutas()
+            kotlin.coroutines.coroutineContext.ensureActive()
+            catalogoPorId = catalogo.associateBy { it.id }
             fuenteFlota = FuenteFlota.REAL
             provider.start()
+            if (!visible) provider.pausar()
             flotaRealJob = viewModelScope.launch {
                 provider.posiciones.collect { nuevas ->
                     aplicarFlotaReal(nuevas)
@@ -384,7 +414,8 @@ class MapaViewModel : ViewModel() {
         val ancla = destinoSeleccionado?.let { LatLng(it.lat, it.lon) }
             ?: coordenadaInicio
 
-        flotaBuses = posiciones.map { p ->
+        val visibles = if (servicios.institucional()) posiciones.filter { it.routeId in catalogoPorId } else posiciones
+        flotaBuses = visibles.map { p ->
             val ruta = catalogoPorId[p.routeId]
             // "No inventa": sin ruta cercana o sin datos fiables, SIN ETA.
             val eta = ruta?.let { VehicleETAEstimator.minutos(p, it, ancla) }
@@ -418,7 +449,7 @@ class MapaViewModel : ViewModel() {
             )
         }
         // Flota viva = posiciones recientes; vacio = "ESPERANDO DATOS".
-        val hayDatos = posiciones.isNotEmpty()
+        val hayDatos = visibles.isNotEmpty()
         if (hayDatos != hayPosicionesRealesRecientes) hayPosicionesRealesRecientes = hayDatos
         busesAnimados = flotaBuses
         busSeleccionado = busSeleccionado?.let { selected -> flotaBuses.firstOrNull {
@@ -434,29 +465,35 @@ class MapaViewModel : ViewModel() {
 
     // Seleccion
     fun seleccionar(destino: DestinoChip) {
-        if (destinoSeleccionado?.id == destino.id) return
-        destinoSeleccionado = destino
+        invalidarTrabajos()
+        seleccion.elegir(destino)
+        aplicarDestino(destino)
+    }
+
+    private fun aplicarDestino(destino: DestinoChip) {
         textoBusqueda = destino.label
         refrescarLlegadas()
-        viewModelScope.launch {
-            cameraPositionState.animate(
-                com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
-                    LatLng(destino.lat, destino.lon), 15f
-                )
-            )
-        }
-        // La flota nace de las lineas cercanas al nuevo ancla.
-        viewModelScope.launch {
-            actualizarRutasCercanas(LatLng(destino.lat, destino.lon))
-        }
-        // Itinerario puerta-a-puerta desde la posicion real del usuario.
+        enfocarPunto(LatLng(destino.lat, destino.lon), 15f)
+        recargarCercanas(LatLng(destino.lat, destino.lon))
         calcularRutaHacia(LatLng(destino.lat, destino.lon))
+    }
+
+    private fun enfocarPunto(punto: LatLng, zoom: Float) {
+        camaraJob?.cancel()
+        val token = seleccion.revision
+        camaraJob = viewModelScope.launch {
+            if (seleccion.vigente(token)) controlCamara.centrar(punto, zoom)
+        }
     }
 
     //----Calculo del itinerario (puerto de calcularRutaHacia, iOS)----
     fun calcularRutaHacia(destino: LatLng) {
+        itinerarioJob?.cancel()
+        alternativaJob?.cancel()
+        val token = seleccion.revision
+        calculandoItinerario = false
         // Modo Buses UTP sin feed institucional: mensaje propio, sin calculo.
-        if (TransporteApp.rutasUTPPendientes) {
+        if (servicios.utpPendiente()) {
             itinerario = null
             mensajeRuta = TransporteApp.mensajePendiente
             return
@@ -479,19 +516,25 @@ class MapaViewModel : ViewModel() {
             mensajeRuta = null
             itinerario = null
             try {
-                val rutas = GTFSRepository.rutas()
+                val rutas = servicios.rutas()
+                coroutineContext.ensureActive()
+                if (!seleccion.vigente(token)) return@launch
                 val opciones = TransitPlanner.opciones(origen, destino, rutas)
+                coroutineContext.ensureActive()
+                if (!seleccion.vigente(token)) return@launch
                 alternativas = opciones.alternativas
                 destacadas = opciones.destacadas
                 val recomendadas = opciones.destacadas.filter { TransitPlanner.Categoria.RECOMENDADA in it.categorias }.map { it.plan }
                 var plan: TransitPlanner.Plan? = null
                 for (candidato in (recomendadas + opciones.alternativas).distinctBy { it.optionID }.take(4)) {
-                    val resuelto = TransitPlanner.conCaminatasReales(candidato) { a, b -> TransitPlanner.caminataReal(a, b) }
+                    val resuelto = TransitPlanner.conCaminatasReales(candidato, servicios.caminar)
+                    coroutineContext.ensureActive()
                     if (resuelto.caminataBoardMetros <= TransitPlanner.RADIO_PIE_METROS && resuelto.caminataDestinoMetros <= TransitPlanner.RADIO_PIE_METROS && resuelto.dentroDeLimiteTransbordo) {
                         plan = resuelto
                         break
                     }
                 }
+                if (!seleccion.vigente(token)) return@launch
                 itinerario = plan
                 if (plan == null) {
                     // Radio de busqueda del mapa: hasta 1600 m a pie en cada
@@ -506,7 +549,7 @@ class MapaViewModel : ViewModel() {
                     enfocarItinerario(plan)
                 }
             } finally {
-                calculandoItinerario = false
+                if (isActive && seleccion.vigente(token)) calculandoItinerario = false
             }
         }
     }
@@ -514,10 +557,10 @@ class MapaViewModel : ViewModel() {
     // Encuadra la camara en el plan completo (equivalente al
     // itinerarioFocusTick de iOS, que ajusta el boundingRect del itinerario).
     private fun enfocarItinerario(plan: TransitPlanner.Plan) {
-        val builder = LatLngBounds.builder()
-        TransitPlanner.puntosCombinados(plan).forEach(builder::include)
-        viewModelScope.launch {
-            cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(builder.build(), 120))
+        camaraJob?.cancel()
+        val token = seleccion.revision
+        camaraJob = viewModelScope.launch {
+            if (seleccion.vigente(token)) controlCamara.encuadrar(TransitPlanner.puntosCombinados(plan))
         }
     }
 
@@ -544,19 +587,23 @@ class MapaViewModel : ViewModel() {
             ?.let { seleccionar(it); return }
         // 2. Sugerencia ya cargada en el dropdown.
         sugerencias.firstOrNull()?.let { seleccionarSugerencia(it); return }
-        // 3. Consulta directa a Places (submit del teclado).
-        viewModelScope.launch {
-            when (val r = PlacesService.buscarTexto(t)) {
-                is PlacesService.Resultado.Exito ->
-                    seleccionarLugarExterno(r.nombre, r.lat, r.lon)
+        // 3. Consulta directa con identidad de selección.
+        val token = invalidarTrabajos()
+        busquedaJob = viewModelScope.launch {
+            when (val r = servicios.buscar(t)) {
+                is PlacesService.Resultado.Exito -> {
+                    val chip = DestinoChip(("ext|" + r.nombre + "|" + r.lat + "|" + r.lon).hashCode(), r.nombre, Icons.Filled.Place, r.lat, r.lon)
+                    if (seleccion.aceptar(token, chip)) aplicarDestino(chip)
+                }
                 else -> Unit  // sin resultados: el usuario sigue viendo el dropdown
             }
         }
     }
 
     fun limpiar() {
+        invalidarTrabajos()
         textoBusqueda = ""
-        destinoSeleccionado = null
+        seleccion.limpiar()
         limpiarSugerencias()
         detenerAnimacion()
         flotaBuses = emptyList()
@@ -571,29 +618,30 @@ class MapaViewModel : ViewModel() {
         calculandoItinerario = false
         refrescarLlegadas()
         // Sin destino: volver a la referencia vigente (campus o sede).
-        viewModelScope.launch {
-            actualizarRutasCercanas(coordenadaInicio)
-        }
-        viewModelScope.launch {
-            cameraPositionState.animate(
-                com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(coordenadaInicio, 14f)
-            )
-        }
+        recargarCercanas(coordenadaInicio)
+        enfocarPunto(coordenadaInicio, 14f)
     }
 
     // Carga las rutas cercanas a un punto: prueba 400 m y, si no encuentra,
     // amplía a 800 m para evitar "sin rutas" cuando el punto quedó algo lejos
     // del recorrido real. La flota se reconstruye sobre esas lineas.
-    private suspend fun actualizarRutasCercanas(punto: LatLng) {
+    private fun recargarCercanas(punto: LatLng) {
+        cercanasJob?.cancel()
+        val token = seleccion.revision
+        cercanasJob = viewModelScope.launch { actualizarRutasCercanas(punto, token) }
+    }
+
+    private suspend fun actualizarRutasCercanas(punto: LatLng, token: Long) {
         // Buses UTP sin feed: sin líneas, sin flota ("Rutas próximamente").
-        if (TransporteApp.rutasUTPPendientes) {
+        if (servicios.utpPendiente()) {
             rutasCercanas = emptyList()
             return
         }
-        var rutas = GTFSRepository.rutasCercaDe(punto, 400.0)
+        var rutas = servicios.cercanas(punto, 400.0)
         if (rutas.isEmpty()) {
-            rutas = GTFSRepository.rutasCercaDe(punto, 800.0)
+            rutas = servicios.cercanas(punto, 800.0)
         }
+        if (!seleccion.vigente(token)) return
         rutasCercanas = rutas
         // La flota SIMULADA nace de estas lineas; si la REAL (MQTT) tiene el
         // control, el resultado simulado no debe pisarla (regla del iOS).
@@ -617,7 +665,7 @@ class MapaViewModel : ViewModel() {
         flotaBuses = busesDesde(rutas, ancla)
         ultimasPublicadas = emptyList()
         publicarSiCambio(forzar = true)
-        if (flotaBuses.isNotEmpty()) iniciarAnimacion()
+        if (visible && flotaBuses.isNotEmpty()) iniciarAnimacion()
     }
 
     private fun busesDesde(rutas: List<RutaGTFS>, ancla: LatLng): List<BusAnimado> {
@@ -785,7 +833,7 @@ class MapaViewModel : ViewModel() {
         animacionJob = viewModelScope.launch {
             while (isActive) {
                 delay(50)
-                val ahora = SystemClock.elapsedRealtime()
+                val ahora = servicios.reloj()
                 val dt = ultimoTick?.let { ((ahora - it) / 1000.0).coerceAtMost(1.0) } ?: 0.0
                 ultimoTick = ahora
                 actualizarPosicionBuses(dt)
@@ -802,7 +850,23 @@ class MapaViewModel : ViewModel() {
     /// SOBREVIVE a la navegacion (la flota queda intacta), pero el bucle se
     /// detiene en onDispose al irse a otra pestaña (bateria); al recomponer
     /// la pantalla hay que encenderlo otra vez. Idempotente.
+    fun pausarPantalla() {
+        visible = false
+        // Retiene la selección y el plan; el próximo fix verificará el origen actual.
+        seleccion.invalidar()
+        busquedaJob?.cancel(); cercanasJob?.cancel(); camaraJob?.cancel()
+        itinerarioJob?.cancel(); alternativaJob?.cancel(); limpiarSugerencias()
+        calculandoItinerario = false; seleccionandoAlternativa = false
+        userRealCoordinate = null
+        detenerAnimacion()
+        detenerGPS()
+        pausarFlota()
+    }
+
     fun reanudar() {
+        visible = true
+        reanudarFlota()
+        if (rutasCercanas.isEmpty()) recargarCercanas(destinoSeleccionado?.let { LatLng(it.lat, it.lon) } ?: coordenadaInicio)
         if (flotaBuses.isNotEmpty() && animacionJob?.isActive != true) {
             iniciarAnimacion()
         }

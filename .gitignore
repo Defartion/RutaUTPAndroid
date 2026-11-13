@@ -20,3 +20,6 @@ local.properties
 # Cachés locales de las herramientas Python
 __pycache__/
 *.py[cod]
+
+# Sesiones locales del compilador Kotlin
+.kotlin/

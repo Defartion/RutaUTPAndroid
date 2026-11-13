@@ -1,5 +1,12 @@
 package com.example.rutautpnative.ui.screens
 
+import androidx.activity.compose.BackHandler
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.rutautpnative.ui.components.AlEstarVisible
+import com.example.rutautpnative.navigation.ViajesActivos
+import com.example.rutautpnative.navigation.TipoViaje
 import android.Manifest
 import android.content.Intent
 import android.net.Uri
@@ -79,13 +86,15 @@ import kotlin.math.ceil
 // los negocios demo ya no viven aqui (pertenecen a TrackingDemo, Fase 10:
 // ver NegociosDemoComponents.kt).
 
-private enum class EstadoNav { ESPERANDO_GPS, SIN_PERMISO, EN_RUTA, FUERA_RUTA, CERCA_DESTINO, FINALIZADO }
+internal enum class EstadoNav { ESPERANDO_GPS, SIN_PERMISO, EN_RUTA, FUERA_RUTA, CERCA_DESTINO, FINALIZADO }
 
 // Paleta oscura: importada de PaletaOscura.kt (compartida, antes duplicada).
 private val PanelOscuroTexto = TextoOscuro
 private val PanelOscuroTextoVariante = TextoOscuroVariante
 
-private class NavegacionVM(val ruta: RutaGTFS) {
+internal class NavegacionVM(val ruta: RutaGTFS) {
+
+    init { ViajesActivos.estado.actualizar(TipoViaje.NAVEGACION, true) }
 
     val shape = PolylineMatching.decimate(ruta.shape, 240)
     val acumulados = PolylineMatching.distanciasAcumuladas(shape)
@@ -161,7 +170,7 @@ private class NavegacionVM(val ruta: RutaGTFS) {
     fun iniciarDemo() {
         detenerDemo()
         demoActivo = true
-        progreso = 0.0
+        if (!reanudarDemo) progreso = 0.0
         demoJob = scope.launch {
             while (isActive) {
                 delay(80)
@@ -193,7 +202,19 @@ private class NavegacionVM(val ruta: RutaGTFS) {
         get() = if (ruta.duracionMin > 0) ceil(ruta.duracionMin * (1.0 - progreso)).toInt() else 0
     val proximoParadero: ParaderoProy? get() = paraderosProy.firstOrNull { it.fraccion > progreso }
 
+    private var reanudarDemo = false
+    fun suspenderPantalla() {
+        gpsJob?.cancel(); gpsJob = null
+        reanudarDemo = reanudarDemo || demoActivo
+        detenerDemo()
+    }
+    fun reanudarPantalla() {
+        if (LocationService.estaAutorizado) iniciarGPS()
+        if (reanudarDemo && estado != EstadoNav.FINALIZADO) iniciarDemo()
+        reanudarDemo = false
+    }
     fun detener() {
+        ViajesActivos.estado.actualizar(TipoViaje.NAVEGACION, false)
         gpsJob?.cancel()
         gpsJob = null
         detenerDemo()
@@ -209,23 +230,24 @@ private class NavegacionVM(val ruta: RutaGTFS) {
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun NavegacionScreen(ruta: RutaGTFS, onFinish: () -> Unit) {
+internal fun NavegacionScreen(ruta: RutaGTFS, holder: NavegacionSessionViewModel = viewModel(), onCerrar: () -> Unit) {
     val context = LocalContext.current
-    val vm = remember(ruta.id) { NavegacionVM(ruta) }
+    val vm = holder.obtener(ruta)
+    val onFinish = { holder.finalizar(); onCerrar() }
+    BackHandler(onBack = onFinish)
+    AlEstarVisible(vm::reanudarPantalla, vm::suspenderPantalla)
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
     val permisoUbicacion = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
 
     // GPS en cuanto haya permiso; al salir, el conteo de consumidores del
     // LocationService apaga el hardware.
     LaunchedEffect(permisoUbicacion.status.isGranted) {
-        if (permisoUbicacion.status.isGranted) {
-            vm.estado = EstadoNav.ESPERANDO_GPS
+        if (permisoUbicacion.status.isGranted && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            if (vm.posicion == null) vm.estado = EstadoNav.ESPERANDO_GPS
             vm.iniciarGPS()
-        } else {
+        } else if (!permisoUbicacion.status.isGranted) {
             vm.estado = EstadoNav.SIN_PERMISO
         }
-    }
-    DisposableEffect(Unit) {
-        onDispose { vm.detener() }
     }
 
     //----Camara----

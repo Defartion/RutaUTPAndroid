@@ -30,6 +30,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.example.rutautpnative.ui.components.AlEstarVisible
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -69,9 +71,10 @@ import java.util.Calendar
 @Composable
 fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel()) {
     val rutas by viewModel.rutas.collectAsState()
+    AlEstarVisible(viewModel::iniciarRelojComunidad, viewModel::pausarPantalla)
     val numParaderos = remember(rutas) { ParaderosIluminados.seleccionar(rutas).size }
     val context = LocalContext.current
-    var seccion by remember { mutableIntStateOf(0) }
+    var seccion by rememberSaveable { mutableIntStateOf(0) }
     val borderColor = OutlineVariant.copy(alpha = 0.25f)
     var showReportarSheet by remember { mutableStateOf(false) }
     var mostrarCambiosRuta by remember { mutableStateOf(false) }

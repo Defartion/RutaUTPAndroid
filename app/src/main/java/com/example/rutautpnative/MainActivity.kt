@@ -28,7 +28,7 @@ import com.example.rutautpnative.data.tarjetas.TarjetasStore
 import com.example.rutautpnative.data.tracking.PassiveTrackingCoordinator
 import com.example.rutautpnative.data.ubicacion.LocationService
 import com.example.rutautpnative.ui.idioma.L
-import com.example.rutautpnative.navigation.AppRouter
+import com.example.rutautpnative.navigation.*
 import com.example.rutautpnative.ui.theme.RutaUTPNativeTheme
 import com.example.rutautpnative.ui.theme.TematicaEmpresaStore
 
@@ -102,7 +102,7 @@ class MainActivity : ComponentActivity() {
                 //     --es pantalla tracking
                 // Valores: mapa | rutas | guardado | seguridad | perfil | tracking.
                 // "ruta" con un id abre el detalle de ESA línea en Rutas.
-                if (BuildConfig.DEBUG) {
+                if (BuildConfig.DEBUG && savedInstanceState == null) {
                     LaunchedEffect(Unit) {
                         when (intent?.getStringExtra("pantalla")?.lowercase()) {
                             "mapa" -> router.navigate(AppScreen.MapaPrincipal)
@@ -120,28 +120,52 @@ class MainActivity : ComponentActivity() {
                 }
                 LaunchedEffect(notificacionIntent) {
                     val llegada = notificacionIntent ?: return@LaunchedEffect
-                    llegada.getStringExtra("notificacionDestinoID")?.let { id ->
-                        val lugar = LugaresStore.cargar().firstOrNull { "lugar:${it.id}" == id }
-                        val sede = com.example.rutautpnative.model.CatalogoSedesTrabajo.todas.firstOrNull { "sede:${it.id}" == id }
-                        val lat = lugar?.lat ?: sede?.lat
-                        val lon = lugar?.lon ?: sede?.lon
-                        if (lat != null && lon != null) router.destinoPendiente = com.example.rutautpnative.navigation.DestinoPendiente(lugar?.nombre ?: sede!!.nombre, lat, lon)
-                        router.navigate(AppScreen.MapaPrincipal)
+                    val destino = llegada.getStringExtra("notificacionDestinoID")
+                    val ruta = llegada.getStringExtra("pushRouteID")
+                    val consejo = if (llegada.hasExtra("notificacionDiaria")) llegada.getIntExtra("notificacionDiaria", -1) else null
+                    val tipo = when {
+                        destino != null -> TipoNotificacion.RECORDATORIO
+                        ruta != null -> TipoNotificacion.CAMBIO_RUTA
+                        consejo != null -> TipoNotificacion.CONSEJO
+                        else -> null
                     }
-                    llegada.getStringExtra("pushRouteID")?.let { route ->
-                        val vigente = llegada.getDoubleExtra("pushExpiresAt", 0.0) > System.currentTimeMillis() / 1000.0
-                        val guardada = LineasGuardadasStore.cargar().any { it.routeId == route }
-                        if (vigente && guardada && PassiveTrackingCoordinator.rutaViajeSeleccionada.value == null) {
-                            router.cambioRutaPendiente = route
-                            router.navigate(AppScreen.MapaPrincipal)
-                        } else android.widget.Toast.makeText(this@MainActivity, com.example.rutautpnative.ui.idioma.L.t("El aviso venció, la línea ya no está guardada o hay un viaje activo.", "The notification expired, the route is no longer saved, or a trip is active."), android.widget.Toast.LENGTH_LONG).show()
+                    if (tipo != null) {
+                        val vence = llegada.getDoubleExtra("notificacionVenceEn", llegada.getDoubleExtra("pushExpiresAt", 0.0))
+                        // Los avisos anteriores sin vigencia abren únicamente el aviso de información no disponible.
+                        val id = llegada.getStringExtra("notificacionAccionID") ?: "legacy:$tipo:$destino:$ruta:$consejo:$vence"
+                        router.recibirNotificacion(AccionNotificacion(id, tipo, destino, ruta, vence, consejo, llegada.getStringExtra("notificacionConfiguracionID")))
                     }
-                    if (llegada.hasExtra("notificacionDiaria")) router.navigate(when (llegada.getIntExtra("notificacionDiaria", 0)) {
-                        2 -> AppScreen.Perfil
-                        3 -> AppScreen.Guardado
-                        1 -> AppScreen.Seguridad
-                        else -> AppScreen.Rutas
-                    })
+                    listOf("notificacionDestinoID", "pushRouteID", "pushExpiresAt", "notificacionDiaria",
+                        "notificacionAccionID", "notificacionVenceEn", "notificacionConfiguracionID").forEach(llegada::removeExtra)
+                }
+                LaunchedEffect(router.notificacionPendiente) {
+                    val accion = router.notificacionPendiente ?: return@LaunchedEffect
+                    val catalogoInicial = TransporteApp.busesUTPActivos
+                    val contextoInicial = router.revisionCatalogo
+                    var destino: DestinoPendiente? = null
+                    val valido = when (accion.tipo) {
+                        TipoNotificacion.RECORDATORIO -> {
+                            val lugar = LugaresStore.cargar().firstOrNull { "lugar:${it.id}" == accion.destinoID }
+                            val sede = com.example.rutautpnative.model.CatalogoSedesTrabajo.todas.firstOrNull { "sede:${it.id}" == accion.destinoID }
+                            val lat = lugar?.lat ?: sede?.lat
+                            val lon = lugar?.lon ?: sede?.lon
+                            if (lat != null && lon != null && lat.isFinite() && lon.isFinite() && lat in -90.0..90.0 && lon in -180.0..180.0) {
+                                destino = DestinoPendiente(lugar?.nombre ?: sede!!.nombre, lat, lon)
+                            }
+                            destino != null
+                        }
+                        TipoNotificacion.CAMBIO_RUTA -> {
+                            val guardada = LineasGuardadasStore.cargar().any { it.routeId == accion.rutaID }
+                            guardada && GTFSRepository.rutas().any { it.id == accion.rutaID }
+                        }
+                        TipoNotificacion.CONSEJO -> accion.consejo in 0..3
+                    }
+                    val configVigente = accion.tipo == TipoNotificacion.CAMBIO_RUTA ||
+                        (!com.example.rutautpnative.data.notificaciones.NotificacionesService.datosInvalidos &&
+                            com.example.rutautpnative.data.notificaciones.NotificacionesService.configuracion.aceptaAviso(
+                                accion.configuracionID, accion.destinoID, accion.consejo))
+                    router.procesarNotificacion(accion, destino, valido && configVigente && catalogoInicial == TransporteApp.busesUTPActivos,
+                        System.currentTimeMillis() / 1000.0, contextoInicial)
                 }
                 RootView(router)
             }

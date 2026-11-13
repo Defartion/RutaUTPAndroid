@@ -40,6 +40,8 @@ class RutaFirebaseMessagingService : FirebaseMessagingService() {
             if (!prefs.edit().putString("notificaciones.push.eventos.v1", JsonObject(vigentes).toString()).commit()) return
         }
         val intent = Intent(this, MainActivity::class.java).setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            .putExtra("notificacionAccionID", "push:" + cambio.eventID)
+            .putExtra("notificacionVenceEn", cambio.expiresAt)
             .putExtra("pushRouteID", cambio.routeID).putExtra("pushExpiresAt", cambio.expiresAt)
         val pending = PendingIntent.getActivity(this, cambio.eventID.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val config = NotificacionesService.configuracion

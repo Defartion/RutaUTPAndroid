@@ -15,6 +15,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 REFERENCE_EXECUTORS = {
+    "travel-state": ("STATE-", "com.example.rutautpnative.IosTravelStateReferenceTest"),
     "eta": ("ETA-", "com.example.rutautpnative.IosEtaReferenceTest"),
     "route-comparison": ("ROUTE-", "com.example.rutautpnative.IosRouteComparisonReferenceTest"),
 }
@@ -140,6 +141,7 @@ def verify_results(root, minimum, baseline_ids):
         raise ValueError("El análisis de Android contiene errores")
     return {"unitTests": totals,
             "referenceEtaCasesExecuted": len(reference_names[REFERENCE_EXECUTORS["eta"][1]]),
+            "referenceStateCasesExecuted": len(reference_names[REFERENCE_EXECUTORS["travel-state"][1]]),
             "referenceRouteCasesExecuted": len(reference_names[REFERENCE_EXECUTORS["route-comparison"][1]]),
             "lintWarnings": sum(issue.get("severity") == "Warning" for issue in issues),
             "lintHints": sum(issue.get("severity") == "Hint" for issue in issues)}

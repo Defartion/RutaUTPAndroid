@@ -10,6 +10,14 @@ object GTFSCSV {
         fun exigir(vararg nombres: String) {
             require(nombres.all { it in indices }) { "Faltan columnas GTFS: ${nombres.filter { it !in indices }.joinToString()}" }
         }
+        fun conIdentificadoresInstitucionales(): Tabla {
+            val ids = setOf("agency_id", "route_id", "trip_id", "shape_id", "stop_id", "fare_id")
+            return Tabla(encabezado, filas.map { fila ->
+                fila.mapIndexed { i, value ->
+                    if (encabezado.getOrNull(i) in ids && value.isNotEmpty()) "utp:" + value else value
+                }
+            })
+        }
     }
     fun parsear(texto: String): Tabla {
         val registros = registros(texto.removePrefix("\uFEFF"))
