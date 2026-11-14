@@ -11,6 +11,9 @@ de transbordos de F01/F02; el plan registra los pendientes restantes.
 La [fase 6](FASE_6_PRESENTACION_Y_TRANSPORTES_3D.md), trabajada el 14/11/2026,
 actualiza la presentación y el visor. Distingue las vistas previas Android
 comprobadas localmente de la comparación iPhone/Android todavía pendiente.
+La [fase 8](FASE_8_RENDIMIENTO_Y_ENTREGA.md) incorpora reutilización de geometría,
+proyecciones y un prefiltro de rutas con equivalencia comprobada, además de
+mediciones JVM y evidencia de una candidata local.
 
 Referencia consultada: [RutaUTP main, commit 8145276](https://github.com/JDiazD33/RutaUTP/tree/8145276bb6fc72a168cc78119def2727578ec0bb),
 del 9 de noviembre de 2026. Comparación realizada el 9 de noviembre de 2026.

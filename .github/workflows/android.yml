@@ -81,7 +81,18 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rutautp-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/debug/output-metadata.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Conservar APK de pruebas instrumentales
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rutautp-debug-androidTest
+          path: app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
           if-no-files-found: error
           retention-days: 7
 
@@ -131,4 +142,56 @@ jobs:
             app/build/reports/parity/backend-push-tests.xml
             app/build/reports/parity/backend-push-check.json
           if-no-files-found: warn
+          retention-days: 14
+
+  candidate:
+    needs: [verify, backend-push]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Obtener código de la candidata
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Preparar Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Preparar lector del APK
+        run: '"${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "build-tools;36.0.0"'
+      - name: Obtener comprobaciones Android
+        uses: actions/download-artifact@v4
+        with:
+          name: android-checks
+          path: app/build
+      - name: Obtener comprobaciones del backend
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-push-checks
+          path: app/build/reports/parity
+      - name: Obtener APK y versión
+        uses: actions/download-artifact@v4
+        with:
+          name: rutautp-debug
+          path: app/build/outputs/apk/debug
+      - name: Obtener APK de pruebas
+        uses: actions/download-artifact@v4
+        with:
+          name: rutautp-debug-androidTest
+          path: app/build/outputs/apk/androidTest/debug
+      - name: Verificar candidata y límites de validación
+        run: python tools/verificar_entrega.py
+      - name: Conservar evidencia de la candidata
+        uses: actions/upload-artifact@v4
+        with:
+          name: local-candidate-checks
+          path: |
+            app/build/reports/parity/release-candidate.json
+            app/build/reports/parity/performance-check.json
+          if-no-files-found: error
           retention-days: 14

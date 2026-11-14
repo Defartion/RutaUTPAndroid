@@ -5,7 +5,7 @@
 `python tools/verificar_paridad.py` comprueba los recursos fijados en
 `parity/reference.json`, los casos de comparación y el seguimiento F01–F15.
 `--require-results` exige además los resultados JUnit y lint de la compilación
-actual: al menos 264 pruebas, sin fallos ni omisiones, incluidos los once casos
+actual: al menos 285 pruebas, sin fallos ni omisiones, incluidos los once casos
 ETA, ocho de comparación de rutas y ocho de continuidad. Los casos pendientes
 se informan por separado.
 
@@ -88,6 +88,26 @@ El backend original usa bloqueos Linux con fcntl; sus pruebas se ejecutan en
 Ubuntu, mediante WSL o el trabajo de CI preparado. Las pruebas Android se
 ejecutan en Windows. Ver reproducción y dependencias de activación en la
 [fase 7](../docs/FASE_7_NOTIFICACIONES_REMOTAS.md).
+
+## Candidata local y mediciones
+
+La prueba medirCargaDestinoEInstantaneasConDatosRealesSinRed genera
+app/build/reports/parity/performance-check.json. Compara con el código de
+08ba24a conservado en los oráculos de pruebas; mide la JVM de la computadora.
+No usa red ni acredita rendimiento de un teléfono.
+
+python tools/verificar_entrega.py comprueba fuentes, oráculos, resultados,
+contratos persistentes y los APK de app y pruebas, además de las verificaciones
+anteriores. Produce app/build/reports/parity/release-candidate.json. Requiere
+las pruebas Android y los resultados del backend descritos en fase 7.
+
+parity/performance-contract.json fija los archivos asociados al informe y
+doce contratos de almacenamiento. Si cambia el código medido, se debe ejecutar
+de nuevo la prueba. Cambiar un almacén exige revisar su compatibilidad. El
+informe deja pendientes las pruebas de dispositivo y servicios reales.
+
+Ver condiciones, tiempos observados y cierre pendiente en la
+[fase 8](../docs/FASE_8_RENDIMIENTO_Y_ENTREGA.md).
 
 ## Scripts de demostración anteriores
 

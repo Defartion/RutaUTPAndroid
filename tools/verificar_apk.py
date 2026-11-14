@@ -44,7 +44,7 @@ def verificar(apk: Path, assets: Path):
                 raise ValueError(f"Pantalla ausente del APK: {screen.decode()}")
         for component in [b"CatalogoIdiomas", b"CargaCatalogo", b"PresentadorSenias",
                           b"CamaraTransporte3D", b"PanelModeloTransporteKt", b"PresentacionSeccionesKt",
-                          b"RegistroPush"]:
+                          b"RegistroPush", b"VehicleETACache", b"GTFSNearbyRouteIndex"]:
             if component not in dex:
                 raise ValueError("Falta un componente del APK: " + component.decode())
     print("APK comprobado: seis mallas accesibles, catálogos exactos y pantallas nuevas incluidas")

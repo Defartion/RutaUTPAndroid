@@ -127,9 +127,10 @@
       "phases": [
         8
       ],
-      "status": "pending",
+      "status": "in_progress",
       "acceptance": "Cachés preservan resultados y reducen trabajo repetido",
-      "validation": "Equivalencia de resultados y mediciones en dispositivo."
+      "validation": "Fase 8 local: caché ETA por instalación de catálogo y coordenadas exactas, prefiltro conservador y proyección sin arrays auxiliares. Equivalencia con código congelado de 08ba24a y con consultas sin índice. JVM Windows: 1000 vehículos, 102 rutas; ETA mediana 44.72 a 7.90 ms; candidatas 3264 a 996. Falta medir rendimiento, inicio completo y batería en Android intermedio.",
+      "evidence": "docs/FASE_8_RENDIMIENTO_Y_ENTREGA.md"
     },
     {
       "id": "F14",
@@ -139,8 +140,8 @@
       ],
       "status": "in_progress",
       "acceptance": "Comprobación automática de main/PR y cobertura de flujos",
-      "validation": "Main publicado en 6a2297c y workflow aprobado (43612152671). Fase 7 local: 264 pruebas Android, 88 del backend y 42 de herramientas; nuevo trabajo Linux preparado en el workflow, todavía sin publicar. Se conservan 39 referencias Compose de fase 6. Instrumentales compiladas; comparación iPhone/Android y pruebas Maps/OpenGL/TalkBack/FCM en dispositivo pendientes.",
-      "evidence": "docs/FASE_7_NOTIFICACIONES_REMOTAS.md"
+      "validation": "Las fases 7 y 8 se publican juntas en main; fase 7 guardada en 08ba24a y fase 8 como entrega independiente. Ejecución remota registrada durante la preparación: 6a2297c, aprobada (43612152671); la nueva publicación se verifica en Actions. Pasan 285 pruebas Android y 45 de herramientas; se verifican los 88 resultados backend de fase 7 y 39 referencias Compose. Candidata APK e informe vinculados a fuentes y contratos persistentes. Tres instrumentales nuevas compiladas. Ejecución en dispositivo, actualización instalada, Maps/OpenGL/TalkBack/FCM e iPhone equivalentes pendientes.",
+      "evidence": "docs/FASE_8_RENDIMIENTO_Y_ENTREGA.md"
     },
     {
       "id": "F15",

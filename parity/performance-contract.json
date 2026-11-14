@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "referenceIosCommit": "8145276bb6fc72a168cc78119def2727578ec0bb",
+  "baselineCommit": "08ba24a96017cc135511c689652977cde80a39f7",
+  "minimumVehicles": 1000,
+  "minimumSamples": 5,
+  "sourcePaths": [
+    "app/src/main/java/com/example/rutautpnative/data/geo/PolylineMatching.kt",
+    "app/src/main/java/com/example/rutautpnative/data/gtfs/GTFSRepository.kt",
+    "app/src/main/java/com/example/rutautpnative/data/gtfs/GTFSNearbyRouteIndex.kt",
+    "app/src/main/java/com/example/rutautpnative/data/tracking/VehicleETAEstimator.kt",
+    "app/src/main/java/com/example/rutautpnative/data/tracking/VehicleETACache.kt",
+    "app/src/main/java/com/example/rutautpnative/ui/screens/mapa/MapaViewModel.kt",
+    "app/src/test/java/com/example/rutautpnative/Phase8PerformanceTest.kt",
+    "app/src/test/java/com/example/rutautpnative/Phase8ContinuityTest.kt",
+    "app/src/test/java/com/example/rutautpnative/reference/PolylineMatchingAnterior.kt",
+    "app/src/test/java/com/example/rutautpnative/reference/VehicleETAAnterior.kt"
+  ],
+  "oracles": [
+    {
+      "path": "app/src/test/java/com/example/rutautpnative/reference/PolylineMatchingAnterior.kt",
+      "sha256": "01e93ec365d10a1d9eb99de896dd9a7bd93579e088f74fe6856579d94129d3bc"
+    },
+    {
+      "path": "app/src/test/java/com/example/rutautpnative/reference/VehicleETAAnterior.kt",
+      "sha256": "9d853cffcec4041088bfccc251eb5f4573bced87db121460a9d14bd6ae3198f4"
+    }
+  ],
+  "storageFiles": [
+    {
+      "path": "app/src/main/java/com/example/rutautpnative/data/LugaresStore.kt",
+      "sha256": "ed0ae452231bd98c6413640963611614399071b72ef414eb575878ecc767de4e",
+      "decoderVisibilityOnly": true,
+      "hashMode": "lf-ignore-final-newline"
+    },
+    {
+      "path": "app/src/main/java/com/example/rutautpnative/data/LineasGuardadasStore.kt",
+      "sha256": "52365e4e4e30d17ece51914a3c9e3c9923694aabcb720d50339760d5b87cb489",
+      "decoderVisibilityOnly": true,
+      "hashMode": "lf-ignore-final-newline"
+    },
+    {
+      "path": "app/src/main/java/com/example/rutautpnative/data/monedero/MonederoStore.kt",
+      "sha256": "0568470b5cc4c68e3286713f5b0d3ee52bf342ff38b535c78dc3eb89fea994f3",
+      "decoderVisibilityOnly": false,
+      "hashMode": "lf-ignore-final-newline"
+    },
+    {
+      "path": "app/src/main/java/com/example/rutautpnative/data/imagenes/ImagenesStore.kt",
+      "sha256": "95b0ff896de2c17fb1f0886d41c6a3c21374fb04554f5d8d8dba5a94977582ad",
+      "decoderVisibilityOnly": false,
+      "hashMode": "lf-ignore-final-newline"
+    },
+    {
+      "path": "app/src/main/java/com/example/rutautpnative/data/idioma/IdiomaStore.kt",
+      "sha256": "77337e9be7bf819da05a56e03e76f4cb05fa0a7bdc2056e2f8562ce811fd445c",
+      "decoderVisibilityOnly": false,
+      "hashMode": "lf-ignore-final-newline"
+    },
+    {
+      "path": "app/src/main/java/com/example/rutautpnative/data/TemaStore.kt",
+      "sha256": "12f5e9ee21f8014bc5f224d782d868e4af651e03a9494e8a6bd257e3c572f84f",
+      "decoderVisibilityOnly": false,
+      "hashMode": "lf-ignore-final-newline"
+    },
+    {
+      "path": "app/src/main/java/com/example/rutautpnative/data/PreferenciasPerfilStore.kt",
+      "sha256": "6f4dd957e9758f5bc01ab04cf8eb18e94891034e8eeee4a08a7bfe4b0ccc1df2",
+      "decoderVisibilityOnly": false,
+      "hashMode": "lf-ignore-final-newline"
+    },
+    {
+      "path": "app/src/main/java/com/example/rutautpnative/data/Persistencia.kt",
+      "sha256": "f4612517719a0c8422dd5c9237763e87d1582e05775690389defc8595a4291b6",
+      "decoderVisibilityOnly": false,
+      "hashMode": "lf-ignore-final-newline"
+    },
+    {
+      "path": "app/src/main/java/com/example/rutautpnative/data/SedeTrabajoStore.kt",
+      "sha256": "c848aed4319c5c56f7581eb003b21e56c36b82b8f469b560718a1dd44e9f72c5",
+      "decoderVisibilityOnly": false,
+      "hashMode": "lf-ignore-final-newline"
+    },
+    {
+      "path": "app/src/main/java/com/example/rutautpnative/data/negocios/CuponesStore.kt",
+      "sha256": "378d1c95f048f5207462859184f12e64f70024289a73638c3025ebdee0824969",
+      "decoderVisibilityOnly": false,
+      "hashMode": "lf-ignore-final-newline"
+    },
+    {
+      "path": "app/src/main/java/com/example/rutautpnative/data/notificaciones/ConfiguracionNotificaciones.kt",
+      "sha256": "ec4481a4a40c69ab5c7d590503b2f2a0e0268bf22160c9870015f0b295ddee12",
+      "decoderVisibilityOnly": false,
+      "hashMode": "lf-ignore-final-newline"
+    },
+    {
+      "path": "app/src/main/java/com/example/rutautpnative/model/Models.kt",
+      "sha256": "b0b90a7e0b41d81dda6183c4188068f97d8bc0618d65db080ef66bbb963987d6",
+      "decoderVisibilityOnly": false,
+      "hashMode": "lf-ignore-final-newline"
+    }
+  ],
+  "timings": [
+    "parseCatalog",
+    "buildNearbyIndex",
+    "snapshotBefore",
+    "snapshotCold",
+    "snapshotWarm",
+    "targetChange",
+    "nearbyBefore",
+    "nearbyIndexed"
+  ]
+}

@@ -7,7 +7,7 @@ preparada. No se creó infraestructura ni se enviaron avisos reales.
 Antes de esta fase se guardó la fase 6 en **6a2297c804dcf49c373bcc67e67e7ee8b1f62988**
 y se publicó main, incluidos los commits pendientes de fases 4 y 5. GitHub
 aprobó [su ejecución 43612152671](https://github.com/Defartion/RutaUTPAndroid/actions/runs/43612152671).
-La fase 7 se conserva como entrega independiente; su commit se registra al iniciar la fase 8. Aún no se ha publicado.
+La fase 7 se guardó en 08ba24a y su publicación se agrupa con la fase 8.
 
 La referencia continúa en main iOS
 8145276bb6fc72a168cc78119def2727578ec0bb. Se cotejan **33 fuentes y 71 recursos**.

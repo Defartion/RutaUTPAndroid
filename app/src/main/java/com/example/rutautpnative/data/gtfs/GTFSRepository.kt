@@ -28,6 +28,7 @@ import kotlin.math.sqrt
 // - El feed es de Trujillo (-8.04, -79.05).
 // - NO incluye GPS en vivo; ver RutaGTFS.kt.
 object GTFSRepository {
+    private val indicesCercanos = mutableMapOf<String, GTFSNearbyRouteIndex>()
 
     //----Campus UTP Trujillo (Av. Nicolás de Piérola 1221)----
     val coordenadaUTP = LatLng(-8.098247879173792, -79.03818104755645)
@@ -78,14 +79,27 @@ object GTFSRepository {
         punto: LatLng,
         radioMetros: Double = 400.0
     ): List<RutaGTFS> {
-        val todas = rutas()
-        return todas
+        val carpeta = if (TransporteApp.busesUTPActivos) "gtfs-utp" else "gtfs"
+        val resultado = resultadoRutas(carpeta = carpeta)
+        if (resultado !is ResultadoCatalogo.Disponible) {
+            synchronized(indicesCercanos) { indicesCercanos.remove(carpeta) }
+            return emptyList()
+        }
+        return kotlinx.coroutines.withContext(Dispatchers.Default) {
+            val indice = synchronized(indicesCercanos) {
+                indicesCercanos[carpeta]?.takeIf { it.catalogo === resultado.rutas }
+                    ?: GTFSNearbyRouteIndex(resultado.rutas).also { indicesCercanos[carpeta] = it }
+            }
+            seleccionarCercanas(indice.candidatas(punto, radioMetros), punto, radioMetros)
+        }
+    }
+
+    internal fun seleccionarCercanas(todas: List<RutaGTFS>, punto: LatLng, radioMetros: Double): List<RutaGTFS> =
+        todas
             .map { it to distanciaMinima(it.shape, punto) }
             .filter { it.second <= radioMetros }
             .sortedBy { it.second }
             .map { it.first }
-    }
-
     //----Parseo del feed----
 
     private fun parsear(am: AssetManager, carpeta: String): List<RutaGTFS> =

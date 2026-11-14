@@ -43,7 +43,7 @@ object LineasGuardadasStore {
         return ctx.lineasDataStore.data.map { deserializar(it[KEY].orEmpty()) }
     }
 
-    private fun deserializar(raw: String): List<LineaGuardadaRef> {
+    internal fun deserializar(raw: String): List<LineaGuardadaRef> {
         if (raw.isBlank()) { _datosInvalidos.value = false; return emptyList() }
         return try {
             json.decodeFromString<List<LineaGuardadaRef>>(raw).also { _datosInvalidos.value = false }

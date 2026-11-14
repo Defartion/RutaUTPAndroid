@@ -13,7 +13,7 @@
       "commit": "7ba57cbe73f97e83fd112584a9e8ff89623ac4c1"
     }
   },
-  "minimumUnitTests": 264,
+  "minimumUnitTests": 285,
   "originalUnitTests": 119,
   "requiredBaselineCaseIds": [
     "ETA-01",
@@ -643,6 +643,21 @@
       "path": "RutaUTP/Models/RecordatorioViaje.swift",
       "sha256": "de2b54730de0837e188881c60d4e8e9ff84e7aa13744d7bd6882280847b3dc20",
       "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Services/Routing/VehicleETACache.swift",
+      "hashMode": "lf",
+      "sha256": "09140b6a8470208522c7b68f659da33f85c6e699bf215223444e468ec1ab4e07"
+    },
+    {
+      "path": "RutaUTP/Services/GTFS/GTFSNearbyRouteIndex.swift",
+      "hashMode": "lf",
+      "sha256": "254dc1d1d67d7514bb04a108d7af2c2f60b0336ebedc486c510b4d218bbd0d6e"
+    },
+    {
+      "path": "RutaUTP/Services/GTFS/GTFSNearbyRoutes.swift",
+      "hashMode": "lf",
+      "sha256": "2f9d5a5a5464af1b049a51b023cd438e0ce3f50f7938521d4deb802cd2e9ec5b"
     }
   ],
   "backendContracts": {

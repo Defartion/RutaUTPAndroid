@@ -116,7 +116,7 @@ object LugaresStore {
         return listOf(utp ?: lugarUTP) + resto
     }
 
-    private fun deserializar(raw: String): List<LugarGuardado> = try {
+    internal fun deserializar(raw: String): List<LugarGuardado> = try {
         json.decodeFromString<List<LugarGuardado>>(raw).also { _datosInvalidos.value = false }.let { lugares ->
             // Los registros anteriores carecían de esFijo: migrar solo esos registros.
             val originales = Json.parseToJsonElement(raw) as kotlinx.serialization.json.JsonArray

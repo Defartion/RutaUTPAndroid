@@ -16,7 +16,7 @@ import com.example.rutautpnative.data.gtfs.TransporteApp
 import com.example.rutautpnative.data.places.PlacesService
 import com.example.rutautpnative.data.routing.TransitPlanner
 import com.example.rutautpnative.data.tracking.MQTTTrackingProvider
-import com.example.rutautpnative.data.tracking.VehicleETAEstimator
+import com.example.rutautpnative.data.tracking.VehicleETACache
 import com.example.rutautpnative.data.tracking.VehiclePosition
 import com.example.rutautpnative.data.ubicacion.LocationService
 import com.example.rutautpnative.ui.idioma.L
@@ -145,6 +145,7 @@ class MapaViewModel(
     private var providerReal: MQTTTrackingProvider? = null
     private var flotaRealJob: Job? = null
     private var catalogoPorId: Map<String, RutaGTFS> = emptyMap()
+    private val etaCache = VehicleETACache()
 
     // Popup del bus tocado (marker 3D o BusCard del panel).
     var busSeleccionado by mutableStateOf<BusAnimado?>(null)
@@ -415,12 +416,14 @@ class MapaViewModel(
             val catalogo = servicios.rutas()
             kotlin.coroutines.coroutineContext.ensureActive()
             catalogoPorId = catalogo.associateBy { it.id }
+            etaCache.instalar(catalogoPorId)
             fuenteFlota = FuenteFlota.REAL
+            detenerAnimacion()
             provider.start()
             if (!visible) provider.pausar()
             flotaRealJob = viewModelScope.launch {
                 provider.posiciones.collect { nuevas ->
-                    aplicarFlotaReal(nuevas)
+                    if (visible) aplicarFlotaReal(nuevas)
                 }
             }
         }
@@ -435,7 +438,7 @@ class MapaViewModel(
         flotaBuses = visibles.map { p ->
             val ruta = catalogoPorId[p.routeId]
             // "No inventa": sin ruta cercana o sin datos fiables, SIN ETA.
-            val eta = ruta?.let { VehicleETAEstimator.minutos(p, it, ancla) }
+            val eta = etaCache.minutos(p, ancla)
             BusAnimado(
                 id = "real-${p.id}",
                 linea = p.linea.ifEmpty { ruta?.linea ?: "" },
@@ -866,6 +869,7 @@ class MapaViewModel(
     // Bucle de animacion a 20 Hz con dt real (cap 1 s tras pausas largas).
     private fun iniciarAnimacion() {
         detenerAnimacion()
+        if (!visible || fuenteFlota != FuenteFlota.SIMULADA) return
         var ultimoTick: Long? = null
         animacionJob = viewModelScope.launch {
             while (isActive) {
@@ -889,6 +893,8 @@ class MapaViewModel(
     /// la pantalla hay que encenderlo otra vez. Idempotente.
     fun pausarPantalla() {
         visible = false
+        cargaPanel.invalidar()
+        cargandoCatalogo = false
         // Retiene la selección y el plan; el próximo fix verificará el origen actual.
         seleccion.invalidar()
         busquedaJob?.cancel(); cercanasJob?.cancel(); camaraJob?.cancel()
@@ -903,8 +909,9 @@ class MapaViewModel(
     fun reanudar() {
         visible = true
         reanudarFlota()
+        refrescarLlegadas()
         if (rutasCercanas.isEmpty()) recargarCercanas(destinoSeleccionado?.let { LatLng(it.lat, it.lon) } ?: coordenadaInicio)
-        if (flotaBuses.isNotEmpty() && animacionJob?.isActive != true) {
+        if (fuenteFlota == FuenteFlota.SIMULADA && flotaBuses.isNotEmpty() && animacionJob?.isActive != true) {
             iniciarAnimacion()
         }
         iniciarGPS()
@@ -917,5 +924,6 @@ class MapaViewModel(
         // La suscripcion a la flota real se corta con la pantalla (bateria/red).
         flotaRealJob?.cancel()
         providerReal?.stop()
+        etaCache.instalar(emptyMap())
     }
 }

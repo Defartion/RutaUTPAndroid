@@ -83,8 +83,11 @@ object PolylineMatching {
     }
 
     /// Longitud total del recorrido en metros.
-    fun totalLengthMeters(puntos: List<LatLng>): Double =
-        distanciasAcumuladas(puntos).lastOrNull() ?: 0.0
+    fun totalLengthMeters(puntos: List<LatLng>): Double {
+        var total = 0.0
+        for (i in 1 until puntos.size) total += GTFSRepository.distanciaMetros(puntos[i - 1], puntos[i])
+        return total
+    }
 
     //----Proyeccion punto -> polilinea----
     // Resultado de `proyectarEnShape`: distancia al trazado, segmento ganador
@@ -108,7 +111,8 @@ object PolylineMatching {
         var mejorDistancia = Double.MAX_VALUE
         var mejorSegmento = 0
         var mejorT = 0.0
-        val largos = DoubleArray(shape.size - 1)
+        var mejorAcumulado = 0.0
+        var mejorLargo = 0.0
         var total = 0.0
 
         for (i in 0 until shape.size - 1) {
@@ -128,20 +132,20 @@ object PolylineMatching {
             val proyX = ax + t * dx
             val proyY = ay + t * dy
             val dist = sqrt((px - proyX) * (px - proyX) + (py - proyY) * (py - proyY))
+            val largo = sqrt(l2)
 
             if (dist < mejorDistancia) {
                 mejorDistancia = dist
                 mejorSegmento = i
                 mejorT = t
+                mejorAcumulado = total
+                mejorLargo = largo
             }
-            largos[i] = sqrt(l2)
-            total += largos[i]
+            total += largo
         }
 
-        var acumulado = 0.0
-        for (i in 0 until mejorSegmento) acumulado += largos[i]
         val fraccion = if (total > 0) {
-            ((acumulado + largos[mejorSegmento] * mejorT) / total).coerceIn(0.0, 1.0)
+            ((mejorAcumulado + mejorLargo * mejorT) / total).coerceIn(0.0, 1.0)
         } else 0.0
 
         return ProyeccionShape(mejorDistancia * METROS_POR_GRADO, mejorSegmento, fraccion)

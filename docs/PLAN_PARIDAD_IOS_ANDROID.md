@@ -2,7 +2,7 @@
 
 Fecha: 10 de noviembre de 2026.
 
-Estado: **fases 1–6 implementadas; fase 7 preparada sin activación; fase 8 pendiente**.
+Estado: **fases 1–6 implementadas; fase 7 preparada sin activación; fase 8 con candidata local verificada**.
 Última validación local: 14 de noviembre de 2026. La fase 3 conserva pendientes
 las comprobaciones de interacción, rotación y GPS en dispositivo. La fase 4
 requiere validar Google Cloud, el broker y dos teléfonos para su cierre integral.
@@ -12,6 +12,9 @@ La fase 6 incorpora revisión de vistas previas Android y pruebas geométricas;
 conserva pendiente la comparación iPhone/Android y las pruebas de OpenGL en hardware.
 La fase 7 cuenta con integración y pruebas locales; faltan Firebase, servidor
 de pruebas y validación de entrega, según confirmó el equipo.
+La fase 8 incorpora cachés, prefiltro conservador, equivalencia con el código
+anterior, mediciones JVM y contratos de conservación de datos. La validación
+de rendimiento y actualización instalada en Android continúa pendiente.
 Ver [resultado y reproducción de fase 1](FASE_1_REFERENCIA_Y_VALIDACION.md).
 Ver [correcciones y pruebas de fase 2](FASE_2_RUTAS_Y_LLEGADAS.md).
 Ver [continuidad y contexto de fase 3](FASE_3_CONTINUIDAD_Y_CONTEXTO.md).
@@ -19,9 +22,13 @@ Ver [mapas, búsqueda y conexión de fase 4](FASE_4_MAPAS_BUSQUEDA_Y_CONEXION.md
 Ver [idiomas, accesibilidad y errores de fase 5](FASE_5_IDIOMAS_ACCESIBILIDAD_Y_ERRORES.md).
 Ver [presentación y transportes 3D de fase 6](FASE_6_PRESENTACION_Y_TRANSPORTES_3D.md).
 Ver [preparación de notificaciones remotas de fase 7](FASE_7_NOTIFICACIONES_REMOTAS.md).
-Las fases 1–6 están publicadas en main. El workflow de GitHub aprobó el commit
+Ver [rendimiento y candidata local de fase 8](FASE_8_RENDIMIENTO_Y_ENTREGA.md).
+Las fases 7 y 8 se publican juntas en main en esta entrega. La ejecución remota
+registrada durante su preparación aprobó el commit
 [6a2297c](https://github.com/Defartion/RutaUTPAndroid/actions/runs/43612152671),
-que incluye los commits previos 21cc604 y aedfc71. La fase 7 se conserva como entrega independiente, todavía sin push.
+que incluye los commits previos 21cc604 y aedfc71. La fase 7 quedó guardada en
+08ba24a; la fase 8 se conserva como commit independiente. Los resultados de
+esta publicación se consultan en GitHub Actions.
 
 ## Objetivo y referencia
 
@@ -243,6 +250,13 @@ Proyecto Firebase del equipo, credenciales de servidor custodiadas fuera del rep
 Las dependencias faltantes mantienen esta fase pendiente. No se anunciará entrega remota operativa solo porque el cliente compile.
 
 ## Fase 8 — Rendimiento y validación de la entrega
+
+**Estado local:** implementación y candidata verificadas el 14/11/2026.
+Pasan 285 pruebas Android y 45 de herramientas; se conservan los 88 resultados
+del paquete backend de fase 7 y 39 referencias Compose. Los tiempos publicados
+son de JVM en la computadora, sin atribuirlos a Android. Tres pruebas nuevas
+de dispositivo están compiladas; su ejecución, actualización instalada y
+comparación con iPhone siguen pendientes.
 
 **Resultado esperado:** la versión conserva las correcciones, responde bien en un teléfono Android intermedio y tiene una entrega reproducible.
 

@@ -26,12 +26,33 @@ object VehicleETAEstimator {
     private const val MAX_MINUTOS = 120
 
     fun minutos(posicion: VehiclePosition, ruta: RutaGTFS, objetivo: LatLng): Int? {
-        // El dibujo puede simplificarse, pero el cálculo conserva las curvas
-        // y longitudes originales, igual que PreparedRoute de iOS.
-        val shape = ruta.shape
-        if (shape.size < 2) return null
+        val preparada = prepararRuta(ruta) ?: return null
+        return minutos(posicion, prepararObjetivo(preparada, objetivo))
+    }
+
+    internal class RutaPreparada(val shape: List<LatLng>, val total: Double,
+        val circular: Boolean, val velocidadProgramada: Double)
+    internal class ObjetivoPreparado(val ruta: RutaPreparada, val proyeccion: PolylineMatching.ProyeccionShape?)
+
+    internal fun prepararRuta(ruta: RutaGTFS): RutaPreparada? {
+        if (ruta.shape.size < 2) return null
+        // Copia una sola vez: una ruta instalada no cambia por mutar una lista externa.
+        val shape = ruta.shape.toList()
         val total = PolylineMatching.totalLengthMeters(shape)
         if (!total.isFinite() || total <= 0) return null
+        return RutaPreparada(shape, total,
+            GTFSRepository.distanciaMetros(shape.first(), shape.last()) <= UMBRAL_RUTA_CIRCULAR_M,
+            if (ruta.duracionMin > 0) total / (ruta.duracionMin * 60.0) else VEL_PROGRAMADA_FALLBACK_MS)
+    }
+
+    internal fun prepararObjetivo(ruta: RutaPreparada, objetivo: LatLng) =
+        ObjetivoPreparado(ruta, PolylineMatching.proyectarEnShape(objetivo, ruta.shape)
+            ?.takeIf { it.distanciaM <= TransitPlanner.RADIO_PIE_METROS })
+
+    internal fun minutos(posicion: VehiclePosition, objetivo: ObjetivoPreparado): Int? {
+        val ruta = objetivo.ruta
+        val shape = ruta.shape
+        val total = ruta.total
 
         // Vehiculo y punto consultado deben caer sobre el recorrido.
         val proyVehiculo = PolylineMatching.proyectarEnShape(
@@ -39,8 +60,7 @@ object VehicleETAEstimator {
         ) ?: return null
         if (proyVehiculo.distanciaM > UMBRAL_VEHICULO_M) return null
 
-        val proyObjetivo = PolylineMatching.proyectarEnShape(objetivo, shape) ?: return null
-        if (proyObjetivo.distanciaM > TransitPlanner.RADIO_PIE_METROS) return null
+        val proyObjetivo = objetivo.proyeccion ?: return null
 
         // Rumbo valido obligatorio: sin rumbo no hay sentido, y sin sentido
         // no hay llegada estimada.
@@ -55,7 +75,7 @@ object VehicleETAEstimator {
         val haciaAdelante = min(dif, 360.0 - dif) <= MAX_DIFERENCIA_SENTIDO_GRADOS
 
         var delta = proyObjetivo.fraccion - proyVehiculo.fraccion
-        if (GTFSRepository.distanciaMetros(shape.first(), shape.last()) <= UMBRAL_RUTA_CIRCULAR_M) {
+        if (ruta.circular) {
             if (haciaAdelante && delta < 0) delta += 1.0
             if (!haciaAdelante && delta > 0) delta -= 1.0
         } else if (if (haciaAdelante) delta < 0 else delta > 0) {
@@ -68,12 +88,10 @@ object VehicleETAEstimator {
         // Detenido no equivale a velocidad desconocida, incluso en el destino.
         if (posicion.speed >= 0 && posicion.speed < VEL_MIN_OBSERVADA_MS) return null
 
-        val programada = if (ruta.duracionMin > 0) total / (ruta.duracionMin * 60.0)
-            else VEL_PROGRAMADA_FALLBACK_MS
         // Solo una velocidad desconocida usa el horario y la longitud real.
         val velocidad = when {
             posicion.speed >= VEL_MIN_OBSERVADA_MS -> min(posicion.speed, VEL_MAX_OBSERVADA_MS)
-            else -> programada.coerceIn(0.5, VEL_MAX_OBSERVADA_MS)
+            else -> ruta.velocidadProgramada.coerceIn(0.5, VEL_MAX_OBSERVADA_MS)
         }
 
         val estimados = ceil(restanteM / velocidad / 60.0)

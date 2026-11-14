@@ -1,0 +1,107 @@
+{
+  "status": "local_candidate_device_validation_pending",
+  "applicationId": "com.example.rutautpnative",
+  "versionName": "1.2",
+  "versionCode": 3,
+  "referenceIosCommit": "8145276bb6fc72a168cc78119def2727578ec0bb",
+  "baselineCommit": "08ba24a96017cc135511c689652977cde80a39f7",
+  "apk": {
+    "path": "app/build/outputs/apk/debug/app-debug.apk",
+    "sha256": "a02bcf6635ddf642c9439533c7997dae20d71421a07ae82761161753c331dff1",
+    "bytes": 66479072
+  },
+  "instrumentationApk": {
+    "sha256": "9eeaeb1990876f243c80623a44663d6071f5f9d2bfb1290b3dc85039b50092a3",
+    "executed": false
+  },
+  "checks": {
+    "unitTests": {
+      "tests": 285,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "referenceEtaCasesExecuted": 11,
+    "referenceStateCasesExecuted": 8,
+    "referenceRouteCasesExecuted": 8,
+    "lintWarnings": 82,
+    "lintHints": 16
+  },
+  "languagesVerified": true,
+  "previewReferences": 39,
+  "backendTests": 88,
+  "configurationVerified": true,
+  "storage": {
+    "sourceContractsVerified": 12,
+    "installationUpgradeVerified": false
+  },
+  "performance": {
+    "schemaVersion": 1,
+    "environment": "host-jvm",
+    "os": "Windows 11",
+    "java": "21.0.10",
+    "baselineCommit": "08ba24a96017cc135511c689652977cde80a39f7",
+    "equivalentResults": true,
+    "androidDeviceMeasured": false,
+    "networkUsed": false,
+    "routes": 102,
+    "shapePoints": 53616,
+    "vehicles": 1000,
+    "samples": 5,
+    "nearbyQueries": 32,
+    "geometryPreparationsWarm": 102,
+    "targetProjectionsWarm": 102,
+    "nearbyCandidates": 996,
+    "nearbyFullCandidates": 3264,
+    "parseCatalog": {
+      "medianMs": 55.7322,
+      "p95Ms": 64.2353
+    },
+    "buildNearbyIndex": {
+      "medianMs": 3.2728,
+      "p95Ms": 3.7441
+    },
+    "snapshotBefore": {
+      "medianMs": 44.7227,
+      "p95Ms": 48.5169
+    },
+    "snapshotCold": {
+      "medianMs": 12.5146,
+      "p95Ms": 12.7589
+    },
+    "snapshotWarm": {
+      "medianMs": 7.9012,
+      "p95Ms": 8.4548
+    },
+    "targetChange": {
+      "medianMs": 8.7867,
+      "p95Ms": 9.233
+    },
+    "nearbyBefore": {
+      "medianMs": 25.0327,
+      "p95Ms": 25.9046
+    },
+    "nearbyIndexed": {
+      "medianMs": 9.0506,
+      "p95Ms": 9.3207
+    },
+    "sourceHashes": {
+      "app/src/main/java/com/example/rutautpnative/data/geo/PolylineMatching.kt": "63756103fc35fe91bb144f0b37b16363c0904bc66223a4a7677b14352c693e39",
+      "app/src/main/java/com/example/rutautpnative/data/gtfs/GTFSRepository.kt": "7ea912965fbe7b23adae1154829e09e23f03ba26272459cc316cfbf05526407a",
+      "app/src/main/java/com/example/rutautpnative/data/gtfs/GTFSNearbyRouteIndex.kt": "c9d554cb596c38002e6ac4e42264581d21eed551c2640fcd7b0cdcd4b8ea2ca1",
+      "app/src/main/java/com/example/rutautpnative/data/tracking/VehicleETAEstimator.kt": "ce29669935f9ccba5dff4e9e478220221672ad6258832f41678b31c925b5be4a",
+      "app/src/main/java/com/example/rutautpnative/data/tracking/VehicleETACache.kt": "eb2f5778dd28ca961ac92891eed471be2d40c759f44bc7810502bf12d11e5fe1",
+      "app/src/main/java/com/example/rutautpnative/ui/screens/mapa/MapaViewModel.kt": "97bfa39cf2082476e6b058c9deba6bc39975bfe1f25623dc6c5169e1710a2642",
+      "app/src/test/java/com/example/rutautpnative/Phase8PerformanceTest.kt": "605fb6f3ecf17c734173887f02743f2a2a1a240e56466c57834947ced2ed438c",
+      "app/src/test/java/com/example/rutautpnative/Phase8ContinuityTest.kt": "99f6aa724b8654f8f52a1c49f692cfcef3b95e841182cd423bdce63c7f697f69",
+      "app/src/test/java/com/example/rutautpnative/reference/PolylineMatchingAnterior.kt": "01e93ec365d10a1d9eb99de896dd9a7bd93579e088f74fe6856579d94129d3bc",
+      "app/src/test/java/com/example/rutautpnative/reference/VehicleETAAnterior.kt": "9d853cffcec4041088bfccc251eb5f4573bced87db121460a9d14bd6ae3198f4"
+    }
+  },
+  "iosDeviceComparison": "pending",
+  "realMapsAndGPS": "pending",
+  "realOpenGL": "pending",
+  "talkBackOnDevice": "pending",
+  "remoteDelivery": "pending",
+  "recordedDateLima": "2026-11-14"
+}

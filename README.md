@@ -12,6 +12,7 @@ La referencia de esta actualización es main, commit 8145276 del 09/11/2026.
 - [Fase 5: idiomas, accesibilidad y errores](docs/FASE_5_IDIOMAS_ACCESIBILIDAD_Y_ERRORES.md)
 - [Fase 6: presentación y transportes 3D](docs/FASE_6_PRESENTACION_Y_TRANSPORTES_3D.md)
 - [Fase 7: integración de notificaciones remotas preparada](docs/FASE_7_NOTIFICACIONES_REMOTAS.md)
+- [Fase 8: rendimiento y candidata local](docs/FASE_8_RENDIMIENTO_Y_ENTREGA.md)
 - [Configurar avisos remotos con Firebase](docs/FIREBASE_ANDROID.md)
 - [Almacenes y claves locales](PERSISTENCIA.md)
 - [Herramientas de desarrollo](tools/README.md)
@@ -33,6 +34,9 @@ que realmente quedaron empaquetados para instalar.
 incluidos los textos propios de Android y los recursos bilingües.
 Los tests unitarios no necesitan teléfono. Cámara, permisos, GPS, avisos del
 sistema y renderizado 3D deben revisarse también en un dispositivo Android.
+La fase 8 incluye mediciones comparativas de cálculo, pruebas de compatibilidad
+y un informe verificable de la candidata. La guía distingue las comprobaciones
+locales de la actualización instalada y las pruebas pendientes en teléfono.
 
 ## Probar desde Android Studio
 
