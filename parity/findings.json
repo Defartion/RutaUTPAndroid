@@ -67,9 +67,10 @@
       "phases": [
         7
       ],
-      "status": "pending",
+      "status": "in_progress",
       "acceptance": "FCM aceptado por registro y worker sin romper APNs",
-      "validation": "Integración backend y entrega real bajo políticas de silencio."
+      "validation": "Fase 7 preparada localmente: contrato schema 2 compartido, recibos FCM vinculados a la aplicación y selección de proveedor en el worker. 264 pruebas Android, 88 Linux del backend (55 nuevas FCM, 6 APNs y 27 quorum/reportes), 42 de herramientas. El equipo confirmó que no dispone aún de Firebase ni servidor de pruebas. Incorporación al backend, despliegue y entrega real pendientes.",
+      "evidence": "docs/FASE_7_NOTIFICACIONES_REMOTAS.md"
     },
     {
       "id": "F08",
@@ -138,8 +139,8 @@
       ],
       "status": "in_progress",
       "acceptance": "Comprobación automática de main/PR y cobertura de flujos",
-      "validation": "Workflow de main aprobado para 1ab4e38 (ejecución 43460750207). Fase 6 local: 252 pruebas Android y 39 de herramientas; 39 vistas previas Compose revisadas, con inventario verificable en el workflow. Las pruebas instrumentales están compiladas, no ejecutadas. Comparación iPhone/Android y Google Maps/OpenGL/TalkBack en dispositivo pendientes. Fases 4 y 5 guardadas en 21cc604 y aedfc71; fase 6 preparada como entrega independiente. La publicación y sus comprobaciones remotas se registran en la siguiente fase.",
-      "evidence": "docs/FASE_6_PRESENTACION_Y_TRANSPORTES_3D.md"
+      "validation": "Main publicado en 6a2297c y workflow aprobado (43612152671). Fase 7 local: 264 pruebas Android, 88 del backend y 42 de herramientas; nuevo trabajo Linux preparado en el workflow, todavía sin publicar. Se conservan 39 referencias Compose de fase 6. Instrumentales compiladas; comparación iPhone/Android y pruebas Maps/OpenGL/TalkBack/FCM en dispositivo pendientes.",
+      "evidence": "docs/FASE_7_NOTIFICACIONES_REMOTAS.md"
     },
     {
       "id": "F15",

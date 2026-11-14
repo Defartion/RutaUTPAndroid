@@ -98,7 +98,7 @@ object PushRutasService {
             ensureActive()
             if (!foreground || generation != generacion) return@launch
             if (routes.size > 100 || routes.any { it.isBlank() || it.length > 128 }) return@launch
-            val settings = NotificacionesService.configuracion
+            val settings = NotificacionesService.configuracion.takeIf { it.valida() } ?: ConfiguracionNotificaciones()
             val device = prefs.getString("notificaciones.push.instalacion.v1", null) ?: UUID.randomUUID().toString().also {
                 prefs.edit().putString("notificaciones.push.instalacion.v1", it).commit()
             }
@@ -108,17 +108,14 @@ object PushRutasService {
             val request = UUID.randomUUID().toString()
             revisionEnviada = previous + 1
             solicitud = request
-            val enabled = activadas && ctx.getSharedPreferences("rutautp.persistencia", 0).getBoolean("perfil_notificaciones", false) && NotificacionesService.permitido(ctx) && !NotificacionesService.datosInvalidos && token != null
-            // schema 2 distingue tokens FCM de los tokens hexadecimales APNs del schema 1.
-            val body = buildJsonObject {
-                put("schemaVersion", 2); put("provider", "fcm"); put("platform", "android"); put("packageName", ctx.packageName)
-                put("requestID", request); put("deviceID", device); put("revision", revisionEnviada)
-                put("timestamp", System.currentTimeMillis() / 1000.0); put("token", token.orEmpty()); put("enabled", enabled)
-                put("routes", JsonArray(routes.map(::JsonPrimitive))); put("language", L.codigo); put("timeZone", ZoneId.systemDefault().id)
-                put("pauseUntil", settings.pausaHasta?.let { JsonPrimitive(it / 1000.0) } ?: JsonNull)
-                put("mutedDays", JsonArray(settings.diasSilencio.sorted().map(::JsonPrimitive))); put("quietHours", settings.silencioHorario)
-                put("quietStart", settings.inicioSilencio); put("quietEnd", settings.finSilencio); put("sound", settings.sonido)
-            }.toString()
+            val enabled = activadas && ctx.getSharedPreferences("rutautp.persistencia", 0).getBoolean("perfil_notificaciones", false) && NotificacionesService.permitido(ctx) && !NotificacionesService.datosInvalidos && !LineasGuardadasStore.datosInvalidos.value && token != null
+            val body = runCatching {
+                RegistroPush.crear(request, device, revisionEnviada, System.currentTimeMillis() / 1000.0,
+                    token.orEmpty(), enabled, routes, L.codigo, ZoneId.systemDefault().id, ctx.packageName, settings)
+            }.getOrElse {
+                estado = L.t("No se pudo registrar el servicio de avisos.", "Could not register notification service.")
+                return@launch
+            }
             if (!prefs.edit().putLong("notificaciones.push.revision.v1", revisionEnviada).commit()) return@launch
             estado = L.t("Sincronizando con el servicio…", "Syncing with the service…")
             try {
@@ -143,18 +140,20 @@ object PushRutasService {
                         handler.post {
                             if (!vigente()) return@post
                             val receipt = ReciboRegistroPush.leer(text) ?: return@post
-                            if (receipt.requestID != solicitud || receipt.revision != revisionEnviada) return@post
+                            val now = System.currentTimeMillis() / 1000.0
+                            val result = receipt.evaluarFcm(solicitud, revisionEnviada, enabled, now, ctx.packageName)
+                            if (result == ResultadoRegistroPush.IGNORAR) return@post
                             timeout?.let(handler::removeCallbacks)
                             solicitud = null
                             val expires = receipt.leaseUntil
-                            val now = System.currentTimeMillis() / 1000.0
-                            val accepted = receipt.accepted && expires > now && expires <= now + 31 * 86400
-                            registroConfirmado = accepted && enabled && receipt.providerReady
-                            estado = when {
-                                !accepted -> L.t("El backend no aceptó el registro FCM. Revisa su configuración para Android.", "The backend did not accept FCM registration. Check its Android configuration.")
-                                !enabled -> L.t("Avisos de cambios desactivados", "Route change notifications disabled")
-                                registroConfirmado -> L.t("Registro remoto confirmado", "Remote registration confirmed")
-                                else -> L.t("El servidor recibió tus ajustes, pero el envío FCM aún no está configurado.", "The server received your settings, but FCM delivery is not configured yet.")
+                            val accepted = result != ResultadoRegistroPush.RECHAZADO
+                            registroConfirmado = result == ResultadoRegistroPush.CONFIRMADO
+                            estado = when (result) {
+                                ResultadoRegistroPush.RECHAZADO -> L.t("El backend no aceptó el registro FCM. Revisa su configuración para Android.", "The backend did not accept FCM registration. Check its Android configuration.")
+                                ResultadoRegistroPush.DESACTIVADO -> L.t("Avisos de cambios desactivados", "Route change notifications disabled")
+                                ResultadoRegistroPush.CONFIRMADO -> L.t("Registro remoto confirmado", "Remote registration confirmed")
+                                ResultadoRegistroPush.PROVEEDOR_PENDIENTE -> L.t("El servidor recibió tus ajustes, pero el envío FCM aún no está configurado.", "The server received your settings, but FCM delivery is not configured yet.")
+                                ResultadoRegistroPush.IGNORAR -> estado
                             }
                             if (accepted) {
                                 lease?.let(handler::removeCallbacks)
@@ -178,6 +177,7 @@ object PushRutasService {
     }
     private fun desconectar() {
         generacion++
+        registroConfirmado = false
         timeout?.let(handler::removeCallbacks)
         lease?.let(handler::removeCallbacks)
         solicitud = null

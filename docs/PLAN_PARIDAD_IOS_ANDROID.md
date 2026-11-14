@@ -2,7 +2,7 @@
 
 Fecha: 10 de noviembre de 2026.
 
-Estado: **fases 1–6 implementadas localmente; fases 7–8 pendientes**.
+Estado: **fases 1–6 implementadas; fase 7 preparada sin activación; fase 8 pendiente**.
 Última validación local: 14 de noviembre de 2026. La fase 3 conserva pendientes
 las comprobaciones de interacción, rotación y GPS en dispositivo. La fase 4
 requiere validar Google Cloud, el broker y dos teléfonos para su cierre integral.
@@ -10,16 +10,18 @@ La fase 5 conserva pendientes la revisión lingüística, TalkBack, texto grande
 y la matriz de permisos en dispositivo.
 La fase 6 incorpora revisión de vistas previas Android y pruebas geométricas;
 conserva pendiente la comparación iPhone/Android y las pruebas de OpenGL en hardware.
+La fase 7 cuenta con integración y pruebas locales; faltan Firebase, servidor
+de pruebas y validación de entrega, según confirmó el equipo.
 Ver [resultado y reproducción de fase 1](FASE_1_REFERENCIA_Y_VALIDACION.md).
 Ver [correcciones y pruebas de fase 2](FASE_2_RUTAS_Y_LLEGADAS.md).
 Ver [continuidad y contexto de fase 3](FASE_3_CONTINUIDAD_Y_CONTEXTO.md).
 Ver [mapas, búsqueda y conexión de fase 4](FASE_4_MAPAS_BUSQUEDA_Y_CONEXION.md).
 Ver [idiomas, accesibilidad y errores de fase 5](FASE_5_IDIOMAS_ACCESIBILIDAD_Y_ERRORES.md).
 Ver [presentación y transportes 3D de fase 6](FASE_6_PRESENTACION_Y_TRANSPORTES_3D.md).
-La fase 3 está publicada en main. El workflow de GitHub aprobó el commit
-[1ab4e38](https://github.com/Defartion/RutaUTPAndroid/actions/runs/43460750207);
-las fases 4 y 5 quedaron guardadas en los commits locales 21cc604 y aedfc71.
-La fase 6 está preparada como entrega independiente; la publicación se registra en la siguiente fase.
+Ver [preparación de notificaciones remotas de fase 7](FASE_7_NOTIFICACIONES_REMOTAS.md).
+Las fases 1–6 están publicadas en main. El workflow de GitHub aprobó el commit
+[6a2297c](https://github.com/Defartion/RutaUTPAndroid/actions/runs/43612152671),
+que incluye los commits previos 21cc604 y aedfc71. La fase 7 se conserva como entrega independiente, todavía sin push.
 
 ## Objetivo y referencia
 
@@ -208,6 +210,10 @@ En cada pantalla se compararán claro/oscuro, datos cargados, carga, vacío, err
 Una vista previa de Compose no sustituye la prueba de mapa, cámara o OpenGL en un dispositivo. Los materiales e iluminación 3D de ambos motores pueden producir diferencias aun utilizando la misma geometría de origen.
 
 ## Fase 7 — Notificaciones remotas Android y backend común
+
+**Estado local:** integración preparada el 14/11/2026. Pasan 264 pruebas Android,
+88 de backend y 42 de herramientas. Se mantiene APNs y se prepara FCM sobre
+el backend fijado. La entrega real conserva las dependencias externas siguientes.
 
 **Resultado esperado:** FCM y APNs comparten reglas de suscripción, vigencia y silencio, con proveedores de entrega distintos.
 

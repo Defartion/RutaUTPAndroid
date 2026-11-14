@@ -5,7 +5,7 @@
 `python tools/verificar_paridad.py` comprueba los recursos fijados en
 `parity/reference.json`, los casos de comparación y el seguimiento F01–F15.
 `--require-results` exige además los resultados JUnit y lint de la compilación
-actual: al menos 252 pruebas, sin fallos ni omisiones, incluidos los once casos
+actual: al menos 264 pruebas, sin fallos ni omisiones, incluidos los once casos
 ETA, ocho de comparación de rutas y ocho de continuidad. Los casos pendientes
 se informan por separado.
 
@@ -70,6 +70,24 @@ También genera `.partes.json`: rangos de vértices de Carroceria/ContornoMarca
 y transformación del espacio local al normalizado. Permiten pintar solo las
 zonas originales de carrocería y situar las bandas/cartel de cada línea en
 las mismas coordenadas de iOS. Deben regenerarse junto con las seis mallas.
+
+## Integración del backend FCM
+
+`python tools/preparar_backend_push.py --ios RUTA_CHECKOUT_IOS` prepara una
+copia aislada en `app/build/backend-phase7`, desde los objetos Git del commit
+fijado de main. Los archivos locales del checkout iOS no se copian. No inicia
+el backend ni modifica un servidor.
+
+`python tools/verificar_backend_push.py` coteja origen, contrato y archivos de
+la integración. `--require-results` exige los 88 casos APNs/FCM/quorum sin fallos
+ni omisiones; guarda `app/build/reports/parity/backend-push-check.json`.
+Los hashes de texto normalizan LF para comprobar el mismo paquete en Windows
+y Linux. Ni el paquete ni las pruebas acreditan entrega remota.
+
+El backend original usa bloqueos Linux con fcntl; sus pruebas se ejecutan en
+Ubuntu, mediante WSL o el trabajo de CI preparado. Las pruebas Android se
+ejecutan en Windows. Ver reproducción y dependencias de activación en la
+[fase 7](../docs/FASE_7_NOTIFICACIONES_REMOTAS.md).
 
 ## Scripts de demostración anteriores
 

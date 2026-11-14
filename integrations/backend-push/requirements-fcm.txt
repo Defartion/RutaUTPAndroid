@@ -1,0 +1,3 @@
+-r requirements-push.txt
+firebase-admin==7.8.0
+tzdata==2026.6

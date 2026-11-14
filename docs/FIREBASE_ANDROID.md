@@ -13,6 +13,11 @@ configuración. Los recordatorios locales funcionan con NotificationManager y
 AlarmManager y no dependen de Firebase. No se han creado cuentas, desplegado
 servicios, registrado dispositivos ni enviado notificaciones a usuarios.
 
+El 14/11/2026 el equipo confirmó que tampoco dispone todavía de un servidor
+de pruebas. La [fase 7](FASE_7_NOTIFICACIONES_REMOTAS.md) deja la integración
+del backend preparada y comprobada localmente: 88 pruebas Linux, compatibilidad
+APNs y contrato compartido con Android. Su incorporación y activación siguen pendientes.
+
 ## Configuración de la aplicación
 
 1. Crear el proyecto Firebase del equipo y registrar la aplicación Android con
@@ -35,7 +40,7 @@ en `rutautp.push`, excluido de copias y transferencias del sistema.
 
 ## Cambio necesario en el backend compartido
 
-La main iOS `138900d06bf57a8835ad6c4261f3b608cf6b66b5` solo implementa registros
+La main iOS `8145276bb6fc72a168cc78119def2727578ec0bb` solo implementa registros
 APNs de esquema 1 y tokens hexadecimales. **Un token FCM no debe enviarse al
 proveedor APNs ni presentarse como si el backend ya lo aceptase.**
 
@@ -72,6 +77,9 @@ debe añadir validación de este esquema y almacenar el proveedor por registro,
 conservar la revisión creciente, la caducidad de 30 días y todas sus verificaciones
 de quorum, suscripción, silencios, permiso de cuenta y deduplicación. Su recibo
 conserva `requestID`, `revision`, `accepted`, `providerReady`, `leaseUntil` y `code`.
+Para FCM añade `schemaVersion: 2`, `provider: "fcm"`, `platform: "android"` y
+`packageName`. Android comprueba esos metadatos antes de confirmar un registro;
+un recibo APNs o de otro paquete no sirve como confirmación FCM.
 Hasta adaptar y desplegar ese backend, la app no anunciará registro confirmado.
 
 Se incluye `integrations/fcm_provider.py` como adaptador del worker de entrega.
@@ -79,6 +87,13 @@ Requiere `firebase-admin` **en el servidor**, autenticado mediante credenciales
 de servicio del proyecto Firebase, guardadas fuera del repositorio. No introduce
 credenciales de servicio en el APK. Debe conectarse al worker existente después
 de las comprobaciones anteriores; importarlo no inicia un servicio ni envía nada.
+
+Esa conexión al worker está preparada en `integrations/backend-push` y se aplica
+a una copia aislada mediante `tools/preparar_backend_push.py`. El mismo worker
+selecciona APNs o FCM según la inscripción y mantiene independientes sus estados
+de disponibilidad. La configuración FCM usa `FCM_ENABLED`, `FCM_PROJECT_ID` y
+`FCM_ANDROID_PACKAGE`; el proyecto y el paquete los autoriza el servidor.
+Las credenciales de servidor se aportan mediante ADC y permanecen fuera del APK.
 
 El backend enviará **mensajes de datos**, sin un bloque `notification` que el
 sistema pudiera mostrar saltándose la política local:

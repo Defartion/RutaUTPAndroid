@@ -11,6 +11,7 @@ La referencia de esta actualización es main, commit 8145276 del 09/11/2026.
 - [Fase 4: mapas, búsqueda y conexión por teléfono](docs/FASE_4_MAPAS_BUSQUEDA_Y_CONEXION.md)
 - [Fase 5: idiomas, accesibilidad y errores](docs/FASE_5_IDIOMAS_ACCESIBILIDAD_Y_ERRORES.md)
 - [Fase 6: presentación y transportes 3D](docs/FASE_6_PRESENTACION_Y_TRANSPORTES_3D.md)
+- [Fase 7: integración de notificaciones remotas preparada](docs/FASE_7_NOTIFICACIONES_REMOTAS.md)
 - [Configurar avisos remotos con Firebase](docs/FIREBASE_ANDROID.md)
 - [Almacenes y claves locales](PERSISTENCIA.md)
 - [Herramientas de desarrollo](tools/README.md)
@@ -65,5 +66,6 @@ y sus permisos de broker se administran en el repositorio compartido iOS.
 
 No hace falta Firebase para compilar ni para programar recordatorios locales.
 Para avisos remotos se necesita un proyecto Firebase, su google-services.json
-y adaptar el backend a FCM conforme a la guía. Pagos, autenticación y comunidad
+y aplicar la integración FCM preparada al backend conforme a la guía de fase 7.
+La configuración y la entrega real siguen pendientes. Pagos, autenticación y comunidad
 siguen teniendo los límites de demostración del proyecto original.

@@ -13,7 +13,7 @@
       "commit": "7ba57cbe73f97e83fd112584a9e8ff89623ac4c1"
     }
   },
-  "minimumUnitTests": 252,
+  "minimumUnitTests": 264,
   "originalUnitTests": 119,
   "requiredBaselineCaseIds": [
     "ETA-01",
@@ -617,6 +617,31 @@
     {
       "path": "RutaUTP/Screens/Perfil/PerfilView.swift",
       "sha256": "59ab5e830fa184e3fc3f923412854aaccfcdae30fa3f43d7f8e4b9e183ba0f26",
+      "hashMode": "lf"
+    },
+    {
+      "path": "backend/rutautp_backend/push_config.py",
+      "sha256": "cd6f5eec0063938c2290412005f7909cd132538e6804d8ffad23b054c51f620c",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Services/Notificaciones/PushRutasService.swift",
+      "sha256": "43d51442ea1fdf9226c19c7c63162a328c8f14dc4be562369eccb9f3ef027165",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Services/Notificaciones/PreferenciasNotificacionesStore.swift",
+      "sha256": "7d79d7d0f5ae818438f2ff1d278928153205a6b05c0779c82ef32e4ef0211b8f",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Services/Notificaciones/NotificacionesService.swift",
+      "sha256": "b1db1ca1986d93bc06410e5694d4646ddebd93c9a8b76b528e4f6ef1e1982b37",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Models/RecordatorioViaje.swift",
+      "sha256": "de2b54730de0837e188881c60d4e8e9ff84e7aa13744d7bd6882280847b3dc20",
       "hashMode": "lf"
     }
   ],

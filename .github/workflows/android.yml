@@ -48,6 +48,7 @@ jobs:
           python tools/verificar_idiomas.py
           python tools/verificar_paridad.py
           python tools/verificar_capturas.py
+          python tools/verificar_backend_push.py
 
       # El runner no recibe credenciales MQTT, Firebase ni firma de producción.
       # Los casos pendientes no se presentan como paridad ya conseguida.
@@ -83,3 +84,51 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 7
+
+  backend-push:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Obtener integración Android
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Obtener únicamente la referencia fijada de main iOS
+        uses: actions/checkout@v4
+        with:
+          repository: JDiazD33/RutaUTP
+          ref: 8145276bb6fc72a168cc78119def2727578ec0bb
+          path: app/build/backend-ios-reference
+          persist-credentials: false
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Preparar backend aislado
+        run: python tools/preparar_backend_push.py --ios app/build/backend-ios-reference
+      - name: Instalar dependencias de pruebas
+        run: >-
+          python -m pip install
+          -r app/build/backend-phase7/backend/requirements-dev.txt
+          -r app/build/backend-phase7/backend/requirements-fcm.txt
+      # Todos los transportes se sustituyen por dobles; no hay credenciales ni broker.
+      - name: Verificar APNs, FCM y quorum sin envíos
+        run: >-
+          python -m pytest -q
+          app/build/backend-phase7/backend/tests/test_push_register_numbers.py
+          app/build/backend-phase7/backend/tests/test_push_retry_registration.py
+          app/build/backend-phase7/backend/tests/test_route_changes.py
+          app/build/backend-phase7/backend/tests/test_fcm_integration.py
+          --junitxml=app/build/reports/parity/backend-push-tests.xml
+      - name: Comprobar resultados de integración
+        run: python tools/verificar_backend_push.py --require-results
+      - name: Conservar resultados del backend
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-push-checks
+          path: |
+            app/build/reports/parity/backend-push-tests.xml
+            app/build/reports/parity/backend-push-check.json
+          if-no-files-found: warn
+          retention-days: 14

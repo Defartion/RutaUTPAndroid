@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "referenceIosCommit": "8145276bb6fc72a168cc78119def2727578ec0bb",
+  "now": 1800000000,
+  "fcmRegistration": {
+    "requestID": "00000000-0000-4000-8000-000000000101",
+    "deviceID": "00000000-0000-4000-8000-000000000102",
+    "revision": 1,
+    "timestamp": 1800000000,
+    "enabled": true,
+    "routes": [
+      "17350695"
+    ],
+    "language": "es",
+    "timeZone": "UTC",
+    "pauseUntil": null,
+    "mutedDays": [],
+    "quietHours": false,
+    "quietStart": 1320,
+    "quietEnd": 420,
+    "sound": true,
+    "schemaVersion": 2,
+    "provider": "fcm",
+    "platform": "android",
+    "packageName": "com.example.rutautpnative",
+    "token": "SYNTHETIC_FCM_TOKEN:phase7"
+  },
+  "apnsRegistration": {
+    "requestID": "00000000-0000-4000-8000-000000000101",
+    "deviceID": "00000000-0000-4000-8000-000000000202",
+    "revision": 1,
+    "timestamp": 1800000000,
+    "enabled": true,
+    "routes": [
+      "17350695"
+    ],
+    "language": "es",
+    "timeZone": "UTC",
+    "pauseUntil": null,
+    "mutedDays": [],
+    "quietHours": false,
+    "quietStart": 1320,
+    "quietEnd": 420,
+    "sound": true,
+    "schemaVersion": 1,
+    "environment": "development",
+    "token": "aa"
+  },
+  "fcmReceipt": {
+    "requestID": "00000000-0000-4000-8000-000000000101",
+    "revision": 1,
+    "accepted": true,
+    "providerReady": true,
+    "code": "saved",
+    "leaseUntil": 1802592000,
+    "schemaVersion": 2,
+    "provider": "fcm",
+    "platform": "android",
+    "packageName": "com.example.rutautpnative"
+  },
+  "dataMessage": {
+    "schemaVersion": "1",
+    "kind": "routeChange",
+    "eventID": "00000000-0000-4000-8000-000000000301",
+    "routeID": "17350695",
+    "expiresAt": "1800000300"
+  },
+  "policies": [
+    {
+      "id": "horario-diurno",
+      "instant": "2026-11-16T17:00:00Z",
+      "timeZone": "America/Lima",
+      "updates": {},
+      "allowed": true
+    },
+    {
+      "id": "noche-cruza-medianoche",
+      "instant": "2026-11-15T04:00:00Z",
+      "timeZone": "America/Lima",
+      "updates": {
+        "quietHours": true
+      },
+      "allowed": false
+    },
+    {
+      "id": "fin-silencio-inclusivo",
+      "instant": "2026-11-15T12:00:00Z",
+      "timeZone": "America/Lima",
+      "updates": {
+        "quietHours": true
+      },
+      "allowed": true
+    },
+    {
+      "id": "domingo-silenciado",
+      "instant": "2026-11-15T17:00:00Z",
+      "timeZone": "America/Lima",
+      "updates": {
+        "mutedDays": [
+          1
+        ]
+      },
+      "allowed": false
+    },
+    {
+      "id": "horas-iguales-silencio-completo",
+      "instant": "2026-11-16T17:00:00Z",
+      "timeZone": "America/Lima",
+      "updates": {
+        "quietHours": true,
+        "quietStart": 420,
+        "quietEnd": 420
+      },
+      "allowed": false
+    },
+    {
+      "id": "pausa-vigente",
+      "instant": "2026-11-16T17:00:00Z",
+      "timeZone": "America/Lima",
+      "updates": {
+        "pauseUntil": 1794848460.0
+      },
+      "allowed": false
+    },
+    {
+      "id": "pausa-terminada",
+      "instant": "2026-11-16T17:00:00Z",
+      "timeZone": "America/Lima",
+      "updates": {
+        "pauseUntil": 1794848400.0
+      },
+      "allowed": true
+    }
+  ],
+  "notice": "Todos los UUID y tokens son sintéticos; no enviar a un servicio real."
+}

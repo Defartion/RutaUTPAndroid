@@ -1,0 +1,54 @@
+{
+  "referenceIosCommit": "8145276bb6fc72a168cc78119def2727578ec0bb",
+  "upstreamFiles": [
+    {
+      "path": "backend/rutautp_backend/push_config.py",
+      "sha256": "cd6f5eec0063938c2290412005f7909cd132538e6804d8ffad23b054c51f620c"
+    },
+    {
+      "path": "backend/rutautp_backend/push_service.py",
+      "sha256": "ed3c4e03fbb7ce2a18718e2dc77c91a0a79ab6886e9774d309ee3321be264a94"
+    }
+  ],
+  "status": "prepared_not_deployed",
+  "schemaVersion": 1,
+  "minimumBackendTests": 88,
+  "requiredTestClasses": [
+    "tests.test_push_register_numbers",
+    "tests.test_push_retry_registration",
+    "tests.test_route_changes",
+    "tests.test_fcm_integration"
+  ],
+  "packageFiles": [
+    {
+      "path": "integrations/backend-push/requirements-fcm.txt",
+      "sha256": "a26a2ea4da6e64eb991236ca32c69e3ec657a4f230b4efb7b44d07813569b242",
+      "hashMode": "lf"
+    },
+    {
+      "path": "integrations/backend-push/rutautp_backend/push_config.py",
+      "sha256": "6781c36cfc144e3acf4559b3c9d559e5bc1f05ff98aaf481797eb7a2d0347a4e",
+      "hashMode": "lf"
+    },
+    {
+      "path": "integrations/backend-push/rutautp_backend/push_service.py",
+      "sha256": "da41a91bafd04cbe61bb0291119d5014899dc3971a73a633b6569e1ad90da509",
+      "hashMode": "lf"
+    },
+    {
+      "path": "integrations/backend-push/tests/test_fcm_integration.py",
+      "sha256": "2cf7c061b60013dc03461ca39bd1f64a3f292e2dda7bbb99bf5aefda005e6571",
+      "hashMode": "lf"
+    },
+    {
+      "path": "integrations/fcm_provider.py",
+      "sha256": "40207e7c5808a245bbe72fb60350459c6cd1a84b396665e6851b4bf30d78ba47",
+      "hashMode": "lf"
+    },
+    {
+      "path": "parity/push-contract.json",
+      "sha256": "84604bf2f05719521e5e0a177153e07d45d8ae6537d29452e2b136187ab7a94d",
+      "hashMode": "lf"
+    }
+  ]
+}

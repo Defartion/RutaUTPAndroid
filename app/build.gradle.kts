@@ -52,7 +52,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    testOptions { unitTests.all { it.systemProperty("rutautp.assets", file("src/main/assets").absolutePath) } }
+    testOptions { unitTests.all {
+        it.systemProperty("rutautp.assets", file("src/main/assets").absolutePath)
+        it.systemProperty("rutautp.parity", rootProject.file("parity").absolutePath)
+    } }
     buildFeatures {
         compose = true
         buildConfig = true
