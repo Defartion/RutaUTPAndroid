@@ -9,6 +9,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
 import com.example.rutautpnative.navigation.AppRouter
 import com.example.rutautpnative.navigation.AppScreen
 import com.example.rutautpnative.ui.idioma.L
@@ -49,8 +51,11 @@ fun BottomNavBar(
     modifier: Modifier = Modifier
 ) {
     val borderColor = OutlineVariant.copy(alpha = 0.20f)
+    val textoGrande = LocalDensity.current.fontScale >= 1.5f
+    val medidor = rememberTextMeasurer()
 
-    Row(
+    // En texto grande se conservan las cinco etiquetas y acciones en dos filas.
+    FlowRow(
         modifier = modifier
             .fillMaxWidth()
             .selectableGroup()
@@ -66,15 +71,18 @@ fun BottomNavBar(
             }
             .padding(top = 8.dp),
         horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
+        maxItemsInEachRow = if (textoGrande) 3 else 5
     ) {
         tabs.forEach { tab ->
             val isActive = router.currentScreen == tab.screen
             val label = tab.label()
+            val estiloEtiqueta = BodyXs.copy(fontSize = 12.sp,
+                fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal)
+            val peso = if (textoGrande) medidor.measure(label, estiloEtiqueta).size.width.coerceAtLeast(1).toFloat() else 1f
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(peso)
                     .heightIn(min = 64.dp)
                     .selectable(selected = isActive, role = Role.Tab, onClick = { router.navigate(tab.screen) })
                     .padding(horizontal = 2.dp, vertical = 6.dp)
@@ -88,7 +96,7 @@ fun BottomNavBar(
                 Spacer(modifier = Modifier.height(3.dp))
                 Text(
                     text = label,
-                    style = BodyXs.copy(fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal),
+                    style = estiloEtiqueta,
                     color = if (isActive) AcentoInterfaz else OnSurfaceVariant,
                     softWrap = true,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,

@@ -21,7 +21,9 @@ class ServiciosMapa(
     val institucional: () -> Boolean = { TransporteApp.busesUTPActivos },
     val utpPendiente: () -> Boolean = { TransporteApp.rutasUTPPendientes },
     val caminar: TransitPlanner.CaminatasReales = TransitPlanner.CaminatasReales { a, b -> TransitPlanner.caminataReal(a, b) },
-    val reloj: () -> Long = { android.os.SystemClock.elapsedRealtime() }
+    val reloj: () -> Long = { android.os.SystemClock.elapsedRealtime() },
+    val falloCatalogo: () -> Boolean = { GTFSRepository.errorCarga.value != null },
+    val reintentarCatalogo: suspend () -> Unit = { GTFSRepository.rutas(reintentar = true); Unit }
 )
 
 interface ControlCamaraMapa {

@@ -8,6 +8,9 @@ La [fase 1](FASE_1_REFERENCIA_Y_VALIDACION.md) prepara la referencia fija,
 los casos comparables y el workflow Android. La
 [fase 2](FASE_2_RUTAS_Y_LLEGADAS.md) corrige las reglas de ETA y comparación
 de transbordos de F01/F02; el plan registra los pendientes restantes.
+La [fase 6](FASE_6_PRESENTACION_Y_TRANSPORTES_3D.md), trabajada el 14/11/2026,
+actualiza la presentación y el visor. Distingue las vistas previas Android
+comprobadas localmente de la comparación iPhone/Android todavía pendiente.
 
 Referencia consultada: [RutaUTP main, commit 8145276](https://github.com/JDiazD33/RutaUTP/tree/8145276bb6fc72a168cc78119def2727578ec0bb),
 del 9 de noviembre de 2026. Comparación realizada el 9 de noviembre de 2026.

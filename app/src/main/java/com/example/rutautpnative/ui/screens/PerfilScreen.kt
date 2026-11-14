@@ -70,28 +70,11 @@ fun PerfilScreen(router: AppRouter) {
 
     Scaffold(containerColor = AppBackground, contentWindowInsets = WindowInsets(0, 0, 0, 0), bottomBar = { BottomNavBar(router) }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).statusBarsPadding().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(28.dp)) {
-            Surface(shape = RoundedCornerShape(24.dp), color = SuperficieAgrupada) {
-                Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(L.t("Perfil", "Profile"), style = BodyMdMedium, color = OnSurfaceVariant, modifier = Modifier.weight(1f).semantics { heading() })
-                        FilledTonalIconButton(onClick = { datos = true }, colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = SurfaceContainerLow, contentColor = AcentoInterfaz)) { Icon(Icons.Filled.Edit, L.t("Editar perfil", "Edit profile")) }
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Box(Modifier.size(72.dp).clip(CircleShape).background(SurfaceContainerLow), contentAlignment = Alignment.Center) {
-                            foto?.let { Image(it.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop) } ?: Text("JD", style = HeadlineMd, color = AcentoInterfaz)
-                        }
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(nombre, style = HeadlineMd, color = OnSurface)
-                            Text(rol, style = BodyXs, color = OnSurfaceVariant)
-                            if (carnetGuardado && PreferenciasVisualesPerfilStore.visible(CarnetPerfil.FOTO, empresa)) Text(L.t("✓ Carné guardado", "✓ Card saved"), style = BodyXs, color = AcentoInterfaz)
-                        }
-                    }
-                }
-            }
+            PerfilIdentidad(nombre, rol, foto, carnetGuardado && PreferenciasVisualesPerfilStore.visible(CarnetPerfil.FOTO, empresa)) { datos = true }
 
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(L.t("Mi billetera", "My wallet"), style = HeadlineSm, color = OnSurface, modifier = Modifier.weight(1f).semantics { heading() })
+                FlowRow(horizontalArrangement = Arrangement.SpaceBetween, verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    Text(L.t("Mi billetera", "My wallet"), style = HeadlineSm, color = OnSurface, modifier = Modifier.semantics { heading() })
                     TextButton(onClick = { credenciales = true }) { Icon(Icons.Filled.Tune, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(5.dp)); Text(L.t("Credenciales", "Credentials")) }
                 }
                 Box(Modifier.clip(RoundedCornerShape(20.dp)).background(PrimaryFill)) { MonederoCard({ recargar = true }, { qr = true }) }

@@ -10,6 +10,7 @@ La referencia de esta actualización es main, commit 8145276 del 09/11/2026.
 - [Fase 3: continuidad del viaje y contexto](docs/FASE_3_CONTINUIDAD_Y_CONTEXTO.md)
 - [Fase 4: mapas, búsqueda y conexión por teléfono](docs/FASE_4_MAPAS_BUSQUEDA_Y_CONEXION.md)
 - [Fase 5: idiomas, accesibilidad y errores](docs/FASE_5_IDIOMAS_ACCESIBILIDAD_Y_ERRORES.md)
+- [Fase 6: presentación y transportes 3D](docs/FASE_6_PRESENTACION_Y_TRANSPORTES_3D.md)
 - [Configurar avisos remotos con Firebase](docs/FIREBASE_ANDROID.md)
 - [Almacenes y claves locales](PERSISTENCIA.md)
 - [Herramientas de desarrollo](tools/README.md)

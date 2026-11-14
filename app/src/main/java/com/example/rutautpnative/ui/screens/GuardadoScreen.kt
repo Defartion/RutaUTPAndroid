@@ -59,7 +59,7 @@ internal fun LugarRow(lugar: LugarGuardado, onClick: () -> Unit) {
             }
             Spacer(Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(lugar.nombre, style = BodyMdMedium, color = OnSurface)
                     if (lugar.esFrecuente) {
                         Box(modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(Tertiary).padding(horizontal = 6.dp, vertical = 2.dp)) {
@@ -67,7 +67,7 @@ internal fun LugarRow(lugar: LugarGuardado, onClick: () -> Unit) {
                         }
                     }
                 }
-                Text(lugar.direccion, style = BodySm, color = OnSurfaceVariant, maxLines = 1)
+                Text(lugar.direccion, style = BodySm, color = OnSurfaceVariant, maxLines = 2)
             }
             Icon(Icons.Filled.ChevronRight, null, tint = OnSurfaceVariant, modifier = Modifier.size(18.dp))
         }

@@ -42,9 +42,10 @@ def verificar(apk: Path, assets: Path):
         for screen in [b"Transportes3DScreenKt", b"NotificacionesScreenKt", b"AlternativasRutaSheetKt", b"RespaldosRecuperacionSheetKt", b"GuardadoPantallaKt", b"SeguridadAyudaKt", b"RutaOpcionCardKt", b"VisorFotoCarnetKt", b"PinturaTransporte3DKt"]:
             if screen not in dex:
                 raise ValueError(f"Pantalla ausente del APK: {screen.decode()}")
-        for component in [b"CatalogoIdiomas", b"CargaCatalogo", b"PresentadorSenias"]:
+        for component in [b"CatalogoIdiomas", b"CargaCatalogo", b"PresentadorSenias",
+                          b"CamaraTransporte3D", b"PanelModeloTransporteKt", b"PresentacionSeccionesKt"]:
             if component not in dex:
-                raise ValueError("Falta un componente de idiomas, catálogo o señas")
+                raise ValueError("Falta un componente del APK: " + component.decode())
     print("APK comprobado: seis mallas accesibles, catálogos exactos y pantallas nuevas incluidas")
     print(f"SHA-256: {hashlib.sha256(apk.read_bytes()).hexdigest()}")
 

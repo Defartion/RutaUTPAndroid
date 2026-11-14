@@ -28,7 +28,15 @@
         "viaje directo/transbordo",
         "Buses UTP pendiente"
       ],
-      "status": "pending"
+      "status": "android_previews_reviewed_device_comparison_pending",
+      "androidPreviewMethods": [
+        "mapa",
+        "mapaCarga",
+        "mapaError",
+        "mapaSinBuses",
+        "mapaUtpPendiente"
+      ],
+      "scope": "Componentes de producción con datos fijos; no todos los estados de esta lista tienen captura automática."
     },
     {
       "id": "routes",
@@ -41,7 +49,19 @@
         "error con reintento",
         "detalle/explorador/3D"
       ],
-      "status": "pending"
+      "status": "android_previews_reviewed_device_comparison_pending",
+      "androidPreviewMethods": [
+        "rutas",
+        "rutasOscuro",
+        "rutasTextoGrande",
+        "detalleRuta",
+        "rutasCarga",
+        "rutasError",
+        "rutasSinResultados",
+        "visorCarga",
+        "visorError"
+      ],
+      "scope": "Componentes de producción con datos fijos; no todos los estados de esta lista tienen captura automática."
     },
     {
       "id": "saved",
@@ -54,7 +74,14 @@
         "datos ilegibles",
         "detalle/edición"
       ],
-      "status": "pending"
+      "status": "android_previews_reviewed_device_comparison_pending",
+      "androidPreviewMethods": [
+        "guardadoLugares",
+        "guardadoLineas",
+        "guardadoVacio",
+        "guardadoError"
+      ],
+      "scope": "Componentes de producción con datos fijos; no todos los estados de esta lista tienen captura automática."
     },
     {
       "id": "safety",
@@ -67,7 +94,12 @@
         "canal no configurado",
         "contacto/reportes"
       ],
-      "status": "pending"
+      "status": "android_previews_reviewed_device_comparison_pending",
+      "androidPreviewMethods": [
+        "seguridadAyuda",
+        "seguridadComunidad"
+      ],
+      "scope": "Componentes de producción con datos fijos; no todos los estados de esta lista tienen captura automática."
     },
     {
       "id": "profile",
@@ -80,7 +112,23 @@
         "error de recuperación",
         "notificaciones sin permiso"
       ],
-      "status": "pending"
+      "status": "android_previews_reviewed_device_comparison_pending",
+      "androidPreviewMethods": [
+        "perfil",
+        "perfilOscuro",
+        "perfilGrande",
+        "recarga",
+        "recargaTextoGrande",
+        "pagarQR"
+      ],
+      "scope": "Componentes de producción con datos fijos; no todos los estados de esta lista tienen captura automática."
     }
+  ],
+  "androidPreviewManifest": "parity/android-previews.json",
+  "nativeExclusions": [
+    "Google Maps y GPS",
+    "render OpenGL y cámara",
+    "permisos y notificaciones del sistema",
+    "TalkBack en dispositivo"
   ]
 }

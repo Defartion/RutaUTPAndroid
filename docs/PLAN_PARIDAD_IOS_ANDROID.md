@@ -2,20 +2,24 @@
 
 Fecha: 10 de noviembre de 2026.
 
-Estado: **fases 1–5 implementadas localmente; fases 6–8 pendientes**.
-Última validación local: 13 de noviembre de 2026. La fase 3 conserva pendientes
+Estado: **fases 1–6 implementadas localmente; fases 7–8 pendientes**.
+Última validación local: 14 de noviembre de 2026. La fase 3 conserva pendientes
 las comprobaciones de interacción, rotación y GPS en dispositivo. La fase 4
 requiere validar Google Cloud, el broker y dos teléfonos para su cierre integral.
 La fase 5 conserva pendientes la revisión lingüística, TalkBack, texto grande
 y la matriz de permisos en dispositivo.
+La fase 6 incorpora revisión de vistas previas Android y pruebas geométricas;
+conserva pendiente la comparación iPhone/Android y las pruebas de OpenGL en hardware.
 Ver [resultado y reproducción de fase 1](FASE_1_REFERENCIA_Y_VALIDACION.md).
 Ver [correcciones y pruebas de fase 2](FASE_2_RUTAS_Y_LLEGADAS.md).
 Ver [continuidad y contexto de fase 3](FASE_3_CONTINUIDAD_Y_CONTEXTO.md).
 Ver [mapas, búsqueda y conexión de fase 4](FASE_4_MAPAS_BUSQUEDA_Y_CONEXION.md).
 Ver [idiomas, accesibilidad y errores de fase 5](FASE_5_IDIOMAS_ACCESIBILIDAD_Y_ERRORES.md).
+Ver [presentación y transportes 3D de fase 6](FASE_6_PRESENTACION_Y_TRANSPORTES_3D.md).
 La fase 3 está publicada en main. El workflow de GitHub aprobó el commit
 [1ab4e38](https://github.com/Defartion/RutaUTPAndroid/actions/runs/43460750207);
-la fase 4 quedó guardada en el commit local 21cc604 y aún no se ha publicado.
+las fases 4 y 5 quedaron guardadas en los commits locales 21cc604 y aedfc71.
+La fase 6 está preparada como entrega independiente; la publicación se registra en la siguiente fase.
 
 ## Objetivo y referencia
 

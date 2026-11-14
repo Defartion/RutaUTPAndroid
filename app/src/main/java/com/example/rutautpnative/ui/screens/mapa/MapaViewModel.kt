@@ -115,6 +115,9 @@ class MapaViewModel(
     private val revisionSugerencias = ControlSeleccion<Unit>()
     private var busquedaJob: Job? = null
     private var cercanasJob: Job? = null
+    private val cargaPanel = ControlSeleccion<Unit>()
+    var cargandoCatalogo by mutableStateOf(false); private set
+    var errorCatalogo by mutableStateOf(false); private set
     private var camaraJob: Job? = null
 
     //----Flota animada sobre shapes GTFS (Fase 2)----
@@ -232,6 +235,8 @@ class MapaViewModel(
     val destinoSeleccionado: DestinoChip? get() = seleccion.seleccion
 
     private fun invalidarTrabajos(): Long {
+        cargaPanel.invalidar()
+        cargandoCatalogo = false
         val token = seleccion.invalidar()
         busquedaJob?.cancel()
         cercanasJob?.cancel()
@@ -644,13 +649,26 @@ class MapaViewModel(
     // Carga las rutas cercanas a un punto: prueba 400 m y, si no encuentra,
     // amplía a 800 m para evitar "sin rutas" cuando el punto quedó algo lejos
     // del recorrido real. La flota se reconstruye sobre esas lineas.
-    private fun recargarCercanas(punto: LatLng) {
+    private fun recargarCercanas(punto: LatLng, reintentar: Boolean = false) {
         cercanasJob?.cancel()
         val token = seleccion.revision
-        cercanasJob = viewModelScope.launch { actualizarRutasCercanas(punto, token) }
+        val carga = cargaPanel.invalidar()
+        cargandoCatalogo = !servicios.utpPendiente()
+        errorCatalogo = false
+        cercanasJob = viewModelScope.launch {
+            try {
+                if (reintentar) servicios.reintentarCatalogo()
+                actualizarRutasCercanas(punto, token, carga)
+                if (cargaPanel.vigente(carga) && seleccion.vigente(token)) errorCatalogo = !servicios.utpPendiente() && servicios.falloCatalogo()
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (_: Exception) {
+                if (cargaPanel.vigente(carga) && seleccion.vigente(token)) { errorCatalogo = true; rutasCercanas = emptyList() }
+            } finally { if (cargaPanel.vigente(carga)) cargandoCatalogo = false }
+        }
     }
+    fun reintentarCatalogo() = recargarCercanas(destinoSeleccionado?.let { LatLng(it.lat, it.lon) } ?: coordenadaInicio, true)
 
-    private suspend fun actualizarRutasCercanas(punto: LatLng, token: Long) {
+    private suspend fun actualizarRutasCercanas(punto: LatLng, token: Long, carga: Long) {
         // Buses UTP sin feed: sin líneas, sin flota ("Rutas próximamente").
         if (servicios.utpPendiente()) {
             rutasCercanas = emptyList()
@@ -660,7 +678,7 @@ class MapaViewModel(
         if (rutas.isEmpty()) {
             rutas = servicios.cercanas(punto, 800.0)
         }
-        if (!seleccion.vigente(token)) return
+        if (!seleccion.vigente(token) || !cargaPanel.vigente(carga)) return
         rutasCercanas = rutas
         // La flota SIMULADA nace de estas lineas; si la REAL (MQTT) tiene el
         // control, el resultado simulado no debe pisarla (regla del iOS).

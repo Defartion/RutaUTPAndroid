@@ -22,6 +22,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -81,7 +82,8 @@ fun MonederoCard(onRecargar: () -> Unit, onPagarQR: () -> Unit) {
             style = BodyXs, color = Color.White.copy(alpha = 0.8f)
         )
         Spacer(Modifier.height(14.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp),
+            maxItemsInEachRow = if (LocalDensity.current.fontScale >= 1.5f) 1 else 2) {
             Button(
                 onClick = onRecargar,
                 enabled = !invalido,

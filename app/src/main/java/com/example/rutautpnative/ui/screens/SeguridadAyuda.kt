@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -27,16 +28,16 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-internal fun SaludoSeguridad() {
-    val ahora by produceState(Date()) { while (true) { delay(30_000); value = Date() } }
-    val hora = Calendar.getInstance().apply { time = ahora }.get(Calendar.HOUR_OF_DAY)
+internal fun SaludoSeguridad(fecha: Date? = null, zonaHoraria: TimeZone = TimeZone.getDefault()) {
+    val ahora by produceState(fecha ?: Date(), fecha) { if (fecha == null) while (true) { delay(30_000); value = Date() } }
+    val hora = Calendar.getInstance(zonaHoraria).apply { time = ahora }.get(Calendar.HOUR_OF_DAY)
     val saludo = when (hora) { in 5..11 -> L.t("Buenos días", "Good morning"); in 12..18 -> L.t("Buenas tardes", "Good afternoon"); else -> L.t("Buenas noches", "Good evening") }
     Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(saludo, style = HeadlineBody, color = OnSurface)
-            Text(SimpleDateFormat("EEEE, d MMMM", Locale.forLanguageTag(L.codigo)).format(ahora), style = BodySm, color = OnSurfaceVariant)
+            Text(SimpleDateFormat("EEEE, d MMMM", Locale.forLanguageTag(L.codigo)).apply { timeZone = zonaHoraria }.format(ahora), style = BodySm, color = OnSurfaceVariant)
         }
-        Text(SimpleDateFormat("HH:mm", Locale.getDefault()).format(ahora), style = HeadlineSm, color = AcentoInterfaz)
+        Text(SimpleDateFormat("HH:mm", Locale.getDefault()).apply { timeZone = zonaHoraria }.format(ahora), style = HeadlineSm, color = AcentoInterfaz)
     }
 }
 
@@ -47,11 +48,22 @@ internal fun AyudaRapidaSeguridad(onEmergencia: () -> Unit, onEditarContacto: ()
     var llamar by remember { mutableStateOf(false) }
     val principal = ContactoEmergencia.telefonoValido(store.emergenciaNumero)
     val alternativo = ContactoEmergencia.telefonoValido(store.emergenciaAlternativo)
+    val textoGrande = LocalDensity.current.fontScale >= 1.5f
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Button(onClick = { com.example.rutautpnative.data.senias.SeniasOverlay.ejecutarTrasVerSenia("seguridad.emergencia", onEmergencia) }, modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = RoundedCornerShape(18.dp), colors = ButtonDefaults.buttonColors(containerColor = PrimaryFill, contentColor = OnPrimaryFill)) {
-            Icon(Icons.Filled.Phone, null); Spacer(Modifier.width(10.dp)); Text(L.t("Emergencias", "Emergency"), modifier = Modifier.weight(1f), style = BodyMdMedium); Text("105", style = BodyMdMedium)
+            if (LocalDensity.current.fontScale >= 1.8f) {
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(L.t("Emergencias", "Emergency"), style = BodyMdMedium)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Icon(Icons.Filled.Phone, null); Text("105", style = BodyMdMedium)
+                    }
+                }
+            } else {
+                Icon(Icons.Filled.Phone, null); Spacer(Modifier.width(10.dp)); Text(L.t("Emergencias", "Emergency"), modifier = Modifier.weight(1f), style = BodyMdMedium); Text("105", style = BodyMdMedium)
+            }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp),
+            maxItemsInEachRow = if (textoGrande) 1 else 2) {
             Card(onClick = { if (principal == null) onEditarContacto() else llamar = true }, modifier = Modifier.weight(1f), shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = SuperficieAgrupada)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {

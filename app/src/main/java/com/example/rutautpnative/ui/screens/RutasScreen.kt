@@ -86,11 +86,7 @@ fun RutasCatalogo(rutas: List<RutaGTFS>, distancias: Map<String, Int>, cerca: De
     onRuta: (RutaGTFS) -> Unit, on3D: () -> Unit, lista: LazyListState = rememberLazyListState()) {
     val foco = LocalFocusManager.current
     Column(Modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp).heightIn(min = 60.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(if (TransporteApp.busesUTPActivos) L.t("Rutas UTP", "UTP routes") else L.t("Rutas", "Routes"), style = HeadlineLg,
-                color = OnSurface, modifier = Modifier.weight(1f).semantics { heading() }.signable("rutas.titulo"))
-            Icon(Icons.Filled.DirectionsBus, null, tint = AcentoInterfaz)
-        }
+        CabeceraSeccion(if (TransporteApp.busesUTPActivos) L.t("Rutas UTP", "UTP routes") else L.t("Rutas", "Routes"), Icons.Filled.DirectionsBus)
         OutlinedTextField(texto, onBusqueda, modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp),
             placeholder = { Text(L.t("Buscar rutas", "Search routes")) }, leadingIcon = { Icon(Icons.Filled.Search, null) },
             trailingIcon = { if (texto.isNotEmpty()) IconButton(onClick = { onBusqueda("") }) { Icon(Icons.Filled.Cancel, L.t("Borrar búsqueda de rutas", "Clear route search")) } },
@@ -153,7 +149,7 @@ private fun EstadoCatalogo(texto: String, cargando: Boolean = false, onRetry: ((
 }
 
 @Composable
-private fun DetalleRutaActual(ruta: RutaGTFS, onBack: () -> Unit, onNavegar: () -> Unit, on3D: () -> Unit) {
+internal fun DetalleRutaActual(ruta: RutaGTFS, onBack: () -> Unit, onNavegar: () -> Unit, on3D: () -> Unit) {
     var explorador by remember { mutableStateOf(false) }
     var mapaListo by remember(ruta.id) { mutableStateOf(false) }
     LaunchedEffect(ruta.id) { delay(450); mapaListo = true }
@@ -184,7 +180,7 @@ private fun DetalleRutaActual(ruta: RutaGTFS, onBack: () -> Unit, onNavegar: () 
             Card(onClick = { explorador = true }, colors = CardDefaults.cardColors(containerColor = Color.Transparent)) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text(L.t("Ver el recorrido", "Show route"), style = HeadlineSm, color = OnSurface, modifier = Modifier.weight(1f)); Icon(Icons.Filled.OpenInFull, L.t("Explorar recorrido", "Explore route"), tint = AcentoInterfaz) }
-                    if (mapaListo) MapaVistaPreviaRuta(ruta, Modifier.fillMaxWidth().height(240.dp).clip(RoundedCornerShape(20.dp))) { explorador = true }
+                    if (mapaListo || androidx.compose.ui.platform.LocalInspectionMode.current) MapaVistaPreviaRuta(ruta, Modifier.fillMaxWidth().height(240.dp).clip(RoundedCornerShape(20.dp))) { explorador = true }
                     else Box(Modifier.fillMaxWidth().height(240.dp).clip(RoundedCornerShape(20.dp)).background(SurfaceContainerLow))
                 }
             }
@@ -232,6 +228,25 @@ private fun PasoRuta(numero: Int, titulo: String, detalle: String, icono: ImageV
 
 @Composable
 private fun MapaVistaPreviaRuta(ruta: RutaGTFS, modifier: Modifier, onAbrir: () -> Unit) {
+    if (androidx.compose.ui.platform.LocalInspectionMode.current) {
+        // La vista previa dibuja solo la geometría local; no inicializa Google Maps.
+        androidx.compose.foundation.Canvas(modifier.background(SurfaceContainerLow)) {
+            val puntos = ruta.shape
+            if (puntos.size > 1) {
+                val minLat = puntos.minOf { it.latitude }; val minLon = puntos.minOf { it.longitude }
+                val alto = (puntos.maxOf { it.latitude } - minLat).coerceAtLeast(.0001)
+                val ancho = (puntos.maxOf { it.longitude } - minLon).coerceAtLeast(.0001)
+                val path = androidx.compose.ui.graphics.Path()
+                puntos.forEachIndexed { i, p ->
+                    val x = (size.width * (.1 + .8 * (p.longitude - minLon) / ancho)).toFloat()
+                    val y = (size.height * (.9 - .8 * (p.latitude - minLat) / alto)).toFloat()
+                    if (i == 0) path.moveTo(x,y) else path.lineTo(x,y)
+                }
+                drawPath(path, ruta.color, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4.dp.toPx()))
+            }
+        }
+        return
+    }
     val camara = rememberCameraPositionState()
     var listo by remember(ruta.id) { mutableStateOf(false) }
     LaunchedEffect(listo, ruta.id) {

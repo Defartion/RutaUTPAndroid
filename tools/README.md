@@ -5,7 +5,7 @@
 `python tools/verificar_paridad.py` comprueba los recursos fijados en
 `parity/reference.json`, los casos de comparación y el seguimiento F01–F15.
 `--require-results` exige además los resultados JUnit y lint de la compilación
-actual: al menos 235 pruebas, sin fallos ni omisiones, incluidos los once casos
+actual: al menos 252 pruebas, sin fallos ni omisiones, incluidos los once casos
 ETA, ocho de comparación de rutas y ocho de continuidad. Los casos pendientes
 se informan por separado.
 
@@ -45,6 +45,20 @@ en `app/build/reports/parity/configuration-check.json`. La opción
 `--expected-map-key` se reserva a marcadores sintéticos de CI; no pasar claves
 reales por la línea de comandos. `--forbid MARCADOR` comprueba que una
 credencial sintética de compilación no se haya empaquetado.
+
+## Vistas previas Compose
+
+`python tools/verificar_capturas.py` coteja el inventario de 39 PNG revisados,
+sus hashes y dimensiones, y la cobertura de las cinco pestañas. El inventario
+está en `parity/android-previews.json`. `--require-results` exige además una
+ejecución satisfactoria de `validateDebugScreenshotTest` para todas las imágenes.
+El informe queda en `app/build/reports/parity/preview-check.json`.
+
+Son referencias locales de Android para detectar regresiones. No sustituyen
+la comparación iPhone/Android ni las pruebas de Google Maps, OpenGL y TalkBack
+en dispositivo. El workflow comprueba el inventario; el renderizado Layoutlib
+se ejecutó localmente en Windows y todavía no se certificó en Linux.
+Ver comandos, alcance y adaptaciones en la [fase 6](../docs/FASE_6_PRESENTACION_Y_TRANSPORTES_3D.md).
 
 ## Recursos 3D
 

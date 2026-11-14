@@ -138,8 +138,8 @@
       ],
       "status": "in_progress",
       "acceptance": "Comprobación automática de main/PR y cobertura de flujos",
-      "validation": "Workflow de main aprobado para 1ab4e38 (ejecución 43460750207). Fase 5 local: 235 pruebas Android y 35 de herramientas; comprobación de idiomas y recursos añadida al workflow. Dos pruebas nuevas de texto grande compiladas; ejecución en dispositivo pendiente. Los commits posteriores a 1ab4e38 aún no están publicados.",
-      "evidence": "docs/FASE_5_IDIOMAS_ACCESIBILIDAD_Y_ERRORES.md"
+      "validation": "Workflow de main aprobado para 1ab4e38 (ejecución 43460750207). Fase 6 local: 252 pruebas Android y 39 de herramientas; 39 vistas previas Compose revisadas, con inventario verificable en el workflow. Las pruebas instrumentales están compiladas, no ejecutadas. Comparación iPhone/Android y Google Maps/OpenGL/TalkBack en dispositivo pendientes. Fases 4 y 5 guardadas en 21cc604 y aedfc71; fase 6 preparada como entrega independiente. La publicación y sus comprobaciones remotas se registran en la siguiente fase.",
+      "evidence": "docs/FASE_6_PRESENTACION_Y_TRANSPORTES_3D.md"
     },
     {
       "id": "F15",

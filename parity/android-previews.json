@@ -1,0 +1,309 @@
+{
+  "schemaVersion": 1,
+  "referenceIosCommit": "8145276bb6fc72a168cc78119def2727578ec0bb",
+  "referenceRoot": "app/src/screenshotTestDebug/reference",
+  "minimumImages": 39,
+  "reviewedAt": "2026-11-14",
+  "kind": "android_compose_regression_references",
+  "environment": {
+    "os": "Windows",
+    "renderer": "Layoutlib",
+    "plugin": "0.0.1-alpha16",
+    "jdk": 21,
+    "timeZone": "America/Lima",
+    "language": "es",
+    "previewAnimation": "fixed_phase_zero"
+  },
+  "iosDeviceComparison": "pending",
+  "nativeMapAndOpenGL": "pending",
+  "scope": "Componentes de producción con entradas fijas. Se revisaron composición, texto y estados; no acredita coincidencia visual con iPhone ni funcionamiento en hardware.",
+  "screens": [
+    {
+      "id": "map",
+      "previewMethods": [
+        "mapa",
+        "mapaCarga",
+        "mapaError",
+        "mapaSinBuses",
+        "mapaUtpPendiente"
+      ]
+    },
+    {
+      "id": "routes",
+      "previewMethods": [
+        "rutas",
+        "rutasOscuro",
+        "rutasTextoGrande",
+        "detalleRuta",
+        "rutasCarga",
+        "rutasError",
+        "rutasSinResultados",
+        "visorCarga",
+        "visorError"
+      ]
+    },
+    {
+      "id": "saved",
+      "previewMethods": [
+        "guardadoLugares",
+        "guardadoLineas",
+        "guardadoVacio",
+        "guardadoError"
+      ]
+    },
+    {
+      "id": "safety",
+      "previewMethods": [
+        "seguridadAyuda",
+        "seguridadComunidad"
+      ]
+    },
+    {
+      "id": "profile",
+      "previewMethods": [
+        "perfil",
+        "perfilOscuro",
+        "perfilGrande",
+        "recarga",
+        "recargaTextoGrande",
+        "pagarQR"
+      ]
+    }
+  ],
+  "images": [
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/detalleRuta_Claro_10965764_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "bb0c373aa89fb6cffc62a501192c29c0a20bee21b8e7ba4c90971a70a01c015a"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/detalleRuta_Oscuro_6de4beb0_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "34d0915b0a2b2645baced02ebbce3b25b778dd3d14df70452e68f3692a14adc5"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/guardadoError_bb4f469c_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "d08533c19915b31fc6ab7e42a225a61decca947c4131332d2121fb0bd8252c61"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/guardadoLineas_Claro_10965764_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "d3a694a79b2c88cfc338a0101fda2f20b18512444e51a3bfa4174275127e5c92"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/guardadoLineas_Oscuro_6de4beb0_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "ca4e269419530237761cbaf20abac95aad4b429a1686bbfefee61dbdac1db024"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/guardadoLugares_Claro_10965764_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "3e5ecacce051c673126a5b315b5d4d883912134e9f81c27f8f21b3d98a419ff2"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/guardadoLugares_Oscuro_6de4beb0_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "b528c4e620df064ee4dd5f5c55367b843ab3b11c98fa26b991b71008c0e69b88"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/guardadoLugares_Texto150_ac93c95c_0.png",
+      "width": 945,
+      "height": 2100,
+      "sha256": "5357ba9179b67271d8510796e3eac75248dde740b806487e918ccb428df7f0b2"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/guardadoLugares_Texto200_d377a4c3_0.png",
+      "width": 840,
+      "height": 2100,
+      "sha256": "10a62080d8ce2791993f4615c06d1c260d5240d3053ae49bdbcf813f353f3c53"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/guardadoVacio_bb4f469c_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "c0c63b470d05197cd77072f3b3c01b4fa74986034d3d0aeb5f11faa48e98e393"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/mapa_Claro_10965764_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "1b173fc55f1069642cd301f4039ec1ce7de9f894b6d9900425ca9483ad603317"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/mapa_Oscuro_6de4beb0_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "cd22aa3efbb152b2755ac53f82e1e010727722feea12c5be7499b74afe416c79"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/mapa_Texto150_ac93c95c_0.png",
+      "width": 945,
+      "height": 2100,
+      "sha256": "a15ccf84ea826f16046f8586ecaed4d83a2717e0c1e71e3158ed10a4bf1a5f8e"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/mapa_Texto200_d377a4c3_0.png",
+      "width": 840,
+      "height": 2100,
+      "sha256": "ce3880777cda070de3dc3fbf0b42a26c84d84fb0028056920fd676772496827b"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/mapaCarga_bb4f469c_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "c067eca2a12d4993522ddeb9ee8668a392520aee0ed1c69c1ad08305fa9f8c19"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/mapaError_bb4f469c_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "17857beef1173698bd8cbb22e63aedb7370b42d8fa33250d0b1c3afe0361eedb"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/mapaSinBuses_bb4f469c_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "8b9c5d56ccd8e0c3c6f44e0ac5fadae647fccca21058f7d58a16878a7332cdbb"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/mapaUtpPendiente_bb4f469c_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "5ee2f4763a642041f983ee725a2e00f1e1c169ff5904771cb110d3d800400f2f"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/perfilGrande_Texto150_ac93c95c_0.png",
+      "width": 945,
+      "height": 2100,
+      "sha256": "527664fe7b5fd0cea4d4b7d975d1656b3e9068c2f5aee00f143762a71875a231"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/perfilGrande_Texto200_d377a4c3_0.png",
+      "width": 840,
+      "height": 2100,
+      "sha256": "bde97d3fa277fb6b812587dc867b38af9962d83ef1bef6162a12998e67f5aca9"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/rutasCarga_bb4f469c_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "566c82168bfeaeefbd062b131c380da91b56d8e5aa5f8d35283574eb4fe359d6"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/rutasError_bb4f469c_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "858db325887cd18b29ddd98421c1e2c0b6a5d07602d9e76f5254331f31571d55"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/rutasSinResultados_bb4f469c_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "ec3616f0741d2c54d648d2e4bb4434eded8167940701e1817f7bc33eb749bd3b"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/seguridadAyuda_Claro_10965764_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "44d563460e4ab9fb5b821e4af21c32597b7bdaa7a00f8b97a6f54f98963ec16e"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/seguridadAyuda_Oscuro_6de4beb0_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "a536a4e7c9c8556e783dda6a64299dd218ad09d6ff2bc8028cce27a1303eec1a"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/seguridadAyuda_Texto150_ac93c95c_0.png",
+      "width": 945,
+      "height": 2100,
+      "sha256": "33bd0c67bd2f982c9469cada732385e28bfac1b8b7bc045119eb8c4dbd1f7e32"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/seguridadAyuda_Texto200_d377a4c3_0.png",
+      "width": 840,
+      "height": 2100,
+      "sha256": "0bac8c22caf10d5f668a242e3595dacd62ad688cc2f5e2ed9c62f19c03215c0e"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/seguridadComunidad_bb4f469c_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "7474a038b9e184c581a7209ebfc28d89d70d76b0f02363a4f063660895ffaa06"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/visorCarga_fd8917d9_0.png",
+      "width": 1024,
+      "height": 1706,
+      "sha256": "8ad983d1bf6fd6252b695a33e5a897bdeb846cc5ea25dc1b54263577973285b9"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/visorError_Claro_8d2eb78a_0.png",
+      "width": 1024,
+      "height": 1706,
+      "sha256": "4f9b59d6de7ddc1065f8393e1bb1a011b62ac580dae308b948d9d7d6224591de"
+    },
+    {
+      "path": "com/example/rutautpnative/Fase6Capturas/visorError_Oscuro_e50c56db_0.png",
+      "width": 1024,
+      "height": 1706,
+      "sha256": "acb615d9316ead48297277ef42e0c2a31a28358f13f2d8f6eac597e93a58ed92"
+    },
+    {
+      "path": "com/example/rutautpnative/PantallasIosCapturas/pagarQR_Pagar con QR_11816e81_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "780459e5b60a327e568ded461d828f1ddaa271cea4399db3dd3cc4eb3fd12c1e"
+    },
+    {
+      "path": "com/example/rutautpnative/PantallasIosCapturas/perfil_Perfil_cff261eb_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "1639d6acc12aa24c23970c491c4f74f1151de1b582f563df789142a986d6f225"
+    },
+    {
+      "path": "com/example/rutautpnative/PantallasIosCapturas/perfilOscuro_Perfil oscuro_9f0f035d_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "6c82bc9863a418958149cdf424b3bbf5e491ef36f271c700da950bf17fd5bc25"
+    },
+    {
+      "path": "com/example/rutautpnative/PantallasIosCapturas/recarga_Recargar saldo_072cc652_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "d5c0e64390034da1422e0eeaacdcf23223b5c4b312198a6b1780c4b30fd1edea"
+    },
+    {
+      "path": "com/example/rutautpnative/PantallasIosCapturas/recargaTextoGrande_Recargar texto grande_8a0f7e0e_0.png",
+      "width": 945,
+      "height": 2100,
+      "sha256": "de973f9dd712f77fc74951db4540e15a43012c4c8839d94936bd3c0a0cb0af32"
+    },
+    {
+      "path": "com/example/rutautpnative/PantallasIosCapturas/rutas_Rutas_9026fce8_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "96d672ec5e24f7956d4c64e402acd6adcea3060c4c6390f2c6622e7229a0150f"
+    },
+    {
+      "path": "com/example/rutautpnative/PantallasIosCapturas/rutasOscuro_Rutas oscuro_144389a0_0.png",
+      "width": 1024,
+      "height": 2216,
+      "sha256": "e5d5f70a28162f53110129c3352fdff322e71895e69d75a31d8e8e0c914470ba"
+    },
+    {
+      "path": "com/example/rutautpnative/PantallasIosCapturas/rutasTextoGrande_Rutas texto grande_5fea56ba_0.png",
+      "width": 945,
+      "height": 2100,
+      "sha256": "7612cca9f04fd1ebfe9ca77261242b2cdb39bd874c02a623f04096a6b8ad557c"
+    }
+  ]
+}

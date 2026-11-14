@@ -51,19 +51,24 @@ la main iOS, además de los datos y servicios portados en la revisión anterior.
 
 ## Vistas previas reproducibles
 
-Las capturas de Compose de Rutas, Perfil, Recargar y Pagar con QR están en
-`app/src/screenshotTestDebug/reference`. Incluyen claro/oscuro y Rutas con
-texto al 150 % en Rutas y Recargar. Representan componentes reales con datos de muestra, no una
-sesión de GPS ni un teléfono conectado.
+Las 39 capturas de Compose están en `app/src/screenshotTestDebug/reference`.
+Cubren las cinco pestañas, detalle de ruta, Recargar, Pagar con QR y marco
+del visor 3D. Incluyen claro/oscuro, texto al 150 % y 200 % y estados de carga,
+error y vacío. Representan componentes reales con datos fijos, no una sesión
+de GPS ni un teléfono conectado. El fondo del mapa es una muestra y las
+capturas del visor no renderizan OpenGL.
 
 ```powershell
-.\gradlew.bat -Pcapturas=true -Pandroid.experimental.enableScreenshotTest=true :app:validateDebugScreenshotTest
+.\gradlew.bat :app:validateDebugScreenshotTest '-Pcapturas=true' '-Pandroid.experimental.enableScreenshotTest=true'
+python tools/verificar_capturas.py --require-results
 ```
 
 Para regenerarlas tras revisar un cambio visual, usar
 `:app:updateDebugScreenshotTest` con las mismas propiedades. El complemento
 de capturas es opcional y usa la versión compatible con AGP 9.2 del proyecto;
 la compilación habitual no lo activa. No es necesario actualizar AGP para usarlo.
+El [documento de fase 6](FASE_6_PRESENTACION_Y_TRANSPORTES_3D.md) detalla las
+adaptaciones para texto grande y las comprobaciones pendientes con iOS y hardware.
 
 ## Git y GitHub
 

@@ -108,7 +108,7 @@ class ReferenceGuardTest(unittest.TestCase):
     def test_resultados_exigen_los_casos_ios_y_el_minimo_original(self):
         self.reports()
         report = CHECK.verify(self.root, require_results=True)
-        self.assertEqual(235, report["checks"]["unitTests"]["tests"])
+        self.assertEqual(252, report["checks"]["unitTests"]["tests"])
         self.assertEqual(8, report["checks"]["referenceStateCasesExecuted"])
         self.assertEqual(11, report["checks"]["referenceEtaCasesExecuted"])
         self.assertEqual(8, report["checks"]["referenceRouteCasesExecuted"])
@@ -138,7 +138,7 @@ class ReferenceGuardTest(unittest.TestCase):
         suite.getroot().remove(suite.getroot().find("testcase"))
         suite.getroot().set("tests", str(len(suite.getroot().findall("testcase"))))
         suite.write(file)
-        with self.assertRaisesRegex(ValueError, "menos de 235"):
+        with self.assertRaisesRegex(ValueError, "menos de 252"):
             CHECK.verify(self.root, require_results=True)
 
     def test_casos_de_comparacion_exigen_su_ejecutor_real(self):

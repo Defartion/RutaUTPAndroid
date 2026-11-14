@@ -45,17 +45,13 @@ fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()
     }
     Scaffold(containerColor = AppBackground, contentWindowInsets = WindowInsets(0, 0, 0, 0), bottomBar = { BottomNavBar(router) }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).statusBarsPadding()) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp).heightIn(min = 60.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(L.t("Guardado", "Saved"), style = HeadlineLg, color = OnSurface, modifier = Modifier.weight(1f).signable("guardado.titulo"))
-                Icon(Icons.Filled.Bookmark, null, tint = AcentoInterfaz)
+            CabeceraSeccion(L.t("Guardado", "Saved"), Icons.Filled.Bookmark)
+            SelectorSeccion(listOf(OpcionSeccion(L.t("Lugares", "Places"), Icons.Filled.Place),
+                OpcionSeccion(L.t("Líneas", "Lines"), Icons.Filled.DirectionsBus)), tab) { indice ->
+                SeniasPresenterAccion(if (indice == 0) "guardado.lugares" else "guardado.lineas") { tab = indice }
             }
-            TabRow(tab, containerColor = Color.Transparent, contentColor = AcentoInterfaz, modifier = Modifier.padding(horizontal = 20.dp)) {
-                listOf(L.t("Lugares", "Places") to Icons.Filled.Place, L.t("Líneas", "Lines") to Icons.Filled.DirectionsBus).forEachIndexed { i, (titulo, icono) ->
-                    Tab(tab == i, onClick = { SeniasPresenterAccion(if (i == 0) "guardado.lugares" else "guardado.lineas") { tab = i } }, text = { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { Icon(icono, null, modifier = Modifier.size(20.dp)); Text(titulo, style = BodyMdMedium) } })
-                }
-            }
-            Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(if (tab == 0) L.f("{0} guardados", "{0} saved", lugares.size.toString()) else L.f("{0} líneas", "{0} lines", lineas.size.toString()), style = BodySm, color = OnSurfaceVariant, modifier = Modifier.weight(1f))
+            FlowRow(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(if (tab == 0) L.f("{0} guardados", "{0} saved", lugares.size.toString()) else L.f("{0} líneas", "{0} lines", lineas.size.toString()), style = BodySm, color = OnSurfaceVariant)
                 Button(onClick = { SeniasPresenterAccion(if (tab == 0) "guardado.anadir_lugar" else "guardado.anadir_linea") { if (tab == 0) anadirLugar = true else anadirLinea = true } },
                     enabled = if (tab == 0) !lugaresInvalidos else !lineasInvalidas, colors = ButtonDefaults.buttonColors(containerColor = PrimaryFill, contentColor = OnPrimaryFill)) {
                     Icon(Icons.Filled.Add, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(if (tab == 0) L.t("Añadir lugar", "Add place") else L.t("Añadir línea", "Add line"))
@@ -98,7 +94,7 @@ fun GuardadoScreen(router: AppRouter, viewModel: GuardadoViewModel = viewModel()
 private fun SeniasPresenterAccion(clave: String, accion: () -> Unit) = com.example.rutautpnative.data.senias.SeniasOverlay.ejecutarTrasVerSenia(clave, accion)
 
 @Composable
-private fun TituloGuardado(texto: String, cantidad: Int) {
+internal fun TituloGuardado(texto: String, cantidad: Int) {
     Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(texto, style = HeadlineXs, color = OnSurface, modifier = Modifier.weight(1f))
         Text(cantidad.toString(), style = BodySm, color = OnSurfaceVariant)
@@ -106,7 +102,7 @@ private fun TituloGuardado(texto: String, cantidad: Int) {
 }
 
 @Composable
-private fun VacioGuardado(titulo: String, texto: String) {
+internal fun VacioGuardado(titulo: String, texto: String) {
     Surface(shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp), color = SuperficieAgrupada) {
         Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Icon(Icons.Filled.BookmarkBorder, null, tint = OnSurfaceVariant, modifier = Modifier.size(32.dp))

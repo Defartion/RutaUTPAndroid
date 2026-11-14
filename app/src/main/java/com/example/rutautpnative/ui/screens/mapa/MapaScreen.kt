@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -85,6 +86,9 @@ import kotlin.math.max
 @Composable
 fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
     val focusManager = LocalFocusManager.current
+    val densidadPantalla = LocalDensity.current
+    var altoBarraInferior by remember { mutableStateOf(100.dp) }
+    var altoPanelInferior by remember { mutableStateOf(158.dp) }
     var mostrarDrawer by remember { mutableStateOf(false) }
     var showReportarSheet by remember { mutableStateOf(false) }
     var mostrarCambiosRuta by remember { mutableStateOf(false) }
@@ -705,8 +709,11 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             // Bottom panel: colapsable a solo el icono de bus (Fase 5, iOS
             // idem); durante la colocación del marcador se retira.
             if (!viajeActivo && !modoColocarMarcador) {
+                Box(Modifier.onSizeChanged { altoPanelInferior = with(densidadPantalla) { it.height.toDp() } }) {
                 BottomPanel(
-                    rutas = vm.rutasCercanas,
+                    cargando = vm.cargandoCatalogo,
+                    fallo = vm.errorCatalogo,
+                    onReintentar = vm::reintentarCatalogo,
                     buses = vm.busesAnimados,
                     fuenteReal = vm.fuenteFlota == FuenteFlota.REAL,
                     utpPendiente = TransporteApp.rutasUTPPendientes,
@@ -718,7 +725,8 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
                     onReportar = { showReportarSheet = true },
                     onSeleccionarBus = { vm.seleccionarBus(it) }
                 )
-                Spacer(modifier = Modifier.height(100.dp)) // espacio para BottomNavBar
+                }
+                Spacer(modifier = Modifier.height(altoBarraInferior))
             } else if (viajeActivo) {
                 Spacer(modifier = Modifier.height(28.dp))
             }
@@ -762,8 +770,7 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 90.dp)
-                    .navigationBarsPadding(),
+                    .padding(bottom = altoBarraInferior + 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -810,7 +817,7 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
             exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 258.dp)
+                .padding(bottom = altoBarraInferior + altoPanelInferior + 8.dp)
         ) {
             vm.busSeleccionado?.let { bus ->
                 BusDetailPopup(
@@ -830,7 +837,9 @@ fun MapaScreen(router: AppRouter, vm: MapaViewModel = viewModel()) {
         // completa con los controles del viaje, igual que el iOS).
         if (!viajeActivo) {
             Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-                BottomNavBar(router)
+                BottomNavBar(router, Modifier.onSizeChanged {
+                    altoBarraInferior = with(densidadPantalla) { it.height.toDp() }
+                })
             }
         }
 
@@ -988,14 +997,14 @@ private fun EstadoContribucion(modifier: Modifier = Modifier) {
 
 // Header
 @Composable
-private fun MapaHeader(onMenuClick: () -> Unit, titulo: String? = null, fuenteReal: Boolean = false, datosRecientes: Boolean = false) {
+internal fun MapaHeader(onMenuClick: () -> Unit, titulo: String? = null, fuenteReal: Boolean = false, datosRecientes: Boolean = false) {
     Row(Modifier.fillMaxWidth().statusBarsPadding().background(AppSurface).padding(horizontal = 20.dp, vertical = 8.dp).heightIn(min = 60.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        FilledTonalIconButton(onClick = onMenuClick, shape = CircleShape) { Icon(Icons.Filled.Menu, L.t("Abrir menú", "Open menu"), tint = AppPrimary) }
+        FilledTonalIconButton(onClick = onMenuClick, shape = CircleShape) { Icon(Icons.Filled.Menu, L.t("Abrir menú", "Open menu"), tint = AcentoInterfaz) }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(titulo ?: L.t("Mapa", "Map"), style = HeadlineLg, color = OnSurface)
             if (fuenteReal) Text(if (datosRecientes) L.t("DATOS RECIENTES", "RECENT DATA") else L.t("ESPERANDO DATOS", "WAITING FOR DATA"), style = BodyXs, color = if (datosRecientes) VerdeExito else OnSurfaceVariant)
         }
-        Icon(Icons.Filled.Map, null, tint = AppPrimary)
+        Icon(Icons.Filled.Map, null, tint = AcentoInterfaz)
     }
 }
 
@@ -1196,10 +1205,11 @@ private fun DestinoChipItem(destino: DestinoChip, isActive: Boolean, onClick: ()
 
 // Boton del panel
 @Composable
-private fun BottomPanel(rutas: List<RutaGTFS>, buses: List<BusAnimado>, fuenteReal: Boolean, utpPendiente: Boolean,
-    colapsado: Boolean, onAlternarColapso: () -> Unit, onReportar: () -> Unit, onSeleccionarBus: (BusAnimado) -> Unit) {
+internal fun BottomPanel(buses: List<BusAnimado>, fuenteReal: Boolean, utpPendiente: Boolean,
+    colapsado: Boolean, onAlternarColapso: () -> Unit, onReportar: () -> Unit, onSeleccionarBus: (BusAnimado) -> Unit,
+    cargando: Boolean = false, fallo: Boolean = false, onReintentar: () -> Unit = {}) {
     Column(Modifier.fillMaxWidth().background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(Color.Transparent, AppBackground.copy(alpha = .92f), AppBackground))).padding(bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        FlowRow(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { SeniasOverlay.ejecutarTrasVerSenia("mapa.reportar", onReportar) }, colors = ButtonDefaults.buttonColors(containerColor = PrimaryFill, contentColor = OnPrimaryFill)) {
                 Icon(Icons.Filled.WarningAmber, null, modifier = Modifier.size(17.dp)); Spacer(Modifier.width(8.dp)); Text(L.t("REPORTAR", "REPORT"), style = BodyXsMedium)
             }
@@ -1210,10 +1220,26 @@ private fun BottomPanel(rutas: List<RutaGTFS>, buses: List<BusAnimado>, fuenteRe
             }
         }
         if (!colapsado) {
-            if (buses.isEmpty()) Surface(Modifier.fillMaxWidth().padding(horizontal = 20.dp), shape = RoundedCornerShape(12.dp), color = SurfaceContainerLow) {
-                Text(if (utpPendiente) TransporteApp.mensajePendiente else if (fuenteReal) L.t("Esperando posiciones de vehículos", "Waiting for vehicle positions") else L.t("No hay transportes para mostrar.", "No transport to show."), style = BodySm, color = OnSurfaceVariant, modifier = Modifier.padding(16.dp))
-            } else androidx.compose.foundation.lazy.LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(buses.size, key = { buses[it].id }) { index -> BusCard(buses[index]) { onSeleccionarBus(buses[index]) } }
+            when (estadoPanelMapa(cargando, fallo, utpPendiente, buses.isNotEmpty(), fuenteReal)) {
+                EstadoPanelMapa.CARGANDO -> androidx.compose.foundation.lazy.LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items(2) { Surface(Modifier.width(180.dp).height(112.dp), shape = RoundedCornerShape(16.dp), color = SurfaceContainerLow) {
+                        Box(contentAlignment = Alignment.Center) { CircularProgressIndicator(Modifier.size(24.dp), color = AcentoInterfaz) }
+                    } }
+                }
+                EstadoPanelMapa.CON_BUSES -> androidx.compose.foundation.lazy.LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items(buses.size, key = { buses[it].id }) { index -> BusCard(buses[index]) { onSeleccionarBus(buses[index]) } }
+                }
+                else -> Surface(Modifier.fillMaxWidth().padding(horizontal = 20.dp).heightIn(min = 112.dp), shape = RoundedCornerShape(12.dp), color = SurfaceContainerLow) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(when {
+                            fallo -> L.t("No se pudo cargar el catálogo de rutas.", "Could not load the route catalog.")
+                            utpPendiente -> TransporteApp.mensajePendiente
+                            fuenteReal -> L.t("Esperando posiciones de vehículos", "Waiting for vehicle positions")
+                            else -> L.t("No hay transportes para mostrar.", "No transport to show.")
+                        }, style = BodySm, color = OnSurfaceVariant)
+                        if (fallo) OutlinedButton(onClick = onReintentar) { Text(L.t("Reintentar", "Try again")) }
+                    }
+                }
             }
         }
     }
@@ -1396,7 +1422,7 @@ private fun PasoItinerario(icon: ImageVector, texto: String, color: Color = OnSu
         modifier = Modifier.padding(vertical = 3.dp)
     ) {
         Icon(icon, null, tint = color, modifier = Modifier.size(16.dp))
-        Text(texto, style = BodySm, color = OnSurface, maxLines = 1)
+        Text(texto, style = BodySm, color = OnSurface, modifier = Modifier.weight(1f))
     }
 }
 
@@ -1440,7 +1466,7 @@ private fun BusDetailPopup(
                             .background(bus.color)
                             .padding(horizontal = 8.dp, vertical = 2.dp)
                     ) {
-                        Text(bus.etiquetaLlegada, style = LabelCapsSm, color = Color.White)
+                        Text(bus.etiquetaLlegada, style = LabelCapsSm, color = if (bus.color == AppPrimary) OnPrimaryContainer else OnSecondaryContainer)
                     }
                 }
                 Text(
@@ -1645,12 +1671,12 @@ private fun OccupancyService.EstadoOcupacion.etiqueta(): String = when (this) {
 // Card de línea del panel inferior (puerto del BusCard de iOS): línea,
 // empresa, cápsula de llegada y "tipo • ramal". Tap â†’ popup del bus.
 @Composable
-private fun BusCard(bus: BusAnimado, onClick: () -> Unit) {
+internal fun BusCard(bus: BusAnimado, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = AppSurface.copy(alpha = 0.85f)),
         elevation = CardDefaults.cardElevation(4.dp),
-        modifier = Modifier.width(256.dp).clickable { onClick() }
+        modifier = Modifier.width(256.dp).heightIn(min = 112.dp).clickable(role = androidx.compose.ui.semantics.Role.Button) { onClick() }
     ) {
         Box {
             Column(modifier = Modifier.padding(14.dp)) {
@@ -1661,20 +1687,20 @@ private fun BusCard(bus: BusAnimado, onClick: () -> Unit) {
                         ocupacion?.let { Text(it, style = BodyXs, color = if (bus.scenarioOccupancy == "full") AppError else OnSurfaceVariant, modifier = Modifier.semantics { contentDescription = L.t("Ocupación simulada: ", "Simulated occupancy: ") + it }) }
                     }
                 }
-                Text(bus.empresa, style = HeadlineSm, color = OnSurface, maxLines = 1)
+                Text(bus.empresa, style = HeadlineSm, color = OnSurface, maxLines = 2)
                 Spacer(Modifier.height(6.dp))
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
-                            .background(bus.color)
+                            .background(if (bus.color == AppPrimary) PrimaryContainer else SecondaryContainer)
                             .padding(horizontal = 8.dp, vertical = 3.dp)
                     ) {
-                        Text(bus.etiquetaLlegada, style = LabelCapsSm, color = Color.White)
+                        Text(bus.etiquetaLlegada, style = LabelCapsSm, color = if (bus.color == AppPrimary) OnPrimaryContainer else OnSecondaryContainer)
                     }
                     Text(
                         "${bus.tipo} • ${bus.ramalTexto}",
-                        style = BodySm, color = OnSurfaceVariant, maxLines = 1
+                        style = BodySm, color = OnSurfaceVariant, maxLines = 2
                     )
                 }
             }

@@ -13,7 +13,7 @@
       "commit": "7ba57cbe73f97e83fd112584a9e8ff89623ac4c1"
     }
   },
-  "minimumUnitTests": 235,
+  "minimumUnitTests": 252,
   "originalUnitTests": 119,
   "requiredBaselineCaseIds": [
     "ETA-01",
@@ -537,6 +537,86 @@
     {
       "path": "backend/PUSH-NOTIFICACIONES.md",
       "sha256": "311829cc3183f70bc77faba3e6d061b528e83888c9335a341fce380df02f2ba9",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Design/Components/BottomNavBar.swift",
+      "sha256": "e7227e18aa6eddf4e6227ca5f999f49897bf5003682bc4122bd1fd797c19f2ac",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Screens/Mapa/MapaView.swift",
+      "sha256": "89433751e9b409c85f563be435f25dc4c6396885147d84888f19945fbf140ef3",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Screens/Mapa/MapSearchPanel.swift",
+      "sha256": "c26b1504a23649f933b1a81782ef99acbca612abf4c05f9d4f0a79dfe7701f66",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Screens/Mapa/NearbyTransportPanel.swift",
+      "sha256": "d861c37027050eeffe1b4b4103f0bfc9d30a36555ca9495952270ef54a4d27c4",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Screens/Mapa/BusCard.swift",
+      "sha256": "926b3609974a56164e337a1edde332f7c95be34d7e3122ce56438739e0b3448e",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Screens/Mapa/SideDrawer.swift",
+      "sha256": "8cfe97f71d439af5e24f4eb107cde12b233ea37b670f8420ef913e66364d6d16",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Screens/Rutas/RutasView.swift",
+      "sha256": "920bde037ce6d3744445f7a82d3f08482aa239646080607a03f23a9756eb4493",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Screens/Rutas/RutaOpcionCard.swift",
+      "sha256": "5f68aa84ae257b397f792a6a3f6b5b14c9c7eb73d69a5b89742bd249c3bb5bf1",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Screens/Rutas/DetalleRutaView.swift",
+      "sha256": "30ae6ba45697f00645dfaaf01744215757996f03cb6148191f3d3b419f2a014d",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Screens/Rutas/IdentificacionRuta3D.swift",
+      "sha256": "d0aed54cf2384ff6696d945df05b2c0bf6fed013b3793dc8e1329b9b531fe8f2",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Screens/Rutas/IdentificacionRuta3DView.swift",
+      "sha256": "b9910925e4e59a7a53faf8028efbfe160415807d1c4dbb502c5d7b90edd6cfe3",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Screens/Rutas/Transportes3DView.swift",
+      "sha256": "cfbf99c05abe8db133982f74232ab97a662e7dee61744452fb9be0dc57574520",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Screens/Rutas/VisorTransporte3D.swift",
+      "sha256": "06ff48c67ffb874e2d0c5287d2690199d5e6f00fe3d110823256088509b4d7ce",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Screens/Guardado/GuardadoView.swift",
+      "sha256": "203ee377bbbcd3e4f6c3478b0db208c0e9cbe7bbd0f5186fab54b38d2035141c",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Screens/Seguridad/SeguridadView.swift",
+      "sha256": "124e9b1b57e638aff0d7779b26fa13aee0ac3c6653cd2fb9fa23d0daf6ccaf42",
+      "hashMode": "lf"
+    },
+    {
+      "path": "RutaUTP/Screens/Perfil/PerfilView.swift",
+      "sha256": "59ab5e830fa184e3fc3f923412854aaccfcdae30fa3f43d7f8e4b9e183ba0f26",
       "hashMode": "lf"
     }
   ],

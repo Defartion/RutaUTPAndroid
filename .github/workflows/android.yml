@@ -47,6 +47,7 @@ jobs:
           python -m unittest discover -s tools/tests -p "test_*.py"
           python tools/verificar_idiomas.py
           python tools/verificar_paridad.py
+          python tools/verificar_capturas.py
 
       # El runner no recibe credenciales MQTT, Firebase ni firma de producción.
       # Los casos pendientes no se presentan como paridad ya conseguida.

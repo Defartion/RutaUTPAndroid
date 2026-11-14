@@ -29,7 +29,8 @@ enum class AccionTarjetaRuta { DETALLE, ANADIR, GUARDADA }
 @Composable
 fun InsigniaLinea(ruta: RutaGTFS, modifier: Modifier = Modifier, grande: Boolean = false, compacta: Boolean = false) {
     val tinta = if (ruta.color.luminance() > 0.179) Color.Black else Color.White
-    val tamano = if (compacta) 38.dp else if (grande) 76.dp else 58.dp
+    val escala = androidx.compose.ui.platform.LocalDensity.current.fontScale.coerceIn(1f, 1.5f)
+    val tamano = (if (compacta) 38.dp else if (grande) 76.dp else 58.dp) * escala
     Column(modifier.width(tamano).heightIn(min = tamano).clip(RoundedCornerShape(16.dp)).background(ruta.color).padding(6.dp),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         if (ruta.letraTransporte.isBlank()) Icon(Icons.Filled.DirectionsBus, null, tint = tinta)
@@ -44,9 +45,16 @@ fun InsigniaLinea(ruta: RutaGTFS, modifier: Modifier = Modifier, grande: Boolean
 
 @Composable
 fun RutaOpcionCard(ruta: RutaGTFS, distancia: String? = null, accion: AccionTarjetaRuta = AccionTarjetaRuta.DETALLE, onClick: () -> Unit) {
-    OutlinedCard(onClick = onClick, modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {
-        contentDescription = L.t("Línea ", "Line ") + ruta.lineaConLetra + ", " + ruta.empresa
-    }, shape = RoundedCornerShape(20.dp), colors = CardDefaults.outlinedCardColors(containerColor = SuperficieAgrupada),
+    val descripcion = listOfNotNull(L.t("Línea ", "Line ") + ruta.lineaConLetra, ruta.empresa,
+        ruta.paradaInicioVisible + " → " + ruta.paradaFinVisible, L.t("Pasaje", "Fare") + " " + ruta.precioTexto,
+        L.f("{0} paraderos", "{0} stops", ruta.paraderos.size.toString()),
+        ruta.frecuenciaTexto.takeIf { ruta.headwayMin > 0 }, distancia,
+        L.t("Guardada", "Saved").takeIf { accion == AccionTarjetaRuta.GUARDADA }).joinToString(". ")
+    OutlinedCard(onClick = onClick, modifier = Modifier.fillMaxWidth().clearAndSetSemantics {
+        contentDescription = descripcion
+        role = Role.Button
+        this.onClick { onClick(); true }
+    }, shape = RoundedCornerShape(20.dp), colors = CardDefaults.outlinedCardColors(containerColor = SurfaceContainerLowest),
         border = androidx.compose.foundation.BorderStroke(1.dp, OutlineVariant.copy(alpha = .4f))) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -55,19 +63,31 @@ fun RutaOpcionCard(ruta: RutaGTFS, distancia: String? = null, accion: AccionTarj
                     Text(L.t("Línea ", "Line ") + ruta.codigoTransporte, style = HeadlineBody, color = OnSurface)
                     Text(ruta.empresa, style = BodySm, color = OnSurfaceVariant)
                 }
-                Icon(when (accion) { AccionTarjetaRuta.DETALLE -> Icons.AutoMirrored.Filled.KeyboardArrowRight; AccionTarjetaRuta.ANADIR -> Icons.Filled.Add; AccionTarjetaRuta.GUARDADA -> Icons.Filled.Bookmark }, null, tint = OnSurfaceVariant)
+                val accesorio = when (accion) { AccionTarjetaRuta.DETALLE -> Icons.AutoMirrored.Filled.KeyboardArrowRight; AccionTarjetaRuta.ANADIR -> Icons.Filled.Add; AccionTarjetaRuta.GUARDADA -> Icons.Filled.Bookmark }
+                if (accion == AccionTarjetaRuta.DETALLE) Icon(accesorio, null, tint = OnSurfaceVariant)
+                else Box(Modifier.size(44.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(if (accion == AccionTarjetaRuta.ANADIR) ruta.color else SurfaceContainerLow),
+                    contentAlignment = Alignment.Center) {
+                    Icon(accesorio, null, tint = if (accion == AccionTarjetaRuta.ANADIR)
+                        if (ruta.color.luminance() > .179f) Color.Black else Color.White else OnSurfaceVariant)
+                }
             }
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(SurfaceContainerLow).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 ExtremoRecorrido(ruta.paradaInicioVisible, false)
                 ExtremoRecorrido(ruta.paradaFinVisible, true)
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                DatoBreveRuta(Icons.Filled.Payments, ruta.precioTexto)
+                DatoBreveRuta(Icons.Filled.Payments, ruta.precioTexto, destacado = true)
                 DatoBreveRuta(Icons.Filled.Place, L.f("{0} paraderos", "{0} stops", ruta.paraderos.size.toString()))
                 if (ruta.headwayMin > 0) DatoBreveRuta(Icons.Filled.Schedule, ruta.frecuenciaTexto)
             }
             distancia?.let { DatoBreveRuta(Icons.Filled.DirectionsWalk, it) }
-            if (accion == AccionTarjetaRuta.GUARDADA) DatoBreveRuta(Icons.Filled.CheckCircle, L.t("Guardada", "Saved"))
+            if (accion == AccionTarjetaRuta.GUARDADA) Surface(color = SurfaceContainerLow,
+                shape = androidx.compose.foundation.shape.CircleShape) {
+                Box(Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                    DatoBreveRuta(Icons.Filled.CheckCircle, L.t("Guardada", "Saved"))
+                }
+            }
         }
     }
 }
@@ -81,9 +101,9 @@ fun ExtremoRecorrido(nombre: String, destino: Boolean) {
 }
 
 @Composable
-fun DatoBreveRuta(icono: ImageVector, texto: String) {
+fun DatoBreveRuta(icono: ImageVector, texto: String, destacado: Boolean = false) {
     Row(horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(icono, null, tint = OnSurfaceVariant, modifier = Modifier.size(16.dp))
-        Text(texto, style = BodyXs, color = OnSurfaceVariant)
+        Text(texto, style = if (destacado) BodyXsMedium else BodyXs, color = if (destacado) OnSurface else OnSurfaceVariant)
     }
 }

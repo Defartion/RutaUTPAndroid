@@ -102,16 +102,11 @@ fun SeguridadScreen(router: AppRouter, viewModel: SeguridadViewModel = viewModel
 
     Scaffold(containerColor = AppBackground, contentWindowInsets = WindowInsets(0, 0, 0, 0), bottomBar = { BottomNavBar(router) }, snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).statusBarsPadding()) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp).heightIn(min = 60.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(L.t("Seguridad", "Safety"), style = HeadlineLg, color = OnSurface, modifier = Modifier.weight(1f))
-                Icon(Icons.Filled.Shield, null, tint = AppPrimary)
-            }
+            com.example.rutautpnative.ui.components.CabeceraSeccion(L.t("Seguridad", "Safety"), Icons.Filled.Shield)
             SaludoSeguridad()
-            TabRow(seccion, containerColor = Color.Transparent, contentColor = AppPrimary, modifier = Modifier.padding(horizontal = 20.dp)) {
-                listOf(L.t("Ayuda", "Help") to Icons.Filled.HealthAndSafety, L.t("Comunidad", "Community") to Icons.Filled.People).forEachIndexed { index, (nombre, icono) ->
-                    Tab(seccion == index, { seccion = index }, text = { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) { Icon(icono, null, modifier = Modifier.size(20.dp)); Text(nombre, style = BodyMdMedium) } })
-                }
-            }
+            com.example.rutautpnative.ui.components.SelectorSeccion(listOf(
+                com.example.rutautpnative.ui.components.OpcionSeccion(L.t("Ayuda", "Help"), Icons.Filled.HealthAndSafety),
+                com.example.rutautpnative.ui.components.OpcionSeccion(L.t("Comunidad", "Community"), Icons.Filled.People)), seccion) { seccion = it }
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
                 if (seccion == 0) {
                     AyudaRapidaSeguridad(onEmergencia = { showLlamarDialog = true }, onEditarContacto = { mostrarContacto = true }, onReportar = { showReportarSheet = true })
@@ -483,7 +478,7 @@ private fun ElegirLugaresSheet(
 // en las POSICIONES REALES de los paraderos cargados. Focos decorativos
 // mientras el catálogo llega. Sigue el ciclo del tema, no Reduce Motion.
 @Composable
-private fun RutasSegurasSection(
+internal fun RutasSegurasSection(
     numParaderos: Int,
     posicionesParaderos: List<LatLng>,
     onOpenParaderos: () -> Unit
@@ -524,7 +519,12 @@ private fun RutasSegurasSection(
 @Composable
 private fun BannerParaderosNocturno(posiciones: List<LatLng>) {
     // Pulsos desfasados por indice (focos que "respiran" como en el iOS).
-    val transicion = rememberInfiniteTransition(label = "focos")
+    val faseBase = if (androidx.compose.ui.platform.LocalInspectionMode.current) 0f else {
+        val transicion = rememberInfiniteTransition(label = "focos")
+        val fase by transicion.animateFloat(initialValue = 0f, targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(833, easing = LinearEasing)), label = "pulso")
+        fase
+    }
     val focos = if (posiciones.isEmpty()) {
         // Catálogo aun no cargado: focos decorativos fijos (iOS idem).
         listOf(Offset(0.2f, 0.4f), Offset(0.5f, 0.6f), Offset(0.8f, 0.3f))
@@ -559,9 +559,8 @@ private fun BannerParaderosNocturno(posiciones: List<LatLng>) {
         // Avenida diagonal (protagonista).
         drawLine(Color(0xFF2C4A66), Offset(0f, h * 0.75f), Offset(w, h * 0.25f), strokeWidth = 4.dp.toPx(), alpha = 0.9f)
         // Focos: halo + nucleo ambar pulsando con desfase por indice.
-        val tiempo = System.nanoTime() / 1_000_000_000f
         focos.forEachIndexed { i, pos ->
-            val fase = (tiempo * 1.2f + i * 0.7f) % 1f
+            val fase = (faseBase + i * 0.7f) % 1f
             val pulso = 0.5f + 0.5f * kotlin.math.sin(fase * 2f * Math.PI.toFloat())
             val cx = pos.x * w
             val cy = pos.y * h
@@ -721,7 +720,7 @@ private fun ComunidadSection(viewModel: SeguridadViewModel, onAnadir: () -> Unit
 
 //----Tarjeta de una publicación de la comunidad----
 @Composable
-private fun ReporteCard(
+internal fun ReporteCard(
     reporte: ReporteComunidad,
     votoActual: VotoComunidad?,
     utiles: Int,
@@ -805,14 +804,15 @@ private fun ReporteCard(
 @Composable
 private fun FotoComunidadImagen(asset: String, modifier: Modifier = Modifier) {
     val contexto = LocalContext.current
-    val bitmap by androidx.compose.runtime.produceState<android.graphics.Bitmap?>(initialValue = null, asset) {
-        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            try {
-                android.graphics.BitmapFactory.decodeStream(contexto.assets.open("comunidad/$asset.jpg"))
-            } catch (e: Exception) {
-                null
-            }
+    fun cargar(): android.graphics.Bitmap? = try {
+        contexto.assets.open("comunidad/" + asset + ".jpg").use { android.graphics.BitmapFactory.decodeStream(it) }
+    } catch (_: java.io.IOException) { null }
+    val inspeccion = androidx.compose.ui.platform.LocalInspectionMode.current
+    val bitmap = if (inspeccion) remember(asset) { cargar() } else {
+        val cargada by androidx.compose.runtime.produceState<android.graphics.Bitmap?>(initialValue = null, asset) {
+            value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { cargar() }
         }
+        cargada
     }
     Box(modifier = modifier.clip(RoundedCornerShape(10.dp)).background(SurfaceContainerHigh)) {
         bitmap?.let { bmp ->

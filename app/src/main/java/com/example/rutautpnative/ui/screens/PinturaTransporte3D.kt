@@ -20,8 +20,13 @@ internal data class PartesModelo3D(val carrocerias: List<List<Int>>, val contorn
     }
 }
 
-internal data class IdentidadModelo3D(val codigo: String, val letra: String, val colores: List<Int>)
-internal data class CartelModelo3D(val vertices: FloatBuffer, val codigo: String, val letra: String)
+internal data class IdentidadModelo3D(val codigo: String, val letra: String, val colores: List<Int>,
+    val routeId: String = "", val empresa: String = "") {
+    val distintivoLetra: String? get() = "VR".takeIf { routeId == "17554634" && codigo == "M-15" && letra == "C2VR" && empresa == "El Cortijo" }
+    val letraPrincipal: String get() = if (distintivoLetra == null) letra else "C2"
+}
+internal data class CartelModelo3D(val vertices: FloatBuffer, val codigo: String, val letra: String,
+    val principal: String = letra, val distintivo: String? = null)
 
 internal fun bufferModelo3D(datos: FloatArray): FloatBuffer = ByteBuffer.allocateDirect(datos.size * 4)
     .order(ByteOrder.nativeOrder()).asFloatBuffer().apply { put(datos); position(0) }
@@ -79,7 +84,7 @@ internal fun identificarModelo3D(mesh: MeshTransporte, partes: PartesModelo3D, n
             vertices.addAll(partes.punto(floatArrayOf(p[0] + x, p[1] + y * cos(p[5]) - z * sin(p[5]), p[2] + y * sin(p[5]) + z * cos(p[5]))).toList())
             vertices.add(u); vertices.add(v)
         }
-        CartelModelo3D(bufferModelo3D(vertices.toFloatArray()), it.codigo, it.letra)
+        CartelModelo3D(bufferModelo3D(vertices.toFloatArray()), it.codigo, it.letra, it.letraPrincipal, it.distintivoLetra)
     }
     return MeshTransporte(bufferModelo3D(datos + extra.toFloatArray()), mesh.cantidad + extra.size / 10, cartel)
 }
